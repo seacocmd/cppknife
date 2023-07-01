@@ -1,0 +1,11 @@
+.cproject
+.project
+*.o
+polygeo
+.settings/
+a.out
+doxygen/
+build/
+/Deploy
+/V
+.git.01/

@@ -1,0 +1,95 @@
+#! /usr/local/bin/sesknife
+
+#---
+# Creates a test environment
+script "makeIncompleteSource"
+  rc = os.mkdir "/tmp/ses"
+  rc = os.mkdir "/tmp/ses/base"
+  copy <<EOS ~source
+/*
+ * source1.hpp
+ *
+ *  Created on: 22.06.2022
+ *      Author: seacocmd
+ */
+class Source1;  
+EOS
+  store ~source "/tmp/ses/base/source1.hpp"
+  
+  copy <<EOS ~source
+
+/*
+ * source2.cpp
+ * created: 2022.04.20
+ * Author: seacocmd
+ */
+class Source2;  
+EOS
+  store ~source "/tmp/ses/base/source2.cpp"
+  
+  copy <<EOS ~source
+class Source3;
+/**
+ * param author The author.
+*/
+EOS
+  store ~source "/tmp/ses/base/source3.cpp"
+endscript
+
+script "checkModification"
+  file = "/tmp/ses/base/source1.hpp"
+  load ~source "$(file)"
+  copy <<EOS ~source2
+/**
+ * source1.hpp
+ *
+ *  Created on: 2022.05.22
+ *      Author: jonny
+ *     License: CC0 Universal
+ */
+class Source1;
+EOS
+  rc = buffer.compare ~source ~source2
+  if!! $(rc) != 0
+    log "+++ difference in $(file): $(rc)
+  endif
+  
+  file = "/tmp/ses/base/source2.cpp"
+  load ~source "$(file)"
+  copy <<EOS ~source2
+/**
+ * source2.cpp
+ *
+ *  Created on: 2022.04.20
+ *      Author: jonny
+ *     License: CC0 Universal
+ */
+class Source2;
+EOS
+  rc = buffer.compare ~source ~source2
+  if!! $(rc) != 0
+    log "+++ difference in $(file): $(rc)
+  endif
+  
+  file = "/tmp/ses/base/source3.cpp"
+  load ~source "$(file)"
+  replace r/2022.01.\d+/ "2022.01.20" ~source
+  copy <<EOS ~source2
+/**
+ * source3.cpp
+ *
+ *  Created on: 2022.01.20
+ *      Author: seacocmd
+ *     License: CC0 Universal
+ */
+class Source2;
+EOS
+  rc = buffer.compare ~source ~source2
+  if!! $(rc) != 0
+    log "+++ difference in $(file): $(rc)
+  endif
+endscript
+  
+  
+
+  

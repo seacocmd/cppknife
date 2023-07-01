@@ -1,0 +1,158 @@
+#! /usr/local/bin/sesknife
+
+# ---
+# Normalizes a date: the result is <year>.<month>.<day>
+# In : date: may be <year>.<month>.<day> or <day>.<month>.<year>
+# Out: _rc: <year>.<month>.<day>
+script normalizeDate
+  assert $date
+  year = string.piece 0 "$date" "."
+  lenghtYear = string.length "$(year)"
+  if!! $(length) > 2
+    _rc = "$(date)"
+  else
+    day := $(year)
+    year = string.piece 2 "$(date)"
+    month = string.piece 1 "$(date)"
+    _rc = "$(year).$(month).$(day)"
+  endif
+endif
+
+# ---
+# Tests whether the content of ~firstComment is a header comment.
+# In : ~firstComment: contains the comment to inspect
+# Out: _rc: if > 0: the comment has an header
+# Out: _originDate: the normalized date from the comment or ""
+script hasHeaderComment
+  _originDate = ""
+  assert ~firstComment
+  select push ~firstComment
+  _rc := 0 
+  if r/Created|Author|License|[.][ch]pp/i
+    _rc := $(count) + 1
+  endif
+   if r/\d+\.\d+\.\d+/
+    _rc := $(count) + 1
+    call normalizeDate "date=$(__hit)"
+    _originDate = $(_rc)
+  endif
+endscript
+
+# ---
+# Creates the template for a header comment.
+# Out: ~_template
+script createTemplate
+
+  copy <<'EOS' ~_template
+/**
+ * !(filename)
+ *
+ *  Created on: $(date)
+ *      Author: $(author)
+ *     License: $(license) (see LICENSE)
+ */
+EOS
+endscript
+
+#---
+# Completes the date with the current date.
+# In : year: "" or the year
+# In : month: "" or the month
+# In : day: "" or the day
+# Out: _rc: the completed date <year>.<month>.<day>
+script completeDate
+  assert !year !month !day
+  now = $(__date)
+  if "$(year)" -eq ""
+    year = string.piece "$(now)" 0
+  endif 
+  if "!(month)" -eq ""
+    month = string.piece "$(now)" 1
+  endif 
+  if $(day) -eq ""
+    day := math.random 1 28
+  endif
+  _rc = "!(year).!(month).!(day)"
+ endscript
+
+#---
+# In : ~_main the c source
+# In : $(file): the full filename
+# Out: ~_firstComment The first comment from ~_main
+# Out: $(_startFirstComment): the position in ~_main of the start of the first comment
+# Out: $(_endFirstComment): the position in ~_main of the end of the first comment
+# Out: $(rc): 1: comment found 0: not found
+script extractFirstComment
+  assert $(file)
+  _rc := 1
+  if s="/*"
+    mark set search
+    _startFirstComment = $(__mark)
+    move! $(__mark)
+    if r/\w/B
+      log! "comment behind code: $(file)"
+      _rc := 0
+    else
+      move! $(__mark)
+      if s"*/"
+        _endFirstComment := $(__position)
+        copy! from ~_main starting $(__mark) excluding $(__position) to ~_firstComment
+      else
+        log! "+++ $(file): missing end of comment"
+        _rc := 0  
+      endif
+    endif
+  endif
+endscript
+ 
+ 
+script createHeader
+  assert $_
+
+#---
+# Completes the date with the current date.
+# In : pattern: "" or the pattern defining the file filter
+# In : licence: "" or the license
+# In : path: "" or the path of the directory with the files
+# In : backupPath: if a source file will be changed the origin is saved here
+# Out: _rc: the completed date <year>.<month>.<day>
+# Out: ~files
+script fetchFiles
+  assert $(pattern) $(path) $(license) $(backupPath)
+  pattern ?= "\.?pp$"
+  ensure license "CC0 1.0 Universel (CC0 1.0)"
+  ensure path "."
+  countFiles = os.listfiles ~files "$(path)" including r/$(pattern)/ files
+  file = buffer.pop !files
+  found := 1
+  while "$(file)" -ne ""
+    log "processing $(file)"
+    load! ~_main !(file)
+    copy ~main ~origin
+    call! "extractFirstComment" "file=$(file)"
+    call! "hasHeaderComment"
+    hasComment := $_rc
+    if $(hasComment)
+      delete from ~_main from $(_startFirstComment) excluding $(_endFirstComment)
+    endif
+    call createHeader "file=$(file)" "hasHeader=$(hasComment)
+    insert ~main 1:1 
+    rc := buffer.compare ~main ~origin
+    if!! rc == 0
+      log! "unchanged: $(file)"
+    else
+      node = os.basename "$(file)"
+      rc = os.copy "$(file)" "$(backPath)/$(node)" unique
+      store ~_main "$(file)"
+    endif
+  endwhile
+endscript
+# Parameters must be set from commandline
+assert $(path)
+minDate ?= "2023.01.01"
+license ?= "CC0 Universal 1.0"
+year ?= 2023
+month ?= ''
+call! fetchFiles "path=$(path)" "minDate=$(minDate)" "year=$(year)" "month=$(month)"
+
+  

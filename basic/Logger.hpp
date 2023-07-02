@@ -10,10 +10,9 @@
 #define CORE_LOGGER_HPP_
 
 namespace cppknife {
-/*
- *
- */
+
 class Logger;
+/// Defines the granularity of the logged messages.
 enum LogLevel {
   LV_UNDEF_LEVEL,
   LV_FATAL,
@@ -26,6 +25,7 @@ enum LogLevel {
   LV_FINEST,
   LV_DEBUG
 };
+/// Abstract class defining a logging output handler.
 /**
  * Manages the output of a logger.
  */
@@ -51,7 +51,7 @@ protected:
   LogLevel _level;
   std::string _name;
 };
-
+/// That appender stores the messages/errors.
 /**
  * Logs messages to a <em>FILE</em> stream.
  */
@@ -86,7 +86,7 @@ protected:
   std::deque<std::string> _lines;
   static const std::string _empty;
 };
-
+/// That appender writes to streams: stdout/stderr or files.
 /**
  * Logs messages to a <em>FILE</em> stream.
  */
@@ -106,6 +106,7 @@ protected:
   bool _usePrefix;
 };
 
+/// That appender writes to files.
 /**
  * Implements a class which is writing log messages to a file.
  */
@@ -131,7 +132,9 @@ protected:
   size_t _currentSize;
   size_t _currentFileNo;
 };
-/** This class allows the logging of messages.
+/// This class allows the logging of messages.
+/**
+ * This class allows the logging of messages.
  * The output itself is done by so called appenders.
  * This allows a flexible handling of different media: files, dialog boxes, console...
  * The message can be contain placeholders which will be replaced
@@ -198,17 +201,6 @@ public:
   static Logger *_globalLogger;
 };
 
-/**
- * Connect classes with multiple base classes to use only one logger.
- */
-class LoggerOwner {
-public:
-  virtual ~LoggerOwner() {
-  }
-public:
-  virtual Logger*
-  logger() = 0;
-};
 /**
  * Returns the global logger.
  *

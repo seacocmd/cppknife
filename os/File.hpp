@@ -10,11 +10,12 @@
 #define OS_FILE_HPP_
 
 namespace cppknife {
+
 enum FileType {
 	FT_UNDEF, FT_FILE, FT_DIRECTORY, FT_SYMBOLIC_LINK
 };
 /**
- * Manages a file system entry, the base class of files, directories and symbolic links.
+ * @brief Manages a file system entry, the base class of files, directories and symbolic links.
  *
  */
 class FileSystemEntity {
@@ -89,7 +90,7 @@ protected:
 	}
 };
 /**
- * Manages a
+ * @brief Manages a normal file.
  */
 class File: public FileSystemEntity {
 protected:
@@ -112,7 +113,7 @@ public:
 	size();
 };
 /**
- * Manages a directory.
+ * @brief Manages a directory.
  */
 class Directory: public FileSystemEntity {
 protected:
@@ -124,7 +125,9 @@ public:
 	Directory&
 	operator=(const Directory &other);
 };
-
+/**
+ * @brief Manages a file symbolic link.
+ */
 class SymbolicLink: public FileSystemEntity {
 protected:
 public:

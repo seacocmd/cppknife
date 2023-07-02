@@ -11,6 +11,11 @@
 
 namespace cppknife {
 
+/**
+ * @brief Offers the access to the secrets stored in a configuration file.
+ *
+ * The secrets in the file are encrypted.
+ */
 class SecretConfiguration: public Configuration {
 protected:
   std::string _filename;

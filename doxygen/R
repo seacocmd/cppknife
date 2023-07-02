@@ -1,0 +1,8 @@
+#! /bin/bash
+for dir in *; do
+  if [ -e $dir/Doxyfile ]; then
+    cd $dir
+    doxygen
+    cd ..
+  fi
+done

@@ -10,12 +10,15 @@
 #define SVGTOOL_HPP_
 
 namespace cppknife {
+/**
+ * Stores the position data of a "sheet".
+ */
 struct SheetData {
   int widthPixel;
   int heightPixel;
 };
 /**
- * Manages a Scalable Vector Graphic (SVG) image in a HTML file.
+ * @brief Manages a Scalable Vector Graphic (SVG) image in a HTML file.
  */
 class SvgTool final {
 protected:

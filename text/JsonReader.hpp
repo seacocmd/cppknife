@@ -8,10 +8,13 @@
 
 #ifndef TEXT_JSONREADER_HPP_
 #define TEXT_JSONREADER_HPP_
-
+/// Implements a reader for files with a Json format.
 namespace cppknife {
 
 class TokenInfo;
+/**
+ * @brief This exception is used for Json format errors.
+ */
 class JsonFormatError: public InternalError {
 public:
   JsonFormatError(const std::string &message, TokenInfo &tokenInfo);
@@ -23,6 +26,9 @@ enum JsonNodeType {
 class ValueJson;
 class ArrayJson;
 class MapJson;
+/**
+ * @brief The base class for an node in the Json data tree.
+ */
 class NodeJson {
 public:
   static const double UNDEF_DOUBLE;
@@ -47,6 +53,9 @@ public:
   static const char* typeToString(JsonNodeType type);
 };
 
+/**
+ * @brief Stores a value in the Json data tree.
+ */
 class ValueJson: public NodeJson {
 protected:
   const char *_value;
@@ -59,7 +68,9 @@ public:
   virtual int asInt(int defaultValue = UNDEF_INT) const;
   virtual const char* asString() const;
 };
-
+/**
+ * @brief Stores an array in the Json data tree.
+ */
 class ArrayJson: public NodeJson {
 protected:
   std::vector<NodeJson*> _array;
@@ -79,6 +90,9 @@ public:
   }
 };
 
+/**
+ * @brief Stores a map in the Json data tree.
+ */
 class MapJson: public NodeJson {
 protected:
   std::map<const char*, NodeJson*, StringComparism> _map;
@@ -90,6 +104,9 @@ public:
   virtual NodeJson& map(const char *label);
 };
 
+/**
+ * @brief Stores a syntactical element ("token") of the Json data stream.
+ */
 class TokenInfo {
 public:
   ByteBuffer &_byteBuffer;
@@ -120,7 +137,7 @@ public:
   void store();
 };
 /**
- * Transforms a Json text into a data structure.
+ * @brief Transforms a Json text into a Json data tree.
  */
 class JsonReader {
   enum TokenType {

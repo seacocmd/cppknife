@@ -12,7 +12,7 @@
 namespace cppknife {
 
 /**
- Observes the logins of the host.
+ * @brief Observes the logins of the host. Under construction.
  */
 class UserCheck : public TaskHandler {
 public:

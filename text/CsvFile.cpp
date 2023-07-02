@@ -11,6 +11,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
+/// Implements a reader for CSV files.
 namespace cppknife {
 
 CsvRow::CsvRow(CsvFile &parent, const char *line, int colCount) :

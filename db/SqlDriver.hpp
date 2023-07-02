@@ -24,7 +24,7 @@ enum ColumnType {
 };
 class SqlDriver;
 /**
- * Stores the meta data of a database column.
+ * @brief Stores the meta data of a database column.
  */
 class ColumnMeta {
 public:
@@ -34,7 +34,7 @@ public:
   std::string _name;
 };
 /**
- * Base class of manager classes that store the meta data of a database table.
+ * @brief A base class storing the meta data of a database table.
  */
 class TableMeta {
 protected:
@@ -47,6 +47,9 @@ public:
   virtual void clear();
   virtual void initialize() = 0;
 };
+/**
+ * @brief Stores statistic data.
+ */
 class TableSummary {
 public:
   int _rowCount;
@@ -58,7 +61,7 @@ public:
   void clear();
 };
 /**
- * Stores the meta data of a result set of a database query.
+ * @brief Stores the meta data of a result set of a database query.
  */
 class MetaResult {
 public:
@@ -71,7 +74,7 @@ public:
   int indexOf(const char *column) const;
 };
 /**
- * Stores one row of a database query.
+ * @brief Stores one row of a database query.
  */
 class RowResult {
 public:
@@ -88,7 +91,7 @@ public:
 };
 
 /**
- * Stores the result of a database query.
+ * @brief Stores the result of a database query.
  */
 class Result {
 public:
@@ -110,6 +113,9 @@ public:
     return _meta->indexOf(column);
   }
 };
+/**
+ * @brief Stores the login data.
+ */
 class LoginData {
 public:
   const char *_driver;
@@ -125,8 +131,9 @@ public:
 public:
   bool fromConfiguration(Configuration &configuration, bool readOnly = false);
 };
+
 /**
- * Base class of a database connection manager.
+ * @brief Defines an interface (abstract class) for database handling.
  * That allows to write programs that can connect to different database management systems.
  */
 class SqlDriver {

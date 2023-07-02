@@ -9,12 +9,13 @@
 #ifndef OS_PATH_HPP_
 #define OS_PATH_HPP_
 
+/// Offers functions for a portable way to handle files system paths.
 namespace cppknife {
 enum OsType {
   OS_UNDEF, LINUX, WINDOWS, ANDROID
 };
 /**
- * Stores the specific data of an operating system.
+ * @brief Stores the specific data of an operating system like path separator.
  */
 struct OsInfo {
   OsType _osType;
@@ -35,7 +36,7 @@ struct OsInfo {
   std::string _tempDirectorySeparator;
 };
 /**
- * Stores the parts of a full file path.
+ * @brief Stores the parts of a full file path.
  */
 struct PathInfo {
   std::string _path;

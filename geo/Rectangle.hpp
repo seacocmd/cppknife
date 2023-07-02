@@ -9,9 +9,10 @@
 #ifndef RECTANGLE_HPP_
 #define RECTANGLE_HPP_
 
+/// Implements a rectangle with vertical/horizonal lines.
 namespace cppknife {
 /**
- * Stores a vertical/horizontal rectangle.
+ * @brief Stores a vertical/horizontal rectangle.
  */
 class Rectangle: public Shape {
 public:

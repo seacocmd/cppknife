@@ -9,12 +9,13 @@
 #ifndef DB_POSTGRES_HPP_
 #define DB_POSTGRES_HPP_
 
-/// Installation packages: apt install libpqxx-6.4 or libpqxx-dev
 #include <pqxx/pqxx>
 namespace cppknife {
 
 /**
- Manages a MySQL or Mariadb database.
+ * @brief Implementation of the interface <em>SqlDriver</em> for Postgres.
+ *
+ * Postgres installation packages: apt install libpqxx-6.4 or libpqxx-dev
  */
 class Postgres: public SqlDriver {
 protected:

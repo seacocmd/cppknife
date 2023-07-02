@@ -20,7 +20,7 @@ enum CharClass {
   CC_WORD_FIRST,
   CC_ASCII95
 };
-
+/// Implements an abstract class for creating pseudo random texts.
 class CharRandom {
 public:
   static const char *_charClasses[];

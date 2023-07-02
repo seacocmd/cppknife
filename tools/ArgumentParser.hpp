@@ -31,7 +31,7 @@ enum DataType {
 };
 typedef const char **StringArray;
 /**
- * That exception signals an argument parser error.
+ * @brief That exception signals an argument parser error.
  */
 class ArgumentException {
 private:
@@ -55,7 +55,7 @@ public:
 };
 
 /**
- * Specification of a program argument (option or other argument).
+ * @brief Specification of a program argument (option or other argument).
  */
 class Parameter {
 private:
@@ -151,6 +151,9 @@ public:
   static const char*
   buildExample(DataType dataType, const char *examples);
 };
+/**
+ * @brief Stores the program arguments from the main program.
+ */
 struct ArgVector {
   ArgVector(int argc, char **argv) :
       _argc(argc), _argv(const_cast<const char**>(argv)) {
@@ -159,7 +162,7 @@ struct ArgVector {
   const char **_argv;
 };
 /**
- * The concrete program argument (option or other argument).
+ * @brief The concrete program argument (option or other argument).
  */
 class Argument {
 protected:
@@ -210,7 +213,14 @@ parameterReleaser(void *object);
 void
 argumentParserReleaser(void *object);
 /**
- * Manages the program arguments.
+ * @brief Manages the parsing of the program arguments.
+ *
+ * It is very easy to specify an program argument.
+ * This parser make checks and can build a complex usage message from that specifications.
+ *
+ * There may be sub commands: Using that allows define arguments specific for that sub command.
+ *
+ * You can nest sub commands.
  */
 class ArgumentParser {
 protected:

@@ -11,6 +11,7 @@
 
 namespace cppknife {
 typedef int64_t seed50_t;
+/// A pseudo random generator which algorithm can be simply ported to other programming languages.
 class PortableRandom: public BaseRandom {
 public:
   // 2**50-1:

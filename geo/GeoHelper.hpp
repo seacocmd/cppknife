@@ -8,10 +8,10 @@
 
 #ifndef GEO_HELPER_HPP_
 #define GEO_HELPER_HPP_
-
+/// Some helper functions for geometry and geography.
 namespace cppknife {
 /**
- * Stores some configuration data for the package.
+ * @brief Stores some configuration data for the package.
  */
 class PolyGeoConfiguration {
 public:

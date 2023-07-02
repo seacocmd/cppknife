@@ -10,6 +10,9 @@
 #define TEXT_LINEAGENT_HPP_
 namespace cppknife {
 
+/**
+ * @brief Allows splitting a file into lines like <em>FILE</em> with the possibility to detect binary data.
+ */
 class LineAgent {
 public:
   LineAgent(Logger *logger);

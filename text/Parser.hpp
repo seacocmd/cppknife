@@ -32,6 +32,10 @@ enum TokenType {
   TT_SPECIAL_9,
   TT_SPECIAL_10,
 };
+/// Allows to jump out from any state of the parser.
+/**
+ * Allows to jump out from any state of the parser.
+ */
 class AbortException {
 public:
   int _exitCode;
@@ -40,6 +44,10 @@ public:
       _exitCode(exitCode) {
   }
 };
+/// Stores an syntactical item of the language like a string, an id or a number.
+/**
+ * Stores an syntactical item of the language like a string, an id or a number.
+ */
 class Token {
 public:
   std::string _string;
@@ -54,6 +62,10 @@ public:
   ;
 };
 
+/// Stores the input data to parse.
+/**
+ * Stores the input data to parse.
+ */
 class InputData {
 public:
   std::string _line;
@@ -66,6 +78,10 @@ public:
   ~InputData() {
   }
 };
+/// Separates a text into syntactical elements ("tokens").
+/**
+ * Separates a text into syntactical elements ("tokens").
+ */
 class Parser {
 protected:
   InputData _input;

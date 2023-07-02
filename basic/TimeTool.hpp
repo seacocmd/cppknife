@@ -10,6 +10,8 @@
 #define BASIC_TIMETOOL_HPP_
 
 namespace cppknife {
+/// Defines some functions for date/time handling.
+
 /**
  * Returns the current date as a date string.
  * @param sortable <em>true</em>: the result is sortable: year first.

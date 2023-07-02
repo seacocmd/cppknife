@@ -10,8 +10,9 @@
 #define CORE_PARSERERROR_HPP_
 
 namespace cppknife {
+/// Represents an error in parsing process and show the error position in the input.
 /**
- * Represents a internal error: unexpected states, limit violations...
+ * Represents an error in parsing process and show the error position in the input.
  */
 class ParserError {
   std::string _message;

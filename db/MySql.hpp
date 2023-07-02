@@ -8,7 +8,6 @@
 
 #ifndef DB_MYSQL_HPP_
 #define DB_MYSQL_HPP_
-
 #include <cppconn/driver.h>
 #include <cppconn/exception.h>
 #include <cppconn/resultset.h>
@@ -16,6 +15,11 @@
 
 namespace cppknife {
 
+/**
+ * @brief Stores the meta data of a database table.
+ *
+ * Meta data are infos about the structure: columns with datatypes...
+ */
 class TableMetaMysql: public TableMeta {
   std::string _tableName;
 public:
@@ -29,7 +33,7 @@ public:
 };
 
 /**
- Manages a MySQL or Mariadb database.
+ * @brief  Implementation of the interface <em>SqlDriver</em> for MySql and Mariadb.
  */
 class MySql: public SqlDriver {
 protected:

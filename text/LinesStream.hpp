@@ -8,12 +8,13 @@
 
 #ifndef TEXT_LINESSTREAM_HPP_
 #define TEXT_LINESSTREAM_HPP_
-
+/// Defines an interface (abstract class) delivering lines without holding all lines in a list.
 namespace cppknife {
 
 /**
- * An abstract class which delivers a text in pieces, for example line by line.
- * It is guaranted that a line is always complete when it is delivered.
+ * @brief Defines an interface (abstract class) delivering lines without holding all lines in a list.
+ *
+ * It automatically fetches the next line if needed.
  */
 class LinesStream {
 public:
@@ -33,6 +34,9 @@ public:
   virtual std::string name() const;
 };
 
+/**
+ * @brief The implementation of <em>LinesStream</em> for a complete text.
+ */
 class StringLinesStream: public LinesStream {
 protected:
   std::string _text;
@@ -46,6 +50,9 @@ public:
   virtual bool fetch(std::string &text);
 };
 
+/**
+ * @brief The implementation of <em>LinesStream</em> for a text file.
+ */
 class FileLinesStream: public LinesStream, public LineReader {
 protected:
   bool _endOfInput;

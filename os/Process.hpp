@@ -10,6 +10,9 @@
 #define OS_PROCESS_HPP_
 namespace cppknife {
 
+/**
+ * @brief Handles calling an external program.
+ */
 class Process {
 protected:
   int _returnCode;

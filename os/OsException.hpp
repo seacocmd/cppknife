@@ -11,7 +11,9 @@
 
 namespace cppknife
 {
-
+/**
+ * @brief An exception used for operating system errors.
+ */
   class OsException
   {
     const char *_message;

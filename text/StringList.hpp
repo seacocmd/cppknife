@@ -11,6 +11,14 @@
 
 namespace cppknife {
 
+/// Manages a very efficient way of memory storage for a certain situation: Freeing a memory is done at the end and at once, not for each item itself.
+/**
+ * Manages a very efficient way of memory storage for a certain situation: Freeing a memory is done at the end and at once, not for each item itself.
+ *
+ * The memory is reserved in clusters of a given size.
+ * A new memory request is served by that cluster unless the size of the cluster does not reach.
+ * In this case a new cluster is reserved.
+ */
 class StringList {
 protected:
   std::vector<const char*> _lines;

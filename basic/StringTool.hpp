@@ -10,9 +10,11 @@
 #define CORE_STRINGTOOL_HPP_
 
 namespace cppknife {
+/// Defines some functions for string handling: C-strings and <em>std::string<em> items.
 extern const std::regex stringToolRegexWhitespaces;
 extern const std::regex stringToolRegexWord;
 
+/// A helper class for maps with <em>const char*</em> keys.
 /**
  * A comparator for <em>const char*</em> pointers.
  * This type is needed for maps with <em>const char*</em> keys.

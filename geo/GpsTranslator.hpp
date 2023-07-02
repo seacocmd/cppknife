@@ -6,12 +6,17 @@
  *     License: CC0 1.0 Universal
  */
 
+/// Conversions from GPS to some EPSG/ESDI coordinates systems and vice versa.
+
 #ifndef GEO_GPSTRANSLATOR_HPP_
 #define GEO_GPSTRANSLATOR_HPP_
 #include <ogr_spatialref.h>
 
 namespace cppknife {
 
+/**
+ * @brief Stores coordinates for non GPS coordinate systems.
+ */
 class EastNorthCoordinates {
 public:
   double _east;
@@ -24,6 +29,9 @@ public:
       _east(east), _north(north) {
   }
 };
+/**
+ * @brief Stores coordinates for GPS coordinate systems.
+ */
 class GpsCoordinates {
 public:
   double _longitude;
@@ -36,6 +44,9 @@ public:
       _longitude(longitude), _latitude(latitude) {
   }
 };
+/**
+ * @brief Implements a translator from GPS to some EPSG/ESDI coordinates systems and vice versa.
+ */
 class GpsTranslator {
 protected:
   Logger &_logger;

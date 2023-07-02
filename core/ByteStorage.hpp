@@ -13,7 +13,7 @@ namespace cppknife {
 typedef long unsigned BufferSize_t;
 class ByteStorage;
 /**
- * Stores a amount of byte sequences.
+ * @brief Stores an amount of byte sequences.
  *
  * Each sequence is stored with the length (as BufferSize_t),
  * the data, a '\0' (for c-strings) and a marker 0xff.
@@ -60,7 +60,7 @@ public:
 };
 
 /**
- * Manages a very efficient storage for byte sequences, e.g. c-like strings.
+ * @brief Manages a very efficient storage for byte sequences, e.g. c-like strings.
  *
  * The length of the sequence is stored too.
  * It is not intended to delete individual sequences:

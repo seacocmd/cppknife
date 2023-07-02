@@ -377,5 +377,4 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
   return rc;
 }
 
-}
-/* namespace */
+} /* namespace cppknife */

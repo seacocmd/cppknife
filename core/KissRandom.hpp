@@ -12,6 +12,11 @@
 namespace cppknife {
 
 class RealRandom;
+/**
+ * @brief Implements the KISS algorithm for pseudo random numbers.
+ *
+ * @see https://en.wikipedia.org/wiki/KISS_(algorithm)
+ */
 class KissRandom: public BaseRandom {
 protected:
   // Should never be 0!
@@ -31,6 +36,11 @@ public:
       const char *text3 = nullptr);
 };
 
+/**
+ * @brief Offers a random generator based on the KISS algorithm with unpredictable values.
+ *
+ * The start state of the pseudo random generator is set to a unpredictable value.
+ */
 class RealKissRandom: public KissRandom {
 public:
   RealKissRandom();

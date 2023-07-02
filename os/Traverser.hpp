@@ -14,7 +14,7 @@
 namespace cppknife {
 
 /**
- * A portable interface to a file system entry like file, directory, symbol link...
+ * @brief A portable interface to a file system entry like file, directory, symbol link...
  * Offers only the properties of the entry, no actions.
  * Abstract base class.
  */
@@ -144,6 +144,9 @@ public:
 };
 class TraverserLinux;
 class DirEntryFilter;
+/**
+ * @brief The Linux implementation of <em>FsEntry</em>.
+ */
 class FsEntryLinux: public FsEntry {
   friend TraverserLinux;
 protected:
@@ -204,6 +207,11 @@ public:
   virtual Type_t
   type();
 };
+/**
+ * @brief An implementation using the portable <em>struct stat</em>.
+ *
+ * <b>Under construction.</b>
+ */
 class FsEntryWithStack: public FsEntry {
 public:
   std::string _path;
@@ -288,7 +296,22 @@ public:
   #endif
 };
 class DirTreeStatistic;
+/**
+ * @brief Offers file filtering.
+ */
 class DirEntryFilter {
+public:
+  char _first[16];
+  FsEntry::Type_t _types;
+  PatternList *_nodePatterns;
+  PatternList *_pathPatterns;
+  FileSize_t _minSize;
+  FileSize_t _maxSize;
+  FileTime_t _minAge;
+  FileTime_t _maxAge;
+  int _minDepth;
+  int _maxDepth;
+  char _last[16];
 public:
   DirEntryFilter();
   ~DirEntryFilter();
@@ -309,22 +332,10 @@ public:
   inline bool testNameFirst() const {
     return _nodePatterns != nullptr;
   }
-public:
-  char _first[16];
-  FsEntry::Type_t _types;
-  PatternList *_nodePatterns;
-  PatternList *_pathPatterns;
-  FileSize_t _minSize;
-  FileSize_t _maxSize;
-  FileTime_t _minAge;
-  FileTime_t _maxAge;
-  int _minDepth;
-  int _maxDepth;
-  char _last[16];
 };
 
 /**
- * Manages trigger points.
+ * @brief Manages trigger points.
  * A trigger point is reached if a given amount of time or a given count of files has been reached.
  * Than an action is done, e.g. showing a status message.
  */
@@ -372,6 +383,9 @@ public:
   trace(const char *message);
 };
 
+/**
+ * @brief Stores statistic data of a directory tree.
+ */
 class DirTreeStatistic {
 public:
   int _directories;
@@ -439,7 +453,7 @@ public:
 static const int MAX_ENTRY_STACK_DEPTH = 256;
 
 /**
- * An abstract class for fetching files from a file tree.
+ * @brief An interface (abstract class) for fetching files from a file tree.
  */
 class FileAgent {
 public:
@@ -451,6 +465,9 @@ public:
   virtual FsEntry*
   rawNextFile(int &level) = 0;
 };
+/**
+ * @brief Implements a <em>FileAgent</em> for "struct stat" based filesystems.
+ */
 class FileAgentWithStack: FileAgent {
 protected:
   ///
@@ -505,6 +522,10 @@ protected:
   bool
   initEntry(const std::string &parent, const char *node, int level);
 };
+/// The Linux implementation of <em>FileAgent</em>.
+/**
+ * The Linux implementation of <em>FileAgent</em>.
+ */
 class FileAgentLinux: public FileAgent {
 protected:
   std::string _base;
@@ -539,6 +560,9 @@ public:
   FsEntry*
   nextFile(int &level);
 };
+/**
+ * @brief Allows to traverse a directory tree file by file with many filter options.
+ */
 class Traverser: public DirTreeStatistic {
 protected:
   std::string _base;

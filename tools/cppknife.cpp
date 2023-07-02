@@ -8,9 +8,14 @@
 /**
  * @mainpage
  * <h1>Objectives</h1>
- * <ul><li>The package polygeo offers classes for processing geometry problems with points, rectangles and polygons.
- * </li>
- * <li>There is the possibility to draw geometric objects as SVG images in a HTML file.</li>
+ * The package <strong>cppknife</strong> offers classes for different scopes:
+ * <ul><li><strong>basic</strong>: Most often used classes: Logger InternalError StringTool TimeTool ...</li>
+ * <li><strong>core</strong>: Often used classes for general usage: ByteStorage KissRandom Storage.</li>
+ * <li><strong>db</strong>: Defines an abstract class SqlDriver with the implementations MySql and Postgres.</li>
+ * <li><strong>geo</strong>: Defines some classes for geometric and geographical things: Shape Rectangle Point2D GpsTranslator... </li>
+ * <li><strong>os</strong>: Defines some classes for operating system things: File FileTool OsException Process Traverser...</li>
+ * <li><strong>text</strong>: Defines some classes for text/text file handling: Configuration CsvFile JsonReader Matcher Parser SearchEngine StringList...</li>
+ * <li><strong>text</strong>: Here are the applications and application related support files/classes: ArgumentParser dbknife fileknife textknife sesknife ...</li>
  * </ul>
  */
 #include <stdio.h>

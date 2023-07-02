@@ -8,9 +8,10 @@
 
 #ifndef TEXT_LINEREADER_HPP_
 #define TEXT_LINEREADER_HPP_
-
+// Implements a line reader with unlimited line size.
 namespace cppknife {
 
+/// Manages a line reader with unlimited line size.
 /**
  * Manages a line reader with unlimited line size.
  * Note: fgets() operates with a limited line size.

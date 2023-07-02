@@ -15,7 +15,7 @@
 namespace cppknife {
 
 /**
- * A base class for handlers implementing a sub command.
+ * @brief A base class for handlers implementing a sub command.
  */
 class CommandHandler {
 protected:

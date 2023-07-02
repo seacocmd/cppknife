@@ -11,6 +11,10 @@
 
 namespace cppknife {
 
+/// Stores a hit of a search.
+/**
+ * Stores a hit of a search.
+ */
 class Hit {
 public:
   Hit();
@@ -35,6 +39,10 @@ private:
   int _end;
 };
 
+/// An interface (abstract class) for text searching with wildcards.
+/**
+ * An interface (abstract class) for text searching with wildcards.
+ */
 class Matcher {
 public:
   Matcher(bool notPattern);
@@ -111,7 +119,15 @@ protected:
   bool _ignoreCase;
   bool _notPattern;
 };
-
+/// An implementation of <em>Matcher</em> for glob matching (used in shells).
+/**
+ * An implementation of <em>Matcher</em> for glob matching (used in shells).
+ *
+ * Wildcards:
+ * <ul><li>'*': any string (the empty string too)</li>
+ * <li>'?': any character</li>
+ * </ul>
+ */
 class SimpleMatcher: public Matcher {
 private:
   std::string _pattern;
@@ -188,6 +204,13 @@ protected:
       Hit *hit, bool greedy) const;
 };
 
+/// Stores an amount of search patterns, with positive and negative patterns.
+/**
+ * Stores an amount of search patterns, with positive and negative patterns.
+ *
+ * Positive patterns: only texts matching that filter will be delivered.
+ * Negative pattterns: only text <strong>not</strong> matching the filter will be delivered.
+ */
 class PatternList {
 private:
   std::string _patternString;

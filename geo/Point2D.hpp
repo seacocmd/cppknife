@@ -9,11 +9,12 @@
 #ifndef POINT2D_HPP_
 #define POINT2D_HPP_
 
+/// Implements a point in a two dimension context.
 namespace cppknife
 {
 
   /**
-   * Manages a two dimensional point.
+ * @brief Manages a two dimensional point.
    */
   class Point2D : public Shape
   {

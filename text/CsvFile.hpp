@@ -12,7 +12,7 @@
 namespace cppknife {
 class CsvFile;
 /**
- * Stores one row of a CSV file.
+ * @brief Stores one row of a CSV file.
  */
 class CsvRow {
   friend CsvFile;
@@ -91,7 +91,8 @@ public:
 };
 
 /**
- * Manages a Comma Separated File (CSV).
+ * @brief Manages a Comma Separated File (CSV).
+ *
  * A CSV file is a plain text file divided in rows and columns.
  * Normally one row is one text line.
  * The columns are separated by one character named "separator".

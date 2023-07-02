@@ -4,8 +4,8 @@
 polygeo
 .settings/
 a.out
-doxygen/
 build/
 /Deploy
 /V
 .git.01/
+cppknife.doxy/

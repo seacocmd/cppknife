@@ -6,11 +6,12 @@
  *     License: CC0 1.0 Universal
  */
 
-#ifndef SHAPE_HPP_
-#define SHAPE_HPP_
+#ifndef _GEO_SHAPE_HPP_
+#define _GEO_SHAPE_HPP_
+/// Defines an abstract class for geometric items.
 namespace cppknife {
 /**
- * Defines the different types of the <em>Shape</em> instances.
+ * @brief Defines the different types of the <em>Shape</em> instances.
  */
 enum ShapeType {
   SHAPE_TYPE_UNDEF, POINT2D, RECTANGLE, POLYGON, RASTER_INFO
@@ -18,7 +19,7 @@ enum ShapeType {
 class Rectangle;
 class Polygon;
 /**
- * Abstract base class of a drawable object.
+ * @brief Abstract base class of a drawable object.
  */
 class Shape {
 public:
@@ -73,4 +74,4 @@ double toleranceOf(double value);
 
 } /* namespace cppknife */
 
-#endif /* SHAPE_HPP_ */
+#endif /* _GEO_SHAPE_HPP_ */

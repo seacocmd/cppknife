@@ -8,6 +8,7 @@
 
 #include "ToolsCommons.hpp"
 #include "Scheduler.hpp"
+using namespace cppknife;
 
 TaskHandler::TaskHandler() {
 }

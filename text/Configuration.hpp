@@ -8,9 +8,12 @@
 
 #ifndef TEXT_CONFIGURATION_HPP_
 #define TEXT_CONFIGURATION_HPP_
-
+/// Implements a reader for configuration in Java style. Each line contains a definition like <em>name = Jonny Walker</em>.
 namespace cppknife {
 
+/**
+ * @brief Offers an exception for errors in configuration data.
+ */
 class ConfigurationException {
 public:
   ConfigurationException(const char *message);
@@ -22,6 +25,17 @@ public:
 protected:
   std::string _message;
 };
+/**
+ * @brief Offers access to a configuration file with Java format.
+ *
+ * This class is an interface and an implementation for memory based configuration at the same time.
+ *
+ * The format:
+ * <ul><li>A list of lines.</li>
+ * <li>A line can be an empty line, a comment or an variable definition.</li>
+ * <li>A variable definition has the form: <em>&lt;name> = &lt;value></em></li>
+ * </ul>
+ */
 class Configuration {
 public:
   /**
@@ -82,6 +96,9 @@ protected:
   bool _internalLogger;
 };
 
+/**
+ * @brief Implementation of <em>Configuration</em> for files.
+ */
 class SimpleConfiguration: public Configuration {
 public:
   SimpleConfiguration(const char *filename = nullptr, Logger *logger = nullptr);

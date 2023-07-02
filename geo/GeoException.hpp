@@ -8,9 +8,10 @@
 
 #ifndef GEOEXCEPTION_HPP_
 #define GEOEXCEPTION_HPP_
+
 namespace cppknife {
 /**
- * General exception for this package.
+ * @brief Implements an exception used for all classes of the scope <em>geo</em>.
  */
 class GeoException {
 public:

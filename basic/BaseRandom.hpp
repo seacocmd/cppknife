@@ -12,7 +12,7 @@
 namespace cppknife {
 
 typedef int32_t seed_t;
-
+/// An abstract class for creating pseudo random numbers.
 class BaseRandom {
 protected:
   static BaseRandom *_globalInstance;

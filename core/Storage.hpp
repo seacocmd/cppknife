@@ -12,9 +12,11 @@
 namespace cppknife {
 typedef void
 (*ReleaseFunction)(void *address);
+
 /**
- * A storage for class instances living the whole program runtime.
+ * @brief A storage for class instances living the whole program runtime.
  *
+ * Purpose: The instances will be freed by a single call at the end of the program.
  * That implements the  singleton design pattern.
  */
 class Storage {

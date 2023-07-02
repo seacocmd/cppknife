@@ -13,6 +13,10 @@ namespace cppknife {
 
 class SearchEngine;
 
+/// Stores a range of lines.
+/**
+ * Stores a range of lines.
+ */
 class LineRange {
 protected:
   /// Index of the first line.
@@ -26,6 +30,10 @@ public:
   bool find(std::regex start, std::regex end);
 };
 
+/// Represents a buffer in the search engine.
+/**
+ * Represents a buffer in the search engine.
+ */
 class LineBuffer: public LineList {
 protected:
   SearchEngine &_engine;
@@ -34,8 +42,12 @@ public:
   virtual ~LineBuffer();
 };
 class SearchResult;
+/// Executes scripts written in a special <em>Search Engine Script Language</em>.
 /**
- * Combines the search with simple strings and with regular expressions.
+ * Executes scripts written in a special <em>Search Engine Script Language</em>.
+ *
+ * Each script contains statements for string searching, string manipulation or flow control (like <em>if</em> and <em>while</em>).
+ * The script can use multiple buffers and variables.
  */
 class SearchEngine: public LineBuffer {
   friend LineRange;

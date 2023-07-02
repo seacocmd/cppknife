@@ -10,6 +10,7 @@
 #define CORE_INTERNALERROR_HPP_
 
 namespace cppknife {
+/// A general exception.
 /**
  * Represents a internal error: unexpected states, limit violations...
  */

@@ -11,6 +11,9 @@
 
 namespace cppknife {
 
+/**
+ * @brief Parses the functions of the <em>Search Engine Script Language</em>.
+ */
 class FunctionEngine {
 protected:
   Script *_script;

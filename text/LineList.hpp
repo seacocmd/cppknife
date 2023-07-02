@@ -9,11 +9,12 @@
 #ifndef TEXT_LINELIST_HPP_
 #define TEXT_LINELIST_HPP_
 
+/// Implements a manager for a list of lines: allows searching, knows positions...
 namespace cppknife {
 
 class Configuration;
 /**
- * Manages a list of strings.
+ * @brief Manages a list of strings.
  */
 enum ChangeType {
   CT_UNDEF, CT_UNCHANGED, CT_CHANGED, CT_INSERTED, CT_APPENDED
@@ -21,6 +22,9 @@ enum ChangeType {
 class SearchExpression;
 
 class LineList;
+/**
+ * @brief Stores a position in a buffer.
+ */
 class BufferPosition {
 public:
   size_t _lineIndex;
@@ -38,7 +42,7 @@ public:
   }
 };
 /**
- * Stores the result of a search in a buffer.
+ * @brief Stores the result of a search in a buffer.
  */
 class SearchResult {
   friend SearchExpression;
@@ -53,6 +57,9 @@ public:
   void clear();
 };
 
+/**
+ * @brief Stores the search parameters.
+ */
 class SearchExpression {
   friend SearchResult;
   friend LineList;
@@ -122,6 +129,9 @@ public:
   void set(const char *pattern, bool isRegExpr, const char *flags = nullptr);
 };
 
+/**
+ * @brief Manages a list of lines called "buffer".
+ */
 class LineList {
   friend SearchExpression;
 public:

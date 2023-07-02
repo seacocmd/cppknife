@@ -14,6 +14,10 @@ namespace cppknife {
 class SearchEngine;
 class LineBuffer;
 
+/// Stores a parameter element in the <em>Search Engine Script Language</em>: it is expressed as <em>&lt;name>=&lt;value></em>.
+/**
+ * Stores a parameter element in <em>Search Engine Script Language</em>: it is expressed as <em>&lt;name>=&lt;value></em>.
+ */
 class ParameterInfo {
 public:
   std::string _name;
@@ -25,6 +29,11 @@ public:
       _name(name), _dataType(type) {
   }
 };
+
+/// Stores an amount of allowed parameter elements.
+/**
+ * Stores an amount of allowed parameter elements.
+ */
 class ParameterSet {
 protected:
   std::map<std::string, ParameterInfo*> _parameters;
@@ -39,6 +48,7 @@ public:
   ParameterInfo* find(const char *name) const;
   std::string populate(const char *definition, std::string &key);
 };
+/// Stores the two block end line numbers from the if statement.
 /**
  * Stores the two block end line numbers from the if statement.
  */
@@ -57,6 +67,10 @@ public:
 };
 class SearchResult;
 class SearchExpression;
+/// Extends the <em>Parser</em> for processing the <em>Search Engine Script Language</em>.
+/**
+ * Extends the <em>Parser</em> for processing the <em>Search Engine Script Language</em>.
+ */
 class SearchParser: public Parser {
 public:
   enum KeyWord {
@@ -201,6 +215,10 @@ public:
       const char *defaultValue = nullptr, bool needed = true);
 };
 
+/// Stores the state of the nesting block statements.
+/**
+ * Stores the state of the nesting block statements.
+ */
 class BlockStackEntry {
 public:
   enum BlockType {
@@ -215,6 +233,12 @@ public:
 };
 class FunctionEngine;
 
+/// Represents a single script.
+/**
+ * Represents a single script.
+ *
+ * A script is an list of statements.
+ */
 class Script: public LineList {
   friend SearchEngine;
 protected:
@@ -458,6 +482,7 @@ public:
    * Defines the current buffer.
    * In some commands the buffer is optional. In that case the current buffer is used.
    * @param name The buffer's name, e.g. ~csv
+   * @param value The new value.
    */
   void setVariable(const std::string &name, const std::string &value);
   /**

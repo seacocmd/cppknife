@@ -11,6 +11,9 @@
 
 namespace cppknife {
 
+/**
+ * @brief Defines an engine for light encryption/decryption.
+ */
 class VeilEngine: public CharRandom {
 public:
   static const char *_defaultSecret1;

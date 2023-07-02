@@ -9,6 +9,7 @@
 #ifndef OS_FILETOOL_HPP_
 #define OS_FILETOOL_HPP_
 
+/// Offers functions useful for files and directories.
 namespace cppknife {
 typedef int64_t FileSize_t;
 typedef struct timespec FileTime_t;

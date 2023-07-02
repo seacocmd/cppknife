@@ -15,7 +15,7 @@
  * <li><strong>geo</strong>: Defines some classes for geometric and geographical things: Shape Rectangle Point2D GpsTranslator... </li>
  * <li><strong>os</strong>: Defines some classes for operating system things: File FileTool OsException Process Traverser...</li>
  * <li><strong>text</strong>: Defines some classes for text/text file handling: Configuration CsvFile JsonReader Matcher Parser SearchEngine StringList...</li>
- * <li><strong>text</strong>: Here are the applications and application related support files/classes: ArgumentParser dbknife fileknife textknife sesknife ...</li>
+ * <li><strong>tools</strong>: Here are the applications and application related support files/classes: ArgumentParser dbknife fileknife textknife sesknife ...</li>
  * </ul>
  */
 #include <stdio.h>

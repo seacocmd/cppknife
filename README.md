@@ -12,3 +12,5 @@ If you want to use the library you can install it under Linux: see linux/install
 - [sesknife](doc/sesknife.md)
 - [textknife](doc/textknife.md)
 
+## Binaries
+- Binaries for the architecture amd64: see releases/amd64

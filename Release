@@ -1,0 +1,8 @@
+#! /bin/bash
+
+for file in fileknife sesknife textknife libcppknife.so; do
+  cp -av build/default/$file releases/x86
+  strip -v releases/x86/$file
+done
+
+

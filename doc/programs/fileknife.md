@@ -3,6 +3,27 @@
 ## Objectives
 That program offers services of files and directories.
 
+## Examples
+```
+# Show a statistic about the filetree in path /home ignoring the .git subdirectories:
+fileknife du /home --directories=-.git
+# Ignore all .git directories, show only *.cpp and *.hpp files:
+fileknife du --files=*.cpp,*.hpp /home
+
+# Show the 20 youngest, newest, largest files from /etc.
+fileknife extrema /etc
+# Show the 5 youngest, newest directories and symbolic links from /var/spool.
+fileknife extrema --count=5 --types=dl /var/spool
+
+# Show all logfiles from /var/log that ar younger than 3 days and a size larger than 1 kByte:
+fileknife list --files=*.log /var/log --days=-3 --size=+1k
+# Show all HTML files unless index.html and modified in more than 5 minutes and limit the path depth to 3:
+fileknife list --files=*.html,-index.html --max-depth=3 --minutes=+5 /srv/www
+
+# Count the lines, words and characters of all source files:
+fileknife wc --files=*.cpp /home/ws/cpp
+```
+
 ## Usage
 
 ```

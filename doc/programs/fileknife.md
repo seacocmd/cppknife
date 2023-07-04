@@ -8,28 +8,27 @@ That program offers services of files and directories.
 # Show a statistic about the filetree in path /home ignoring the .git subdirectories:
 fileknife du /home --directories=-.git
 # Ignore all .git directories, show only *.cpp and *.hpp files:
-fileknife du --files=*.cpp,*.hpp /home
+fileknife du --files=,*.cpp,*.hpp /home
 
 # Show the 20 youngest, newest, largest files from /etc.
 fileknife extrema /etc
 # Show the 5 youngest, newest directories and symbolic links from /var/spool.
-fileknife extrema --count=5 --types=dl /var/spool
+fileknife extrema --count=5 --type=d,l /var/spool
 
 # Show all logfiles from /var/log that ar younger than 3 days and a size larger than 1 kByte:
-fileknife list --files=*.log /var/log --days=-3 --size=+1k
+fileknife list --files=,*.log /var/log --days=-3 --size=+1k
 # Show all HTML files unless index.html and modified in more than 5 minutes and limit the path depth to 3:
-fileknife list --files=*.html,-index.html --max-depth=3 --minutes=+5 /srv/www
+fileknife list --files=,*.html,-index.html --max-depth=3 --minutes=+5 /srv/www
 
-# Count the lines, words and characters of all source files:
-fileknife wc --files=*.cpp /home/ws/cpp
+# Count the lines, words and characters of all source files without the generated files in build:
+fileknife wc --files=,*.cpp /home/ws/cpp --directories=,-build
 ```
 
 ## Usage
 
 ```
-fileknife --help
 fileknife [<options>]  MODE
-    Version Jun 20 2022
+    Version Jul  4 2023
     A universal tool working on files and directories
   -?,--help
     Shows the usage information., e.g. --help -?
@@ -37,6 +36,8 @@ fileknife [<options>]  MODE
     Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG, e.g. --log-level=123 -l0
   -v,--verbose
     Show more information, e.g. --verbose -v
+  --examples
+    Show usage examples, e.g. --examples --examples --examples --examples --examples
   MODE
     What should be done:
     du
@@ -44,7 +45,7 @@ fileknife [<options>]  MODE
     extrema
       Creates a statistic about the youngest/oldest/largest files
     list
-      Lists some files/directories
+      Lists specified files/directories
     wc
       Counts words, lines and characters
 fileknife du [<options>]  BASE
@@ -94,9 +95,11 @@ fileknife extrema [<options>]  BASE
   -t TYPE,--type=TYPE
     The file type: f(ile) d(irectory) l(ink) s(ocket) b(lock) p(ipe) c(har), e.g. --type=f,d,l -td
 fileknife list [<options>]  BASE
-    Lists some files/directories
+    Lists specified files/directories
   -?,--help
     Shows the usage information., e.g. --help -?
+  -1,--name-only
+    Show only the filename, no other attributes, e.g. --name-only -1
   BASE
     The start directory or a list of file patterns delimited by ',', first with path. Preceding '-' defines a NOT pattern, e.g. . /home/jonny/*.c,*.h,-*tmp*
   -f FILES,--files=FILES

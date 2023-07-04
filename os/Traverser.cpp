@@ -439,7 +439,7 @@ size_t FsEntryWithStack::fullNameLength() {
   bool FsEntryWithStack::getPrivilege(const char* privilege, Logger* logger) {
   	bool rc = false;
   	LUID luidPrivilege;
-  	HANDLE hAccessToken;
+  	HANDLE hAccessToken = 0;
   	if (! OpenProcessToken (GetCurrentProcess(),
   			TOKEN_ADJUST_PRIVILEGES | TOKEN_QUERY, &hAccessToken)) {
   		if (logger != nullptr)
@@ -450,7 +450,7 @@ size_t FsEntryWithStack::fullNameLength() {
   		logger->sayF(LOG_ERROR | CAT_FILE, LC_GET_PRIVILEGE_2,
   			"LookupPrivilegeValue(): $1").arg((int) GetLastError()).end();
   	} else {
-  		TOKEN_PRIVILEGES tpPrivileges;
+  		TOKEN_PRIVILEGES tpPrivileges = 0;
   		tpPrivileges.PrivilegeCount = 1;
   		tpPrivileges.Privileges[0].Luid = luidPrivilege;
   		tpPrivileges.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
@@ -1052,7 +1052,7 @@ FileAgentLinux::FileAgentLinux(const char *base, const DirEntryFilter *filter,
     char *argv[] = { (char*) base, nullptr };
 
     ;
-    auto flags = FTS_COMFOLLOW | FTS_PHYSICAL;
+    auto flags = FTS_PHYSICAL;
     if (!intrinsic) {
       flags |= FTS_NOSTAT;
     }
@@ -1073,7 +1073,7 @@ void FileAgentLinux::changeBase(const char *base) {
     _fts = nullptr;
   }
   char *argv[] = { (char*) base, nullptr };
-  _fts = fts_open(argv, FTS_COMFOLLOW | FTS_PHYSICAL | FTS_DONTCHDIR, nullptr);
+  _fts = fts_open(argv, FTS_PHYSICAL, nullptr);
 }
 
 FsEntry*

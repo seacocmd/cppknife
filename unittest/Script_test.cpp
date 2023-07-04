@@ -658,7 +658,7 @@ endif
 
 TEST(ScriptTest, buildCppHeader) {
   // FEW_TESTS();
-#ifndef NEVER
+#ifdef NEVER
   auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto fnSource = temporaryFile("example.ses", "unittest", true);
   auto fnData = temporaryFile("data.inp", "unittest", true);

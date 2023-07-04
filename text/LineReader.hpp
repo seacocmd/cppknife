@@ -11,9 +11,9 @@
 // Implements a line reader with unlimited line size.
 namespace cppknife {
 
-/// Manages a line reader with unlimited line size.
 /**
- * Manages a line reader with unlimited line size.
+ * @brief Manages a line reader with unlimited line size and binary file detection.
+ *
  * Note: fgets() operates with a limited line size.
  */
 class LineReader {
@@ -28,7 +28,7 @@ protected:
   /// The last result of nextLine(): valid until the next call of nextLine()
   std::string _currentLine;
   size_t _blockSize;
-  /// A data block containing the start of the next data.
+  /// A data block containing the start of the next line.
   std::string _nextBlock;
   /// Points on the start of the next line inside <em>_nextBlock</em>.
   const char *_cursorNextBlock;
@@ -84,6 +84,10 @@ public:
    * @return <em>true</em>: data available.
    */
   bool readBlock();
+  /**
+   * Change the state to start from file begin again.
+   */
+  void reset();
   /**
    * Sets the flag whether the newline should be removed from returned lines.
    */

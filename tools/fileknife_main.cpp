@@ -18,7 +18,7 @@ int main(int argc, char **argv) {
     //filter = "ArgumentParserTest.*";
     //filter = "BaseRandomTest.*";
     //filter = "ByteStorageTest.*";
-    //filter = "FileKnifeTest.*";
+    filter = "FileKnifeTest.*";
     //filter = "FileTest.*";
     //filter = "FileToolTest.*";
     //filter = "LineAgentTest.*";

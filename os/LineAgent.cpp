@@ -27,7 +27,28 @@ LineAgent::~LineAgent() {
     _buffer = nullptr;
   }
 }
-
+int LineAgent::estimateLineCount() {
+  size_t rc = -1;
+  struct stat state;
+  if (::stat(_filename.c_str(), &state) == 0) {
+    auto fileSize = state.st_size;
+    if (_restLength == 0) {
+      fillBuffer(_buffer);
+    }
+    size_t lines = 1;
+    char *ptr = _buffer;
+    char *last = ptr;
+    auto restLength = _restLength;
+    while ((ptr = static_cast<char*>(memchr(static_cast<void*>(last), '\n',
+        restLength))) != nullptr) {
+      lines++;
+      restLength -= (ptr - last) - 1;
+      last = ptr + 1;
+    }
+    rc = 1 + int(static_cast<double>(fileSize) / _restLength * lines);
+  }
+  return rc;
+}
 const char* LineAgent::nextLine(size_t &length) {
   const char *rc = nullptr;
   if (_handle > 0) {
@@ -112,6 +133,8 @@ bool LineAgent::openFile(const char *filename) {
   }
   _eofReached = false;
   _handle = open(filename, O_RDONLY);
+  _filename = filename;
+  _hasBinaryData = false;
   bool rc = true;
   if (_handle < 0) {
     char buffer[512];

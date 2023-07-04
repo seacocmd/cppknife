@@ -90,7 +90,7 @@ public:
         _templateConfiguration = new SimpleConfiguration(filename.c_str(),
             _logger);
       } else {
-        _replacement = _argumentParser.asString("pattern", nullptr);
+        _replacement = _argumentParser.asString("replacement", nullptr);
         if (_replacement == nullptr) {
           _logger->error("missing --replacement");
           break;
@@ -131,10 +131,12 @@ public:
 
 class ReplaceCommandHandler: public CommandHandler {
 private:
-  std::map<std::string, int> _strings;
+  std::regex _pattern;
+  std::string _replacement;
 public:
   ReplaceCommandHandler(ArgumentParser &argumentParser, Logger *logger) :
-      CommandHandler(argumentParser, logger), _strings() {
+      CommandHandler(argumentParser, logger), _replacement() {
+    _replacement = argumentParser.asString("replacement");
   }
   virtual ~ReplaceCommandHandler() {
   }
@@ -145,61 +147,18 @@ public:
 
   virtual bool oneFile() {
     bool rc = true;
+    auto pattern = _argumentParser.asRegExpr("pattern");
     auto filename = _status->accessFullName();
-    const int MAX = 0xffff;
-    char buffer[MAX + 1];
-    buffer[MAX] = '\0';
-    FILE *input = fopen(filename, "r");
-    const char *ptr = nullptr;
-    const char *start = nullptr;
-    char cc = 0;
-    while (fgets(buffer, sizeof buffer, input) != nullptr) {
-      char delimiter = '\0';
-      ptr = buffer;
-      while ((cc = *ptr++) != '\0') {
-        if (cc == '\\') {
-          if (*ptr++ == '\0') {
-            break;
-          } else {
-            continue;
-          }
-        }
-        if (start == nullptr && (cc == '"' or cc == '\'')) {
-          start = ptr - 1;
-          delimiter = cc;
-        } else if (start != nullptr && cc == delimiter) {
-          std::string contents(start, ptr - start);
-          if (_strings.find(contents) != _strings.end()) {
-            _strings[contents]++;
-          } else {
-            _strings[contents] = 1;
-          }
-          start = nullptr;
-          delimiter = '\0';
-        }
+    FileLinesStream stream(filename, *_logger);
+    std::string line;
+    bool found = false;
+    while (stream.fetch(line)) {
+      if (std::regex_search(line, pattern)) {
+        found = true;
+        break;
       }
     }
     return rc;
-  }
-  void write(const char *filename, Logger &logger) {
-    FILE *output = nullptr;
-    if (strcmp(filename, "-") == 0) {
-      output = stdout;
-    } else {
-      output = fopen(filename, "w");
-    }
-    if (output == nullptr) {
-      logger.say(LV_ERROR, formatCString("cannot open %s", filename));
-    } else {
-      auto keys = keysOfMap<std::string, int>(_strings);
-      std::sort(keys.begin(), keys.end());
-      for (auto key : keys) {
-        fprintf(output, "%s\n", key.c_str());
-      }
-      if (strcmp(filename, "-") != 0) {
-        fclose(output);
-      }
-    }
   }
 }
 ;
@@ -292,6 +251,18 @@ int adapt(ArgumentParser &parser, Logger &logger) {
 }
 
 /**
+ * Manages the "adapt" sub command.
+ * @param parser Contains the program argument info.
+ * @param logger Manages the output.
+ * @return 0: success Otherwise: the exit code.
+ */
+int replace(ArgumentParser &parser, Logger &logger) {
+  ReplaceCommandHandler handler(parser, &logger);
+  int rc = handler.run("source");
+  return rc;
+}
+
+/**
  * Manages the "strings" sub command.
  * @param parser Contains the program argument info.
  * @param logger Manages the output.
@@ -316,25 +287,35 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
       "Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG",
       "5");
   parser.add("--verbose", "-v", DT_BOOL, "Show more information");
-  parser.addMode("mode", "What should be done:", "du,extrema,list,wc");
+  parser.addMode("mode", "What should be done:", "adapt,string");
 
-  ArgumentParser listParser("list", logger, "Lists some files/directories");
-  parser.addSubParser("mode", "list", listParser);
-  addTraverserOptions(listParser);
   ArgumentParser adaptParser("adapt", logger, "Adapts configuration files.");
-  adaptParser.add("--template", "-t", DT_STRING, "Use a template: php");
+  parser.addSubParser("mode", "adapt", adaptParser);
+  adaptParser.add("--template", "-t", DT_STRING, "Use a template: php", nullptr,
+      "php");
   adaptParser.add("--pattern", "-P", DT_REGEXPR,
-      "The pattern describing the key.", "");
+      "The pattern describing the key.", "", "/^max_memory\\s*=");
+  adaptParser.add("--replacement", "-R", DT_STRING,
+      "The replacement of the pattern", nullptr, "max_memory = 512k");
   adaptParser.add("--anchor", "-a", DT_REGEXPR,
       "If pattern is not found the replacement is inserted near that anchor.",
-      "");
+      "", "/#.*max_memory");
   adaptParser.add("--above-anchor", "-A", DT_BOOL,
       "Insert above the anchor line.", "false");
   adaptParser.add("source", nullptr, DT_FILE_PATTERN,
-      "A directory with or without a list of file patterns.", ".", nullptr,
-      true);
-  parser.addSubParser("mode", "adapt", adaptParser);
-  addTraverserOptions(listParser);
+      "A directory with or without a list of file patterns.", ".",
+      "/etc/php/8.4/*.conf", true);
+  addTraverserOptions(adaptParser);
+#ifdef REPLACE
+  ArgumentParser replaceParser("replace", logger,
+      "Replaces a pattern in files.");
+  parser.addSubParser("mode", "replace", replaceParser);
+  replaceParser.add("--pattern", "-P", DT_REGEXPR, "The pattern to replace.", "",
+      "/Jenny Smith/i");
+  replaceParser.add("--replacement", "-R", DT_STRING,
+      "The replacement of the pattern", nullptr, "Jenny Miller");
+  addTraverserOptions(replaceParser);
+#endif
 
   ArgumentParser stringsParser("strings", logger,
       "Fetches the strings delimited by ' or \" from files.");
@@ -347,9 +328,6 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
       "-");
   addTraverserOptions(stringsParser);
 
-  ArgumentParser duParser("du", logger, "Counts files, directories, bytes");
-  parser.addSubParser("mode", "du", duParser);
-  addTraverserOptions(duParser);
   auto verbose = parser.asBool("verbose");
   ArgVector argVector(argc, argv);
   if (!parser.parseAndCheck(argVector)) {
@@ -359,6 +337,8 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
     logger->setLevel(level);
     if (parser.isMode("mode", "adapt")) {
       rc = adapt(parser, *logger);
+    } else if (parser.isMode("mode", "replace")) {
+      rc = replace(parser, *logger);
     } else if (parser.isMode("mode", "strings")) {
       rc = strings(parser, *logger);
     } else {

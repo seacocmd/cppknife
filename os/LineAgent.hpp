@@ -31,6 +31,13 @@ public:
     return _hasBinaryData;
   }
   /**
+   * Estimates the count of lines of the file.
+   *
+   * Count the newlines in the buffer and make a linear approximation with the file size.
+   * @return <em>-1</em>Error. Otherwise: The estimation of the count of lines in the file.
+   */
+  int estimateLineCount();
+  /**
    * Returns the next line.
    * Reads some data into the <em>_buffer</em> if needed.
    * @param[out] length The line length.

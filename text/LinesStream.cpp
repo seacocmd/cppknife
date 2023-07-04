@@ -35,6 +35,9 @@ bool StringLinesStream::fetch(std::string &text) {
   return rc;
 }
 
+void StringLinesStream::reset() {
+  _valid = true;
+}
 FileLinesStream::FileLinesStream(const char *filename, Logger &logger,
     bool removeNewline, size_t bufferSize) :
     LinesStream(), LineReader(filename, logger, removeNewline, bufferSize), _endOfInput(
@@ -54,6 +57,9 @@ bool FileLinesStream::fetch(std::string &text) {
 bool FileLinesStream::endOfInput() const {
   return _endOfInput;
 }
-
+void FileLinesStream::reset() {
+  _endOfInput = false;
+  static_cast<LineReader*>(this)->reset();
+}
 }
 /* namespace cppknife */

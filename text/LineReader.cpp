@@ -105,23 +105,6 @@ const std::vector<std::string> LineReader::lookahead(int countLines) {
   return _lookAheadLines;
 }
 
-bool LineReader::readBlock() {
-  bool rc = false;
-  _nextBlock.resize(_blockSize);
-  auto bytes = ::read(_fileHandle, const_cast<char*>(_nextBlock.data()),
-      _blockSize);
-  if (bytes <= 0) {
-    _nextBlock.resize(0);
-    _cursorNextBlock = nullptr;
-  } else {
-    _nextBlock.resize(bytes);
-    _cursorNextBlock = _nextBlock.c_str();
-    rc = true;
-    _countBlockReads++;
-  }
-  return rc;
-}
-
 const std::string& LineReader::nextLine() {
   if (!_ignoreLookahead && _lookAheadLines.size() > 0) {
     _currentLine = _lookAheadLines[0];
@@ -144,6 +127,23 @@ bool LineReader::openFile(const char *filename) {
   _currentLine.clear();
   _cursorNextBlock = nullptr;
   return _fileHandle >= 0;
+}
+
+bool LineReader::readBlock() {
+  bool rc = false;
+  _nextBlock.resize(_blockSize);
+  auto bytes = ::read(_fileHandle, const_cast<char*>(_nextBlock.data()),
+      _blockSize);
+  if (bytes <= 0) {
+    _nextBlock.resize(0);
+    _cursorNextBlock = nullptr;
+  } else {
+    _nextBlock.resize(bytes);
+    _cursorNextBlock = _nextBlock.c_str();
+    rc = true;
+    _countBlockReads++;
+  }
+  return rc;
 }
 bool LineReader::readLine() {
   bool rc = false;
@@ -191,6 +191,13 @@ bool LineReader::readLine() {
     }
   }
   return rc;
+}
+void LineReader::reset() {
+  _lookAheadLines.clear();
+  _currentLine.clear();
+  _cursorNextBlock = nullptr;
+  _nextBlock.clear();
+  lseek(_fileHandle, 0, SEEK_SET);
 }
 } /* namespace cppknife */
 

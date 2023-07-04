@@ -31,7 +31,15 @@ public:
    * @return <em>true</em> text was available.
    */
   virtual bool fetch(std::string &text) = 0;
+  /**
+   * Returns the name of the stream.
+   * @return The name.
+   */
   virtual std::string name() const;
+  /**
+   * Change the state to start from the begin again.
+   */
+  virtual void reset() = 0;
 };
 
 /**
@@ -48,6 +56,7 @@ public:
 public:
   virtual bool endOfInput() const;
   virtual bool fetch(std::string &text);
+  virtual void reset();
 };
 
 /**
@@ -66,6 +75,7 @@ public:
   virtual std::string name() const {
     return _filename;
   }
+  virtual void reset();
 };
 } /* namespace cppknife */
 

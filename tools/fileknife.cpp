@@ -96,6 +96,29 @@ protected:
   bool _reverse;
 };
 
+void examples() {
+  printf(
+      R"""(# Show a statistic about the filetree in path /home ignoring the .git subdirectories:
+fileknife du /home --directories=-.git
+# Ignore all .git directories, show only *.cpp and *.hpp files without the test file:
+fileknife du --files=,*.cpp,*.hpp,-*test.?pp /home
+
+# Show the 20 youngest, newest, largest files from /etc.
+fileknife extrema /etc
+# Show the 5 youngest, newest directories and symbolic links from /var/spool.
+fileknife extrema --count=5 --type=d,l /var/spool
+
+# Show all log files with *.log and *.gz from /var/log that are older than 30 days and a size larger than 5 kByte:
+fileknife list '/var/log/*.log,*.gz' --days=+30 --size=+5k
+# Show all HTML files unless index.html and modified in more than 5 minutes and limit the path depth to 3:
+fileknife list --files=,*.html,-index.html --max-depth=3 --minutes=+5 /srv/www
+# Show only the filename without attributes: larger than 1GByte, the *.deb and *.zip and *.gz files. 
+fileknife list --name-only --size=+1G /opt/downloads/*.deb,*.zip,*.gz
+
+# Count the lines, words and characters of all source files without the generated files in build:
+fileknife wc /home/ws/cpp/*.cpp,*.hpp --directories=,-build
+)""");
+}
 /**
  * Manages the "list" sub command.
  * @param parser Contains the program argument info.
@@ -242,7 +265,7 @@ int wc(ArgumentParser &parser, Logger &logger) {
   char buffer[8192];
   LineList lines(8128);
   LineAgent lineAgent(&logger);
-  size_t length;
+  size_t length = 0;
   const char *line;
   const char *wordSeparators = " \t";
   size_t bytesTotal = 0;
@@ -345,6 +368,7 @@ int list(ArgumentParser &parser, Logger &logger) {
   DirEntryFilter filter;
   int level = 0;
   populateFilter(parser, filter);
+  bool nameOnly = parser.asBool("nameOnly", false);
   FsEntry *status;
   Traverser traverser("", &filter, nullptr, &logger);
   char buffer[8192];
@@ -363,26 +387,29 @@ int list(ArgumentParser &parser, Logger &logger) {
       baseIsPattern = true;
     }
     while ((status = traverser.nextFile(level)) != nullptr) {
-      std::string format;
-      auto fileTime = status->filetimeAsString();
       auto fileName = status->fullName();
-      if (status->isDirectory()) {
-        // 2022.10.22 12:44:49 2048.123456 MB /home/my.txt
-        logger.log(
-            formatOnBuffer(buffer, sizeof buffer, "d%s      directory %s",
-                fileTime.c_str(), fileName));
-      } else if ((status->type() & (FsEntry::TF_LINK_DIR | FsEntry::TF_LINK))
-          != 0) {
-        logger.log(
-            formatOnBuffer(buffer, sizeof buffer, "%c%s %11.6f MB %s -> %s",
-                status->typeAsChar(), fileTime.c_str(),
-                status->fileSize() / 1E6, fileName,
-                status->linkReference().c_str()));
+      if (nameOnly) {
+        logger.log(fileName);
       } else {
-        logger.log(
-            formatOnBuffer(buffer, sizeof buffer, "%c%s %11.6f MB %s",
-                status->typeAsChar(), fileTime.c_str(),
-                status->fileSize() / 1E6, fileName));
+        auto fileTime = status->filetimeAsString();
+        if (status->isDirectory()) {
+          // 2022.10.22 12:44:49 2048.123456 MB /home/my.txt
+          logger.log(
+              formatOnBuffer(buffer, sizeof buffer, "d%s      directory %s",
+                  fileTime.c_str(), fileName));
+        } else if ((status->type() & (FsEntry::TF_LINK_DIR | FsEntry::TF_LINK))
+            != 0) {
+          logger.log(
+              formatOnBuffer(buffer, sizeof buffer, "%c%s %11.6f MB %s -> %s",
+                  status->typeAsChar(), fileTime.c_str(),
+                  status->fileSize() / 1E6, fileName,
+                  status->linkReference().c_str()));
+        } else {
+          logger.log(
+              formatOnBuffer(buffer, sizeof buffer, "%c%s %11.6f MB %s",
+                  status->typeAsChar(), fileTime.c_str(),
+                  status->fileSize() / 1E6, fileName));
+        }
       }
     }
   }
@@ -405,9 +432,13 @@ int fileKnife(int argc, char **argv, Logger *loggerExtern) {
       "Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG",
       "5");
   parser.add("--verbose", "-v", DT_BOOL, "Show more information");
+  parser.add("--examples", nullptr, DT_BOOL, "Show usage examples", "false");
   parser.addMode("mode", "What should be done:", "du,extrema,list,wc");
-  ArgumentParser listParser("list", logger, "Lists some files/directories");
+  ArgumentParser listParser("list", logger,
+      "Lists specified files/directories");
   parser.addSubParser("mode", "list", listParser);
+  listParser.add("--name-only", "-1", DT_BOOL,
+      "Show only the filename, no other attributes");
   addTraverserOptions(listParser);
   ArgumentParser extramaParser("extrema", logger,
       "Creates a statistic about the youngest/oldest/largest files");
@@ -439,7 +470,9 @@ int fileKnife(int argc, char **argv, Logger *loggerExtern) {
   } else {
     auto level = static_cast<LogLevel>(parser.asInt("log-level", LV_SUMMARY));
     logger->setLevel(level);
-    if (parser.isMode("mode", "list")) {
+    if (parser.asBool("examples")) {
+      examples();
+    } else if (parser.isMode("mode", "list")) {
       rc = list(parser, *logger);
     } else if (parser.isMode("mode", "du")) {
       rc = du(parser, *logger);

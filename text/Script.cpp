@@ -591,7 +591,7 @@ void Script::deleteStatement(bool testOnly) {
   bool excludeStart = false;
   bool includeEnd = false;
   const char *list[] = { "exclude-start", "include-end", nullptr };
-  int index;
+  int index = 0;
   LineBuffer *buffer = _parser.parseBuffer(testOnly, &_engine, false, true);
   auto type = _parser.parse();
   while (type != TT_EOF && (index = _parser.indexOfWords(list)) >= 0) {
@@ -1299,9 +1299,10 @@ void Script::log(bool testOnly) {
   getText(testOnly, contents);
   if (testOnly) {
     _parser.assertToken(TT_EOF);
-  }
-  for (auto line : contents) {
-    _logger.say(LV_INFO, line.c_str());
+  } else {
+    for (auto line : contents) {
+      _logger.say(LV_INFO, line.c_str());
+    }
   }
 }
 

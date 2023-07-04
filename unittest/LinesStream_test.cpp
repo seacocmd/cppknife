@@ -49,7 +49,46 @@ TEST(LinesStreamTest, stringLinesStream) {
   ASSERT_STREQ("Abcd", text.c_str());
   ASSERT_FALSE(stream.fetch(text));
   ASSERT_FALSE(stream.fetch(text));
+  delete logger;
+}
 
+TEST(LinesStreamTest, reset) {
+  FEW_TESTS;
+  auto logger = buildMemoryLogger(100, LV_DEBUG);
+  StringLinesStream stream("Abcd");
+  std::string text;
+  ASSERT_TRUE(stream.fetch(text));
+  ASSERT_STREQ("Abcd", text.c_str());
+  ASSERT_FALSE(stream.fetch(text));
+  ASSERT_FALSE(stream.fetch(text));
+  stream.reset();
+  ASSERT_TRUE(stream.fetch(text));
+  ASSERT_STREQ("Abcd", text.c_str());
+  ASSERT_FALSE(stream.fetch(text));
+  ASSERT_FALSE(stream.fetch(text));
+  delete logger;
+}
+
+TEST(LinesStreamTest, fileLinesStreamReset) {
+  FEW_TESTS;
+  auto logger = buildMemoryLogger(100, LV_DEBUG);
+  auto fnSource = temporaryFile("linesstream.txt", "unittest", true);
+  writeText(fnSource.c_str(), R"(1
+abc
+ABCDEFGH
+)");
+  FileLinesStream stream(fnSource.c_str(), *logger);
+  ASSERT_FALSE(stream.endOfFile());
+  std::string text;
+  ASSERT_TRUE(stream.fetch(text));
+  ASSERT_STREQ("1", text.c_str());
+  ASSERT_TRUE(stream.fetch(text));
+  ASSERT_STREQ("abc", text.c_str());
+  stream.reset();
+  ASSERT_TRUE(stream.fetch(text));
+  ASSERT_STREQ("1", text.c_str());
+  ASSERT_TRUE(stream.fetch(text));
+  ASSERT_STREQ("abc", text.c_str());
   delete logger;
 }
 

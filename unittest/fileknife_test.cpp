@@ -12,7 +12,7 @@
 using namespace cppknife;
 
 static bool onlyFewTests() {
-  return false;
+  return true;
 }
 #define FEW_TESTS() if (onlyFewTests()) return
 
@@ -72,7 +72,7 @@ bool matchInAnyLine(MemoryAppender *appender, const char *toFind) {
   return rc;
 }
 TEST(FileKnifeTest, list) {
-  FEW_TESTS();
+  //FEW_TESTS();
   auto base = initTree();
   const char *argv[] = { "-l5", "list", base.c_str() };
   auto logger = buildMemoryLogger(100, LV_FINE);
@@ -215,4 +215,16 @@ TEST(FileKnifeTest, wc) {
       startsWith(lines[0].c_str(), -1, (std::string("20 ") + base).c_str()));
   delete logger;
 }
-
+TEST(FileKnifeTest, listTypeNameOnlyMaxDepth) {
+  FEW_TESTS();
+  auto base = initTreeWc();
+  const char *argv[] = { "list", "--name-only", "--max-depth=0", "--type=d",
+      base.c_str() };
+  auto logger = buildMemoryLogger(100, LV_FINE);
+  fileKnife(sizeof argv / sizeof argv[0], const_cast<char**>(argv), logger);
+  auto appender = dynamic_cast<MemoryAppender*>(logger->findAppender("memory"));
+  auto lines = appender->lines();
+  ASSERT_EQ(4, lines.size());
+  ASSERT_STREQ(lines[0].c_str(), "/tmp/unittest/wc.test/dir1/dir2");
+  ASSERT_STREQ(lines[1].c_str(), "/tmp/unittest/wc.test/dir1");
+}

@@ -12,7 +12,7 @@
 using namespace cppknife;
 
 static bool onlyFewTests() {
-  return true;
+  return false;
 }
 #define FEW_TESTS() if (onlyFewTests()) return
 

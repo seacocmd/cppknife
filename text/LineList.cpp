@@ -7,6 +7,7 @@
  */
 
 #include "text.hpp"
+#include "../os/os.hpp"
 
 namespace cppknife {
 
@@ -14,20 +15,6 @@ BufferPosition::BufferPosition(size_t line, size_t column) :
     _lineIndex(line), _columnIndex(column) {
 }
 
-/**
- *   LineList &_parent;
- bool _isRegExpr;
- bool _ignoreCase;
- /// for simple strings: if <em>true</em> there are two meta characters: '^': begin of line '$': end of line
- bool _knowsMetaCharacters;
- /// for simple strings only: the pattern must lay at the begin of the line.
- bool _beginOfLine;
- /// for simple strings only: the pattern must lay at the end of the line.
- bool _endOfLine;
- std::regex *_regExpr;
- std::string _pattern;
- *
- */
 SearchExpression::SearchExpression(const char *pattern, bool isRegExpr,
     const char *flags) :
     _isRegExpr(isRegExpr), _ignoreCase(false), _knowsMetaCharacters(false), _beginOfLine(
@@ -248,7 +235,7 @@ std::vector<std::string>& LineList::copyRange(std::vector<std::string> &target,
   return target;
 }
 void LineList::deleteRange(BufferPosition start, BufferPosition end) {
-  size_t length;
+  size_t length = 0;
   if (start._lineIndex > end._lineIndex
       || (start._lineIndex == end._lineIndex
           && start._columnIndex > end._columnIndex)) {
@@ -663,20 +650,24 @@ bool LineList::readFromFile(const char *filename, bool stripNewline) {
   LineReader reader(nullptr, _logger, stripNewline);
   reader.openFile(filename);
 
-  FILE *fp = fopen(filename, "r");
-  bool rc = false;
-  char buffer[64000];
+  LineAgent lineAgent(&_logger);
+  lineAgent.openFile(filename);
+  auto lineCount = lineAgent.estimateLineCount();
+  if (lineCount > 0) {
+    _lines.reserve(lineCount * 3 / 2);
+  }
+  bool rc = true;
   size_t length = 0;
-  if (fp != nullptr) {
-    while (fgets(buffer, sizeof buffer, fp) != nullptr) {
-      if (stripNewline && (length = strlen(buffer)) > 0
-          && buffer[length - 1] == '\n') {
-        buffer[length - 1] = '\0';
-      }
-      _lines.push_back(buffer);
+  const char *line;
+  while ((line = lineAgent.nextLine(length)) != nullptr) {
+    if (lineAgent.hasBinaryData()) {
+      rc = false;
+      break;
     }
-    rc = true;
-    fclose(fp);
+    if (stripNewline && length > 0 && line[length - 1] == '\n') {
+      length--;
+    }
+    _lines.push_back(std::string(line, length));
   }
   return rc;
 }

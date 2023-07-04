@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     //filter = "ConfigurationTest.*";
     //filter = "FileTest.*";
     //filter = "FileToolTest.*";
-    filter = "ScriptTest.*";
+    //filter = "ScriptTest.*";
     //filter = "JsonReaderTest.*";
     //filter = "LinesStreamTest.*";
     //filter = "LineReaderTest.*";

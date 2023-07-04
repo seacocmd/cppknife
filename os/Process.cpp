@@ -32,7 +32,7 @@ Process::~Process() {
 void Process::readIntoFile(int fhInput, const char *fileOutput) {
   char buffer[0x10000];
   std::string rc;
-  ssize_t bytes;
+  ssize_t bytes = 0;
   FILE *fpOut = fopen(fileOutput, "w");
   while ((bytes = read(fhInput, buffer, sizeof buffer - 1)) > 0) {
     //buffer[bytes] = '\0';
@@ -77,7 +77,7 @@ std::string Process::readIntoString(int fhInput) {
 
 void Process::childProc(const char *argv[], int pipes[], const char *inputFile,
     const char *inputString) {
-  int filein;
+  int filein = 0;
 
   printf("childProc(): %s\n", argv[0]);
   printf("childProc(): dup2-1 %d %d\n", pipes[1], pipes[0]);
@@ -132,7 +132,7 @@ void Process::parentProc(const char *argv[], int pipes[],
 int Process::executeDeprecated(const char *argv[], const char *inputString,
     const char *inputFile, std::string *outputString, const char *outputFile) {
   int pipes[2];
-  int pid;
+  int pid = 0;
   if (pipe(pipes) == -1) {
     _logger->say(LV_ERROR, "execute(): pipe failed");
   }
@@ -156,7 +156,7 @@ int Process::execute(const char *argv[], const char *inputString,
   int rc = 0;
   int pipes1[2];
   int pipes2[2];
-  int pid;
+  int pid = 0;
   if (pipe(pipes1) < 0) {
     auto errNo = errno;
     _logger->say(LV_ERROR,
@@ -236,7 +236,7 @@ int Process::executeAndPipe(const char **argv1, const char **argv2,
     const char *inputFile, const char *inputString, std::string *outputString,
     const char *outputFile) {
   int pipes[2];
-  int pid;
+  int pid = 0;
 
   if (pipe(pipes) == -1) {
     _logger->say(LV_ERROR, "pipe failed");
@@ -260,8 +260,8 @@ int Process::executeAndPipe(const char **argv1, const char **argv2,
 int Process::executeAndPipeDeprecated(const char **argv1, const char **argv2,
     const char *input, std::string *outputString, const char *outputFile) {
   int rc = 0;
-  pid_t pid1;
-  pid_t pid2;
+  pid_t pid1 = 0;
+  pid_t pid2 = 0;
   int fd1[2];
   int fd2[2];
 // cat | grep | cut

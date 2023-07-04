@@ -19,8 +19,8 @@ TEST(SearchEngineTest, basic) {
   auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto fnSource = temporaryFile("example.script", "unittest", true);
   auto fnTarget = temporaryFile("data.out", "unittest", true);
-  std::string script(R"""(copy "Hello" !_main
-store !_main "###" 
+  std::string script(R"""(copy "Hello" ~_main
+store ~_main "###" 
 )""");
   replaceString(script, "###", fnTarget, 1);
   writeText(fnSource.c_str(), script.c_str());
@@ -39,11 +39,11 @@ TEST(SearchEngineTest, copyHereDocument) {
   auto fnSource = temporaryFile("example.script", "unittest", true);
   auto fnTarget = temporaryFile("data.out", "unittest", true);
   std::string script(
-      R"""(copy <<EOS !_main
+      R"""(copy <<EOS ~_main
 line1
 line2
 EOS
-store !_main "###" 
+store ~_main "###" 
 )""");
   replaceString(script, "###", fnTarget, 1);
   writeText(fnSource.c_str(), script.c_str());
@@ -74,7 +74,7 @@ TEST(SearchEngineTest, ifStatement) {
   auto fnSource = temporaryFile("example.script", "unittest", true);
   auto fnTarget = temporaryFile("data.out", "unittest", true);
   std::string script(
-      R"""(copy <<EOS !_main
+      R"""(copy <<EOS ~_main
 Hello world!
 EOS
 if s/Hello/
@@ -97,11 +97,11 @@ TEST(SearchEngineTest, numericAssignment) {
   auto fnSource = temporaryFile("example.script", "unittest", true);
   auto fnTarget = temporaryFile("data.out", "unittest", true);
   std::string script(
-      R"""(!(no) := 3
-!(no) := !(no) + 1 - 2
-log! "No: !(no) expected: 2"
-!(no) := !(no) * 6 / 3 % 3
-log! "No: !(no) expected: 1"
+      R"""(no := 3
+no = $(no) + 1 - 2
+log! "No: $(no) expected: 2"
+no = $(no) * 6 / 3 % 3
+log! "No: $(no) expected: 1"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -118,16 +118,16 @@ TEST(SearchEngineTest, whileStatement) {
   auto fnTarget = temporaryFile("data.out", "unittest", true);
   //auto fnTrace = temporaryFile("trace.log", nullptr, true);
   std::string script(
-      R"""(copy <<EOS !_main
+      R"""(copy <<EOS ~_main
 one man
 two men
 EOS
-!(count) := 0
+count = 0
 while r/m[ae]n/
-  !(count) := !(count) + 1
-  log! "loop !(count)"
+  count = $(count) + 1
+  log! "loop $(count)"
 endwhile
-log! "count: !(count) expected: 2"
+log! "count: $(count) expected: 2"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -143,11 +143,11 @@ TEST(SearchEngineTest, predefinedVariables) {
   auto fnScript = temporaryFile("example.script", "unittest", true);
   auto fnData = temporaryFile("data.inp", "unittest", true);
   std::string script(
-      R"""(load !_main "###"
+      R"""(load ~_main "###"
 if r/m[ae]n/
-  log! "file: !(_file) line: !(_line) lines: !(_lines)"
-  log! "hit: !(_hit)"
-  log! "date: !(_date) !(_time)"
+  log! "file: $(__file) line: $(__line) lines: $(__lines)"
+  log! "hit: $(__hit)"
+  log! "date: $(__date) $(__time)"
 else
   log "unexpected"
 endif
@@ -172,17 +172,17 @@ TEST(SearchEngineTest, move) {
   auto fnScript = temporaryFile("example.script", "unittest", true);
   auto fnData = temporaryFile("data.inp", "unittest", true);
   std::string script(
-      R"""(load !_main "###"
+      R"""(load ~_main "###"
 move s/e3/
-log! "3 expected: !(_start) !(_hit) !(_position)"
+log! "3 expected: $(__start) $(__hit) $(__position)"
 move 1:3
-log! "expected: 1:3 !(_position)"
+log! "expected: 1:3 $(__position)"
 move +1:-1
-log! "expected: 2:2 !(_position)"
+log! "expected: 2:2 $(__position)"
 move +1
-log! "expected: 3:2 !(_position)"
+log! "expected: 3:2 $(__position)"
 move 0:+99
-log! "expected: 3:6 !(_position) 1:1 !(_mark)"
+log! "expected: 3:6 $(__position) 1:1 $(__mark)"
 )""");
   replaceString(script, "###", fnData, 1);
   writeText(fnScript.c_str(), script.c_str());
@@ -205,18 +205,18 @@ TEST(SearchEngineTest, mark) {
   auto fnScript = temporaryFile("example.script", "unittest", true);
   auto fnData = temporaryFile("data.inp", "unittest", true);
   std::string script(
-      R"""(load !_main "###"
-mark save !(pos1)
+      R"""(load ~_main "###"
+mark save $(pos1)
 move 2:3
-log! "expected: 1:1 2:3 !(_mark) !(_position)"
+log! "expected: 1:1 2:3 $(__mark) $(__position)"
 mark set
-log! "expected: 2:3 2:3 !(_mark) !(_position)"
+log! "expected: 2:3 2:3 $(__mark) $(__position)"
 move +1:-1
-log! "expected: 3:2 !(_position)"
+log! "expected: 3:2 $(__position)"
 mark exchange
-log! "expected: 3:2 2:3 !(_mark) !(_position)"
-mark restore !(pos1)
-log! "expected: 1:1 !(_mark)"
+log! "expected: 3:2 2:3 $(__mark) $(__position)"
+mark restore $(pos1)
+log! "expected: 1:1 $(__mark)"
 )""");
   replaceString(script, "###", fnData, 1);
   writeText(fnScript.c_str(), script.c_str());
@@ -240,7 +240,7 @@ TEST(SearchEngineTest, insert) {
   auto fnScript = temporaryFile("example.script", "unittest", true);
   auto fnData = temporaryFile("data.inp", "unittest", true);
   std::string script(
-      R"""(load !_main "###"
+      R"""(load ~_main "###"
 insert 2:5 "XXX"
 move 1:1
 if s/LineXXX2/
@@ -248,7 +248,7 @@ if s/LineXXX2/
 else
   log "wrong"
 endif
-log !_main
+log ~_main
 )""");
   replaceString(script, "###", fnData, 1);
   writeText(fnScript.c_str(), script.c_str());
@@ -273,13 +273,13 @@ TEST(SearchEngineTest, deleteStatement) {
   auto fnData = temporaryFile("data.inp", "unittest", true);
   auto fnOut = replaceString(fnData, ".inp", ".out");
   std::string script(
-      R"""(load !_main "#1"
+      R"""(load ~_main "#1"
 move 2:2
 mark set 
 move s/abc/
-delete! !(_mark) !(_start)
+delete! $(__mark) $(__start)
 delete 1:0 2:0
-store !_main "#2"
+store ~_main "#2"
 )""");
   replaceString(script, "#1", fnData, 1);
   replaceString(script, "#2", fnOut, 1);
@@ -309,11 +309,11 @@ TEST(SearchEngineTest, replace) {
   auto fnData = temporaryFile("data.inp", "unittest", true);
   auto fnOut = replaceString(fnData, ".inp", ".out");
   std::string script(
-      R"""(load !_main "#1"
-replace r/line(.)/i "Y!1" if s/4/
-replace r/line(.)/i "X!1" 2:1 3:1
-replace r/line(.)/iL "l!1"  
-store !_main "#2"
+      R"""(load ~_main "#1"
+replace r/line(.)/i "Y$1" if s/4/
+replace r/line(.)/i "X$1" 2:1 3:1
+replace r/line(.)/iL "l$1"  
+store ~_main "#2"
 )""");
   replaceString(script, "#1", fnData, 1);
   replaceString(script, "#2", fnOut, 1);
@@ -342,8 +342,8 @@ TEST(SearchEngineTest, conditionNumeric) {
   auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto fnScript = temporaryFile("example.script", "unittest", true);
   std::string script(
-      R"""(!(int) := 5
-if !(int) > 5
+      R"""(int := 5
+if $(int) > 5
   stop ">"
 else
   log "> ok"
@@ -380,7 +380,7 @@ endif
   writeText(fnScript.c_str(), script.c_str());
   engine.loadScript("example", fnScript.c_str());
   engine.selectScript("example");
-  ASSERT_TRUE(engine.testAndRun());
+  ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }
 TEST(SearchEngineTest, conditionStringCondition) {
@@ -388,8 +388,8 @@ TEST(SearchEngineTest, conditionStringCondition) {
   auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto fnScript = temporaryFile("example.script", "unittest", true);
   std::string script(
-      R"""(!(string) = "B"
-if "!(string)" -gt "B"
+      R"""(string = "B"
+if!! "$(string)" -gt "B"
   stop "-gt"
 else
   log "-gt ok"
@@ -426,7 +426,7 @@ endif
   writeText(fnScript.c_str(), script.c_str());
   engine.loadScript("example", fnScript.c_str());
   engine.selectScript("example");
-  ASSERT_TRUE(engine.testAndRun());
+  ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }
 
@@ -435,10 +435,10 @@ TEST(SearchEngineTest, leave) {
   auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto fnScript = temporaryFile("example.script", "unittest", true);
   std::string script(
-      R"""(!(count) := 0
+      R"""(count := 0
 while 1
-  !(count) := !(count) + 1
-  if !(count) > 5
+  count := $(count) + 1
+  if!! $(count) > 5
     leave 2
     stop "leave"
   endif
@@ -449,6 +449,6 @@ endwhile
   writeText(fnScript.c_str(), script.c_str());
   engine.loadScript("example", fnScript.c_str());
   engine.selectScript("example");
-  ASSERT_TRUE(engine.testAndRun());
+  ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }

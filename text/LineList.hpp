@@ -78,6 +78,13 @@ protected:
   std::string _pattern;
   std::string _flags;
 public:
+  /**
+   * Constructor.
+   * @param pattern The pattern to search as string.
+   * @param isRegExpr <em>true</em>: the pattern is a regular expression. <em>false</em>: the pattern is a simple string.
+   * @param flags A string with flags: 'i': ignore case 'M': known meta character (for simple strings)
+   *    'B': search backwards 'L': search in one line only
+   */
   SearchExpression(const char *pattern = nullptr, bool isRegExpr = false,
       const char *flags = nullptr);
   ~SearchExpression();
@@ -125,6 +132,7 @@ public:
    * @param pattern The pattern to search.
    * @param isRegExpr <em>true</em>: the pattern is a regular expression.
    * @param flags A string with flags: 'i': ignore case 'M': known meta character (for simple strings)
+   *    'B': search backwards 'L': search in one line only
    */
   void set(const char *pattern, bool isRegExpr, const char *flags = nullptr);
 };
@@ -344,7 +352,7 @@ public:
    * Replaces a pattern by a replacement.
    * @param searchExpression Defines the search pattern.
    * @param replacement The replacement string. May contain back references.
-   * @param count The maximal count of replacements in each processed line. If <em>-1</em> not limit is given.
+   * @param count The maximal count of replacements in each processed line. If <em>-1</em> no limit is given.
    * @param start <em>nullptr</em> or the begin of the range to process.
    * @param end <em>nullptr</em> or the end of the range to process.
    * @param filter <em>nullptr></em> or a search expression: A hit is found only if that search expression

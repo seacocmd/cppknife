@@ -84,7 +84,7 @@ bool Parser::hasWaitingWord(const char *word) {
 }
 int Parser::indexOfWords(const char *words[]) {
   int rc = -1;
-  int index;
+  int index = 0;
   const std::string &token = _token._string;
   while (words[index] != nullptr) {
     if (token == words[index]) {

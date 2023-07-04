@@ -46,7 +46,7 @@ void addTraverserOptions(ArgumentParser &parser) {
  * @param filter: OUT: The filter to populate.
  */
 void populateFilter(const ArgumentParser &parser, DirEntryFilter &filter) {
-  auto types = splitCString(parser.asString("types", ""), ",");
+  auto types = splitCString(parser.asString("type", ""), ",");
   if (types[0].empty()) {
     filter._types = FsEntry::TC_ALL;
   } else {
@@ -77,12 +77,8 @@ void populateFilter(const ArgumentParser &parser, DirEntryFilter &filter) {
       filter._types = static_cast<FsEntry::Type_t>(typeMap);
     }
   }
-  /*
-   bool _allDirectories;
-   *
-   */
   filter._minDepth = parser.asInt("min-depth", 0);
-  filter._maxDepth = parser.asInt("max-depth", 99);
+  filter._maxDepth = parser.asInt("max-depth", 255);
   for (size_t ix = 0; ix < parser.countValuesOf("size"); ix++) {
     auto value = parser.asSize("size", 0, ix);
     auto value2 = parser.asString("size", "0", ix);

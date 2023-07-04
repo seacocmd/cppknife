@@ -151,7 +151,7 @@ std::string SqlDriver::replacePositionalArguments(const char *sql,
   char *endOfBuffer = buffer;
   int ixParameter = -1;
   do {
-    char cc;
+    char cc = 0;
     while ((cc = *ptr) != '\'' && cc != parameterChar && cc != '\0') {
       ptr++;
     }

@@ -30,7 +30,7 @@ set(GEO_SOURCES geo/GeoException.cpp geo/GeoHelper.cpp geo/GpsTranslator.cpp geo
 set(GEO_UNITTEST_SOURCES unittest/GeoException_test.cpp unittest/GeoHelper_test.cpp unittest/GpsTranslator_test.cpp unittest/Point2D_test.cpp
 	unittest/Rectangle_test.cpp unittest/Shape_test.cpp)
 
-set(OS_SOURCES os/File.cpp os/FileDb.cpp os/FileTool.cpp os/LineAgent.cpp os/OsException.cpp os/Path.cpp os/Process.cpp
+set(OS_SOURCES os/File.cpp os/FileTool.cpp os/LineAgent.cpp os/OsException.cpp os/Path.cpp os/Process.cpp
 	os/Traverser.cpp)
 
 set(OS_UNITTEST_SOURCES unittest/File_test.cpp unittest/FileDb_test.cpp unittest/FileTool_test.cpp unittest/LineAgent_test.cpp unittest/OsException_test.cpp unittest/Path_test.cpp unittest/Process_test.cpp
@@ -85,7 +85,7 @@ set_target_properties(cppknifebasic cppknifecore cppknifedb cppknifetext cppknif
 find_package(GTest REQUIRED)
 
 add_executable(fileknife tools/fileknife_main.cpp tools/fileknife.cpp 
-	unittest/google_test.cpp)
+	unittest/google_test.cpp unittest/fileknife_test.cpp)
 target_link_libraries(fileknife
 	cppknifebasic cppknifecore cppknifetext cppknifeos cppknifetools
 	unittestbasic unittestcore unittesttext unittestos
@@ -101,7 +101,7 @@ target_link_libraries(geoknife
 	gdal)
 
 add_executable(textknife tools/textknife_main.cpp tools/textknife.cpp 
-	unittest/google_test.cpp)
+	unittest/google_test.cpp unittest/textknife_test.cpp)
 target_link_libraries(textknife
 	cppknifebasic cppknifecore cppknifetext cppknifeos cppknifetools
 	unittestbasic unittestcore unittesttext unittestos

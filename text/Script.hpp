@@ -30,24 +30,6 @@ public:
   }
 };
 
-/// Stores an amount of allowed parameter elements.
-/**
- * Stores an amount of allowed parameter elements.
- */
-class ParameterSet {
-protected:
-  std::map<std::string, ParameterInfo*> _parameters;
-public:
-  ParameterSet();
-  ParameterSet(ParameterInfo *parameter);
-  ParameterSet(ParameterInfo *parameters[]);
-  ~ParameterSet();
-public:
-  void add(ParameterInfo &parameter);
-  int asInt(const char *name, int defaultValue = -1) const;
-  ParameterInfo* find(const char *name) const;
-  std::string populate(const char *definition, std::string &key);
-};
 /// Stores the two block end line numbers from the if statement.
 /**
  * Stores the two block end line numbers from the if statement.
@@ -169,10 +151,12 @@ public:
    * @param engine The assigned search engine.
    * @param mustBePresent <em>true</em>: if there is not a buffer name an error occurs.
    * @param bufferMustExist <em>true</em>: if the buffer does not exist an error occurs.
+   * @param returnNullIfMissing <em>true</em>: if the buffer is not present then <em>nullptr</em> will be returned.
    * @return <em>nullptr</em>: The buffer does not exists. Otherwise: the buffer.
    */
   LineBuffer* parseBuffer(bool testOnly, SearchEngine *engine,
-      bool mustBePresent, bool bufferMustExist);
+      bool mustBePresent, bool bufferMustExist,
+      bool returnNullIfMissing = false);
   /**
    * Parses an integer if that exists.
    * @param testOnly testOnly <em>true</em>: the statement should be tested not executed.
@@ -293,8 +277,9 @@ public:
   void check();
   /**
    * Handles the "call" statement.
+   * @return The exit code: 0: success.
    */
-  void call(bool testOnly);
+  int call(bool testOnly);
   /**
    * Handles the "copy" statement.
    */
@@ -385,11 +370,11 @@ public:
    */
   void getText(bool testOnly, std::vector<std::string> &contents);
   /**
-   * Tests whether a parameter definition is at the current parser position.
-   * @param parameterSet IN/OUT: IN: The allowed parameters Out: the value of the parameter.
-   * @return Empty string if there is no parameter definition. Otherwise the name of the parameter.
+   * Returns the value of the variable (local or global).
+   * @param name the variable name: $(&lt;id>) or &lt;id>
+   * @return The value of the variable. "": the variable does not exist.
    */
-  std::string hasParameter(ParameterSet &parameterSet);
+  std::string getVariable(const char *name) const;
   /**
    * Handles the if else endif statements.
    * @param testOnly testOnly <em>true</em>: the statement should be tested not executed.
@@ -443,8 +428,9 @@ public:
   /**
    * Tests or executes one statement.
    * @param testOnly <em>true</em>: the statement should be tested not executed.
+   * @return The return code of the last "call" statement: 0: success.
    */
-  void oneStatement(bool testOnly);
+  int oneStatement(bool testOnly);
   /**
    * Returns the precedence of an operator.
    * @param theOperator The operator to inspect.
@@ -458,8 +444,9 @@ public:
   void replace(bool testOnly);
   /**
    * Runs the script.
+   * @return The exit code of the script: 0: success
    */
-  void run();
+  int run();
   /**
    * Handles the "script" statement.
    */

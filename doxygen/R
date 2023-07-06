@@ -6,3 +6,4 @@ for dir in *; do
     cd ..
   fi
 done
+cp -va ../doc ../../seapluspro.github.io

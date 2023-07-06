@@ -39,69 +39,6 @@ const std::vector<std::string> SearchParser::_keywords = { "assert", "call",
     "insert", "leave", "load", "log", "mark", "move", "range", "replace",
     "script", "select", "stop", "store", "while", };
 
-ParameterSet::ParameterSet() :
-    _parameters() {
-}
-ParameterSet::ParameterSet(ParameterInfo *parameter) :
-    _parameters() {
-  add(*parameter);
-}
-ParameterSet::ParameterSet(ParameterInfo *parameters[]) :
-    _parameters() {
-  for (auto ix = 0; parameters[ix] != nullptr; ix++) {
-    add(*parameters[ix]);
-  }
-}
-ParameterSet::~ParameterSet() {
-  for (auto [name, item] : _parameters) {
-    delete item;
-  }
-  _parameters.clear();
-}
-void ParameterSet::add(ParameterInfo &parameter) {
-  _parameters[parameter._name] = &parameter;
-}
-
-int ParameterSet::asInt(const char *name, int defaultValue) const {
-  auto parameter = find(name);
-  int rc = defaultValue;
-  if (parameter != nullptr) {
-    rc = ::atoi(parameter->_value.c_str());
-  }
-  return rc;
-}
-ParameterInfo* ParameterSet::find(const char *name) const {
-  std::string key(name);
-  ParameterInfo *rc = nullptr;
-  auto it = _parameters.find(name);
-  if (it != _parameters.end()) {
-    rc = it->second;
-  }
-  return rc;
-}
-std::string ParameterSet::populate(const char *definition, std::string &key) {
-  std::string rc;
-  auto parts = splitCString(definition, "=", 2);
-  auto parameter = find(parts[0].c_str());
-  if (parameter == nullptr) {
-    rc = formatCString("unknown parameter: %s", parts[0].c_str());
-  } else {
-    key = parts[0];
-    parameter->_value = parts[1];
-    switch (parameter->_dataType) {
-    case ParameterInfo::DT_INT:
-      if (!isInt(parts[1].c_str())) {
-        rc = formatCString(
-            "wrong data type for parameter %s (int expected): %s",
-            parts[0].c_str(), parts[1].c_str());
-      }
-      break;
-    default:
-      break;
-    }
-  }
-  return rc;
-}
 
 SearchParser::SearchParser(Logger &logger) :
     Parser(logger) {
@@ -169,7 +106,7 @@ std::string SearchParser::nameOfBuffer(const std::string &name) {
   return rc;
 }
 LineBuffer* SearchParser::parseBuffer(bool testOnly, SearchEngine *engine,
-    bool mustBePresent, bool bufferMustExist) {
+    bool mustBePresent, bool bufferMustExist, bool returnNullIfMissing) {
   LineBuffer *rc = nullptr;
   auto type = parseSpecial(&SearchParser::_regexBuffer, 1);
   if (type == 1) {
@@ -177,10 +114,12 @@ LineBuffer* SearchParser::parseBuffer(bool testOnly, SearchEngine *engine,
       rc = asBufferName(*engine, bufferMustExist);
     }
   } else {
-    if (mustBePresent && !testOnly) {
-      throw ParserError(std::string("missing buffer name"), *this);
-    } else {
-      rc = engine->getBuffer();
+    if (!returnNullIfMissing) {
+      if (mustBePresent && !testOnly) {
+        throw ParserError(std::string("missing buffer name"), *this);
+      } else {
+        rc = engine->getBuffer();
+      }
     }
   }
   return rc;
@@ -357,13 +296,13 @@ void Script::assignment(bool testOnly) {
     if (conditionalAssignment && exists) {
       // do nothing
     } else if (exists && append) {
-      _variables[name] += value;
+      setVariable(name, getVariable(name.c_str()) + value);
     } else {
       setVariable(name, value);
     }
     if (!testOnly && _engine._trace != nullptr) {
-      fprintf(_engine._trace, "  %s -> %.80s\n", name.c_str(),
-          _variables[name].c_str());
+      auto value = getVariable(name.c_str());
+      fprintf(_engine._trace, "  %s -> %.80s\n", name.c_str(), value.c_str());
     }
   }
 }
@@ -448,24 +387,36 @@ void Script::assertStatement(bool testOnly) {
     bool again = true;
     const char *name = nullptr;
     do {
-      type = _parser.parseSpecial(&SearchParser::_regexVariable,
-          SearchParser::TT_VARIABLE, &SearchParser::_regexBuffer,
+      type = _parser.parseSpecial(&Parser::_regexId, TT_IDENTIFIER,
+          &SearchParser::_regexBuffer,
           SearchParser::TT_BUFFER);
-      if (type == SearchParser::TT_VARIABLE) {
-        variableAsString(_parser.tokenAsString(), false);
-      } else if (type == SearchParser::TT_BUFFER) {
+      switch (type) {
+      case TT_IDENTIFIER:
+        if (!variableExists(_parser.tokenAsCString())) {
+          throw ParserError(
+              formatCString("missing variable: %s", _parser.tokenAsCString()),
+              _parser);
+        }
+        break;
+      case SearchParser::TT_BUFFER:
         if (getBuffer(name = _parser.tokenAsCString()) == nullptr) {
           throw ParserError(formatCString("missing buffer: %s", name), _parser);
         }
-      } else {
+        break;
+      case TT_UNKNOWN:
         again = false;
+        break;
       }
     } while (again);
     _parser.assertToken(TT_EOF);
   }
 }
 
-void Script::call(bool testOnly) {
+int Script::call(bool testOnly) {
+  int rc = 0;
+  if (!testOnly) {
+    rc = 0;
+  }
   Script *script = nullptr;
   std::string scriptName;
   if (_parser.parseSpecial(&Parser::_regexId, TT_IDENTIFIER) == TT_IDENTIFIER) {
@@ -494,7 +445,7 @@ void Script::call(bool testOnly) {
       }
     }
   }
-  auto parameters = _parser.parseBuffer(testOnly, &_engine, false, true);
+  auto parameters = _parser.parseBuffer(testOnly, &_engine, false, true, true);
   std::string define;
   std::vector<std::string> parts;
   while (!(define = _parser.parseString(testOnly, "parameter", nullptr, false)).empty()) {
@@ -515,24 +466,30 @@ void Script::call(bool testOnly) {
     if (parameters != nullptr) {
       lineNo++;
       for (auto line : parameters->lines()) {
-        auto parts = splitCString(line.c_str(), "=", 2);
-        if (parts.size() != 2) {
-          throw ParserError(
-              formatCString("parameter definition in line %d misses a '=': %s",
-                  lineNo, line.c_str()), _parser);
+        if (!line.empty()) {
+          auto parts = splitCString(line.c_str(), "=", 2);
+          if (parts.size() != 2) {
+            throw ParserError(
+                formatCString(
+                    "parameter definition in line %d misses a '=': %s", lineNo,
+                    line.c_str()), _parser);
+          }
+          trimString(parts[0]);
+          script->setVariable(parts[0], parts[1]);
         }
-        trimString(parts[0]);
-        script->setVariable(parts[0], parts[1]);
       }
     }
     _engine.pushScript(script, _indexNextStatement);
-    _engine.testAndRun();
+    rc = _engine.testAndRun();
     _engine.popScript();
   }
+  return rc;
 }
 
 void Script::check() {
   if (!_alreadyTested) {
+    // Note: global variables will be saved outside.
+    auto localSafe = _variables;
     while (_indexNextStatement < _lines.size()) {
       oneStatement(true);
     }
@@ -541,6 +498,7 @@ void Script::check() {
           formatCString("missing end of block starting in line %d",
               _openBlocks.back()->_lineIndex), _parser);
     }
+    _variables = localSafe;
     _alreadyTested = true;
   }
 }
@@ -549,7 +507,7 @@ void Script::copy(bool testOnly) {
   std::vector<std::string> contents2;
   std::vector<std::string> &contents = contents2;
   LineBuffer *buffer = nullptr;
-  auto fromMode = _parser.hasWaitingWord("from");
+  auto fromMode = _parser.hasWaitingWord("from") == 1;
   if (!fromMode) {
     getText(testOnly, contents);
     buffer = _parser.parseBuffer(testOnly, &_engine, false, false);
@@ -557,24 +515,24 @@ void Script::copy(bool testOnly) {
     auto source = _parser.parseBuffer(testOnly, &_engine, true, true);
     BufferPosition start(0, 1);
     BufferPosition end(END_OF_FILE, 0);
-    if (_parser.hasWaitingWord("starting")) {
+    if (_parser.hasWaitingWord("starting") == 1) {
       _parser.parsePosition(testOnly, "start", true, start);
     }
-    bool including = _parser.hasWaitingWord("including");
-    if (including || _parser.hasWaitingWord("excluding")) {
+    int endMode = _parser.hasWaitingWord("including", "excluding");
+    if (endMode > 0) {
       _parser.parsePosition(testOnly, "end", true, end);
     }
-    bool hasTo = _parser.hasWaitingWord("to");
+    bool hasTo = _parser.hasWaitingWord("to") == 1;
     if (hasTo) {
       buffer = _parser.parseBuffer(testOnly, &_engine, false, false);
     } else {
       buffer = _engine.getBuffer();
     }
     if (!testOnly) {
-      source->copyRange(contents2, start, end, !including);
+      source->copyRange(contents2, start, end, endMode == 2);
     }
   }
-  auto append = _parser.hasWaitingWord("append");
+  auto append = _parser.hasWaitingWord("append") == 1;
   if (testOnly) {
     _parser.assertToken(TT_EOF);
   } else {
@@ -583,35 +541,39 @@ void Script::copy(bool testOnly) {
 }
 
 void Script::deleteStatement(bool testOnly) {
-// delete <start> <end> [buffer] [excluding-start] [including-end]
+// delete (starting | behind) <start> (excluding | including) <end> in [buffer]
   BufferPosition start;
   BufferPosition end;
-  _parser.parsePosition(testOnly, "start-position", true, start);
-  _parser.parsePosition(testOnly, "end-position", true, end);
-  bool excludeStart = false;
-  bool includeEnd = false;
-  const char *list[] = { "exclude-start", "include-end", nullptr };
-  int index = 0;
-  LineBuffer *buffer = _parser.parseBuffer(testOnly, &_engine, false, true);
-  auto type = _parser.parse();
-  while (type != TT_EOF && (index = _parser.indexOfWords(list)) >= 0) {
-    if (index == -1) {
-      throw ParserError(
-          formatCString("option exclude-start or include-end expected not %s",
-              _parser.tokenAsCString()), _parser);
-    }
-    if (index == 0) {
-      excludeStart = true;
-    } else {
-      includeEnd = true;
-    }
-    type = _parser.parse();
+  int startMode = _parser.hasWaitingWord("from", "behind");
+  if (startMode == 0) {
+    throw ParserError("missing 'from' or 'behind'", _parser);
   }
+  _parser.parsePosition(testOnly, "start-position", true, start);
+  int count = 0;
+  int endMode = _parser.hasWaitingWord("excluding", "including", "count");
+  switch (endMode) {
+  case 0:
+    throw ParserError("missing 'excluding' or 'including' or 'count'", _parser);
+  case 1:
+  case 2:
+    _parser.parsePosition(testOnly, "end-position", true, end);
+    break;
+  case 3:
+    count = _parser.parseInt(testOnly, "count", true);
+    break;
+  }
+  if (_parser.hasWaitingWord("in") == 0) {
+    throw ParserError("missing 'in'", _parser);
+  }
+  auto buffer = _parser.parseBuffer(testOnly, &_engine, true, true);
   if (!testOnly) {
-    if (excludeStart) {
+    if (startMode == 2) {
       start._columnIndex++;
     }
-    if (includeEnd && end._columnIndex > 0) {
+    if (endMode == 3) {
+      end._lineIndex = start._lineIndex;
+      end._columnIndex = start._columnIndex + count;
+    } else if (endMode == 2 && end._columnIndex > 0) {
       end._columnIndex--;
     }
     buffer->deleteRange(start, end);
@@ -670,7 +632,7 @@ void Script::error(const char *message) {
 void Script::exitStatement(bool testOnly) {
 // exit [<exitcode>] [global]
   auto exitCode = _parser.parseInt("message", 0, true);
-  auto isGlobal = _parser.hasWaitingWord("global");
+  auto isGlobal = _parser.hasWaitingWord("global") == 1;
   if (testOnly) {
     _parser.assertToken(TT_EOF);
   } else {
@@ -717,66 +679,6 @@ size_t Script::findEndOfBlock(int line, int idStatement, int idEnd1, int idEnd2,
   return rc;
 }
 
-void Script::getText(bool testOnly, std::vector<std::string> &contents) {
-  if (_parser.parseSpecial(&SearchParser::_regexHereDocument, 1) == 1) {
-    auto marker = _parser.tokenAsString().substr(2);
-    bool doInterpolate = marker[0] != '\'';
-    if (!doInterpolate) {
-      marker = marker.substr(1, marker.size() - 2);
-    }
-    bool found = false;
-    size_t ix = _indexNextStatement;
-    while (ix < _lines.size()) {
-      auto line = _lines[ix++];
-      if (line == marker) {
-        found = true;
-        _indexNextStatement = ix;
-        break;
-      }
-      if (!testOnly) {
-        if (doInterpolate) {
-          interpolate(testOnly, &line);
-        }
-        contents.push_back(line);
-      }
-    }
-    if (!found) {
-      throw ParserError(formatCString("missing end marker %s", marker.c_str()),
-          _parser);
-    }
-  } else {
-    auto type = _parser.parseSpecial();
-    switch (static_cast<int>(type)) {
-    case SearchParser::TT_STRING2: {
-      if (!testOnly) {
-        contents = splitString(_parser.tokenAsInterpolatedString(),
-            Parser::_regexNewline);
-      }
-      break;
-    }
-    case SearchParser::TT_BUFFER:
-      if (!testOnly) {
-        auto buffer = _parser.asBufferName(_engine);
-        if (buffer == nullptr) {
-          error(
-              formatCString("unknown buffer: %s", _parser.tokenAsCString()).c_str());
-        }
-        if (buffer != nullptr) {
-          contents = buffer->constLines();
-        }
-      }
-      break;
-    case SearchParser::TT_BUFFER_EXPRESSION:
-    default:
-      throw ParserError(
-          formatCString(
-              "unexpected data: '%s' Expected buffer, buffer-expression or string",
-              _parser.tokenAsCString()), _parser);
-
-    }
-  }
-}
-
 bool Script::getCondition(bool testOnly) {
   bool rc = false;
   auto type = _parser.parseSpecial(&SearchParser::_regexPattern,
@@ -795,7 +697,7 @@ bool Script::getCondition(bool testOnly) {
       _parser.assertToken(TT_EOF);
     } else {
       SearchResult searchResult;
-      rc = searchBuffer(*buffer, searchExpr, searchResult, false);
+      rc = searchBuffer(*buffer, searchExpr, searchResult, true);
     }
   }
 
@@ -950,22 +852,87 @@ bool Script::getConditionAsSimilar(bool testOnly, const std::string &op1) {
   return rc;
 }
 
-std::string Script::hasParameter(ParameterSet &parameterSet) {
+void Script::getText(bool testOnly, std::vector<std::string> &contents) {
+  if (_parser.parseSpecial(&SearchParser::_regexHereDocument, 1) == 1) {
+    auto marker = _parser.tokenAsString().substr(2);
+    bool doInterpolate = marker[0] != '\'';
+    if (!doInterpolate) {
+      marker = marker.substr(1, marker.size() - 2);
+    }
+    bool found = false;
+    size_t ix = _indexNextStatement;
+    while (ix < _lines.size()) {
+      auto line = _lines[ix++];
+      if (line == marker) {
+        found = true;
+        _indexNextStatement = ix;
+        break;
+      }
+      if (!testOnly) {
+        if (doInterpolate) {
+          interpolate(testOnly, &line);
+        }
+        contents.push_back(line);
+      }
+    }
+    if (!found) {
+      throw ParserError(formatCString("missing end marker %s", marker.c_str()),
+          _parser);
+    }
+  } else {
+    auto type = _parser.parseSpecial();
+    switch (static_cast<int>(type)) {
+    case SearchParser::TT_STRING2: {
+      if (!testOnly) {
+        contents = splitCString(_parser.tokenAsInterpolatedString().c_str(),
+            "\n");
+      }
+      break;
+    }
+    case SearchParser::TT_BUFFER:
+      if (!testOnly) {
+        auto buffer = _parser.asBufferName(_engine);
+        if (buffer == nullptr) {
+          error(
+              formatCString("unknown buffer: %s", _parser.tokenAsCString()).c_str());
+        }
+        if (buffer != nullptr) {
+          contents = buffer->constLines();
+        }
+      }
+      break;
+    case SearchParser::TT_BUFFER_EXPRESSION:
+    default:
+      throw ParserError(
+          formatCString(
+              "unexpected data: '%s' Expected buffer, buffer-expression or string",
+              _parser.tokenAsCString()), _parser);
+
+    }
+  }
+}
+
+/**
+ * Returns the value of the variable (local or global).
+ * @param name the variable name: $(&lt;id>) or &lt;id>
+ * @return <em>nullptr</em>: variable  Otherwise: the value of the variable.
+ */
+std::string Script::getVariable(const char *name) const {
   std::string rc;
-  auto type = _parser.parseSpecial(&SearchParser::_regexParameterDefinition, 1);
-  if (type == 1) {
-    auto error = parameterSet.populate(_parser.tokenAsCString(), rc);
-    if (!error.empty()) {
-      throw ParserError(error, _parser);
+  std::string name2(
+      name[0] == '$' ? name : formatCString("$(%s)", name).c_str());
+  if (name2[2] == '_') {
+    rc = _engine.globalVariable(name2.c_str());
+  } else {
+    auto it = _variables.find(name2);
+    if (it != _variables.end()) {
+      rc = it->second;
     }
   }
   return rc;
 }
 
 void Script::ifStatement(bool testOnly) {
-// Always interpolate the input:
-
-  interpolate(testOnly, nullptr, _numericalContext);
   bool condition = getCondition(testOnly);
 // Deleted in destructor:
   auto item = new BlockStackEntry(BlockStackEntry::BT_IF_THEN,
@@ -1005,7 +972,7 @@ void Script::interpolate(bool testOnly, std::string *line,
   std::smatch matches;
   while (std::regex_search(*line, matches, SearchParser::_regexVariable2)) {
     auto contents = variableAsString(matches.str(0), testOnly);
-    if (numericContext && contents.empty()) {
+    if (testOnly && numericContext && contents.empty()) {
       line->replace(matches.position(0), matches.length(), "0");
     } else {
       line->replace(matches.position(0), matches.length(), contents);
@@ -1074,32 +1041,18 @@ void Script::leave(bool testOnly) {
 }
 
 void Script::load(bool testOnly) {
-  auto type = _parser.parseSpecial();
-  if (type != SearchParser::TT_BUFFER) {
-    throw ParserError(
-        formatCString("expected: buffer name instead of %s",
-            _parser.tokenAsCString()), _parser);
-  }
-  auto bufferName = _parser.tokenAsString();
-  auto buffer = _parser.asBufferName(_engine, false);
-  if (buffer == nullptr) {
-    buffer = createBuffer(bufferName.c_str());
-  }
-  type = _parser.parseSpecial();
-  if (type != SearchParser::TT_STRING2) {
-    throw ParserError(
-        formatCString("expected a string (as filename) instead of %s",
-            _parser.tokenAsCString()), _parser);
-  }
+  auto buffer = _parser.parseBuffer(testOnly, &_engine, true, false, false);
+  auto filename = _parser.parseString(testOnly, "filename");
   if (testOnly) {
-    if (type == TT_UNKNOWN) {
-      type = _parser.parse();
-    }
     _parser.assertToken(TT_EOF);
-  }
-  if (!testOnly) {
-    auto filename = asString();
+  } else {
+    if (!fileExists(filename.c_str())) {
+      throw ParserError(
+          formatCString("file %s does not exist", filename.c_str()), _parser);
+    }
+    buffer->clear();
     buffer->readFromFile(filename.c_str(), true);
+    buffer->setPosition(0, 0);
     if (_engine._trace != nullptr) {
       fprintf(_engine._trace, "  %s: %ld lines read\n", filename.c_str(),
           buffer->lines().size());
@@ -1306,7 +1259,8 @@ void Script::log(bool testOnly) {
   }
 }
 
-void Script::oneStatement(bool testOnly) {
+int Script::oneStatement(bool testOnly) {
+  int rc = 0;
   const std::string &line = _lines[_indexNextStatement];
   _indexNextStatement++;
   _parser.setInput(line.c_str(), _indexNextStatement, _name.c_str());
@@ -1323,20 +1277,13 @@ void Script::oneStatement(bool testOnly) {
     case TT_COMMENT:
       break;
     case TT_KEYWORD:
-      if (_parser.input()._unprocessed[0] == '!') {
-        _parser.input()._unprocessed.erase(0, 1);
-        if (_parser.input()._unprocessed[0] == '!') {
-          _parser.input()._unprocessed.erase(0, 1);
-          _numericalContext = true;
-        }
-        interpolate(testOnly, nullptr, _numericalContext);
-      }
+      interpolate(testOnly, nullptr, testOnly);
       switch (_parser.token()._keywordId) {
       case SearchParser::KW_ASSERT:
         assertStatement(testOnly);
         break;
       case SearchParser::KW_CALL:
-        call(testOnly);
+        rc = call(testOnly);
         break;
       case SearchParser::KW_COPY:
         copy(testOnly);
@@ -1413,30 +1360,45 @@ void Script::oneStatement(bool testOnly) {
       break;
     }
   }
+  return rc;
 }
 void Script::replace(bool testOnly) {
-// replace <search-expr> <replacement> [<buffer>] [<start> [<end>]] [count=<count]  [if <filter-search-expr>]
+// replace <search-expr> <replacement> [<buffer>] [<from> [<end>]] [count <count]  [if <filter-search-expr>]
 // parent is a dummy:
   SearchExpression searchExpression;
   BufferPosition end(END_OF_LINE, END_OF_LINE);
-  BufferPosition start;
+  BufferPosition start(0, 0);
   std::string line;
   std::string column;
   _parser.parsePattern(testOnly, "search", true, searchExpression);
   std::string replacement = _parser.parseString(testOnly, "replacement");
   LineBuffer *buffer = _parser.parseBuffer(testOnly, &_engine, false, true);
-  if (_parser.parsePosition(testOnly, "start-position", false, start)) {
-    _parser.parsePosition(testOnly, "end-position", false, end);
+  int startMode = _parser.hasWaitingWord("from", "behind");
+  if (startMode > 0) {
+    _parser.parsePosition(testOnly, "start-position", true, start);
+    if (startMode == 2) {
+      start._columnIndex++;
+    }
   }
-  static ParameterSet parameters(
-      new ParameterInfo("count", ParameterInfo::DT_INT));
-  auto parameter = hasParameter(parameters);
+  int endMode = _parser.hasWaitingWord("excluding", "including");
+  switch (endMode) {
+  case 0:
+    break;
+  case 1:
+  case 2:
+    _parser.parsePosition(testOnly, "end-position", true, end);
+    if (endMode == 2) {
+      end._columnIndex--;
+    }
+    break;
+  }
+  int countMode = _parser.hasWaitingWord("count");
   int count = 0x7fffffff;
-  if (parameter == "count") {
-    count = parameters.asInt("count");
+  if (countMode > 0) {
+    count = _parser.parseInt(testOnly, "count", true);
   }
   SearchExpression filterExpression;
-  bool hasFilter = _parser.hasWaitingWord("if");
+  bool hasFilter = _parser.hasWaitingWord("if") > 0;
   if (hasFilter) {
     _parser.parsePattern(testOnly, "filter", true, filterExpression);
   }
@@ -1528,11 +1490,13 @@ LineBuffer* Script::getBuffer(const char *name) {
   }
   return rc;
 }
-void Script::run() {
+int Script::run() {
   _indexNextStatement = 0;
-  while (_indexNextStatement < _lines.size()) {
-    oneStatement(false);
+  int rc = 0;
+  while (_indexNextStatement < _lines.size() && rc == 0) {
+    rc = oneStatement(false);
   }
+  return rc;
 }
 
 void Script::script(bool testOnly) {
@@ -1565,7 +1529,8 @@ void Script::script(bool testOnly) {
 }
 void Script::select(bool testOnly) {
 // select [push] <buffer> | select pop
-  if (_parser.hasWaitingWord("pop")) {
+  int mode = _parser.hasWaitingWord("pop", "push");
+  if (mode == 1) {
     if (!testOnly) {
       if (_bufferStack.size() < 1) {
         throw ParserError("pop on an empty stack", _parser);
@@ -1574,12 +1539,11 @@ void Script::select(bool testOnly) {
       _bufferStack.pop_back();
     }
   } else {
-    bool push = _parser.hasWaitingWord("push");
     auto buffer = _parser.parseBuffer(testOnly, &_engine, true, true);
     if (testOnly) {
       _parser.assertToken(TT_EOF);
     } else {
-      if (push) {
+      if (mode == 2) {
         _bufferStack.push_back(_currentBuffer);
       }
       _currentBuffer = buffer;
@@ -1604,7 +1568,7 @@ void Script::stop(bool testOnly) {
 void Script::store(bool testOnly) {
   auto buffer = _parser.parseBuffer(testOnly, &_engine, false, true);
   auto filename = _parser.parseString(testOnly, "filename");
-  bool append = _parser.hasWaitingWord("append");
+  bool append = _parser.hasWaitingWord("append") > 0;
   if (testOnly) {
     _parser.assertToken(TT_EOF);
   } else {
@@ -1682,6 +1646,8 @@ std::string Script::variableAsString(const std::string &name, bool quiet) {
         rc = value;
       } else if (name == "$(__line)") {
         rc = formatCString("%d", buffer->position(position)._lineIndex);
+      } else if (name == "$(__column)") {
+        rc = formatCString("%d", buffer->position(position)._columnIndex);
       } else if (name == "$(__lines)") {
         rc = formatCString("%d", buffer->lines().size());
       } else if (name == "$(__position)") {

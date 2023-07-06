@@ -270,7 +270,34 @@ Line 2Wow def
   delete logger;
 }
 
-TEST(LineListTest, insertMoreLines) {
+TEST(LineListTest, insertMoreLinesNoNewline) {
+  //FEW_TESTS;
+  auto logger = buildMemoryLogger();
+  LineList list1(10, logger);
+  LineList list2(10, logger);
+  auto data = splitCString(R"""(Line 1 abc
+Line 2 def
+0123456789
+)""", "\n");
+  auto data2 = splitCString(R"""(xxx
+yyyy
+zz)""", "\n");
+  list1.lines() = std::vector(data);
+  auto lines2 = std::vector(data2);
+  BufferPosition position(1, 6);
+  list1.insert(position, lines2, false);
+  auto data3 = joinVector(list1.constLines(), "\n");
+  ASSERT_STREQ(data3.c_str(),
+      R"""(Line 1 abc
+Line 2xxx
+yyyy
+zz def
+0123456789
+)""");
+  delete logger;
+}
+
+TEST(LineListTest, insertMoreLinesAddNewline) {
   FEW_TESTS;
   auto logger = buildMemoryLogger();
   LineList list1(10, logger);
@@ -284,17 +311,42 @@ yyyy
 zz)""", "\n");
   list1.lines() = std::vector(data);
   auto lines2 = std::vector(data2);
-  BufferPosition position;
-  position._lineIndex = 1;
-  position._columnIndex = 6;
+  BufferPosition position(1, 6);
   list1.insert(position, lines2);
   auto data3 = joinVector(list1.constLines(), "\n");
   ASSERT_STREQ(data3.c_str(),
       R"""(Line 1 abc
 Line 2xxx
 yyyy
-zz def
+zz
+ def
 0123456789
+)""");
+  delete logger;
+}
+
+TEST(LineListTest, insertMoreLinesAddNewlineBeginOfLine) {
+  FEW_TESTS;
+  auto logger = buildMemoryLogger();
+  LineList list1(10, logger);
+  LineList list2(10, logger);
+  auto data = splitCString(R"""(Line 1 abc
+Line 2 def
+)""", "\n");
+  auto data2 = splitCString(R"""(xxx
+yyyy
+zz)""", "\n");
+  list1.lines() = std::vector(data);
+  auto lines2 = std::vector(data2);
+  BufferPosition position(1, 0);
+  list1.insert(position, lines2);
+  auto data3 = joinVector(list1.constLines(), "\n");
+  ASSERT_STREQ(data3.c_str(),
+      R"""(Line 1 abc
+xxx
+yyyy
+zz
+Line 2 def
 )""");
   delete logger;
 }

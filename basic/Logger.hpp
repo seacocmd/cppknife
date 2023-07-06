@@ -155,10 +155,10 @@ public:
   addStandardAppenders(bool console, const char *file, int fileCount = 5,
       int fileSize = 1000100);
   inline bool error(const char *message) {
-    return say(LV_ERROR, message);
+    return say(LV_ERROR, formatCString("+++ %s", message).c_str());
   }
   inline bool error(const std::string &message) {
-    return say(LV_ERROR, message);
+    return say(LV_ERROR, "+++ " + message);
   }
   /** Returns the current level of the logging call.
    * @return 	The current log level.

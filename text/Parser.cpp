@@ -69,16 +69,29 @@ char Parser::firstChar() {
   return _input._unprocessed.empty() ? '\0' : _input._unprocessed[0];
 }
 
-bool Parser::hasWaitingWord(const char *word) {
-  bool rc = false;
+int Parser::hasWaitingWord(const char *word1, const char *word2,
+    const char *word3) {
+  int rc = false;
   size_t length = strspn(_input._unprocessed.c_str(), " \t");
   if (length > 0) {
     _input._unprocessed.erase(0, length);
   }
-  length = strlen(word);
-  if (strncmp(word, _input._unprocessed.c_str(), length) == 0) {
+  length = strlen(word1);
+  if (strncmp(word1, _input._unprocessed.c_str(), length) == 0) {
     _input._unprocessed.erase(0, length);
-    rc = true;
+    rc = 1;
+  } else if (word2 != nullptr) {
+    length = strlen(word2);
+    if (strncmp(word2, _input._unprocessed.c_str(), length) == 0) {
+      _input._unprocessed.erase(0, length);
+      rc = 2;
+    } else if (word3 != nullptr) {
+      length = strlen(word3);
+      if (strncmp(word3, _input._unprocessed.c_str(), length) == 0) {
+        _input._unprocessed.erase(0, length);
+        rc = 3;
+      }
+    }
   }
   return rc;
 }

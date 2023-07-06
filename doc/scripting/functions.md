@@ -51,10 +51,10 @@ Returns 0 if there is no difference.
 
 #### Examples
     diff := buffer.difference ~origin ~new
-    if!! diff == 0
+    if diff == 0
       log "buffers are equal"
     else
-      log! "first difference in line $(diff)"
+      log "first difference in line $(diff)"
     fi
 	
 ### buffer.join
@@ -143,6 +143,8 @@ If the path does not exists, an empty string is returned.
 ### os.copy
 Copies a file. Returns 1 on success or 0 on error.
 
+If the keyword "unique" is found the name is modified if the target already exists.
+
 #### Syntax
     os.copy <source-name> <target-name> [unique]
 
@@ -166,7 +168,7 @@ Returns the path of a given filename.
     os.dirname <filename>
 
 #### Examples
-    path =  os.dirname $(file)
+    path =  os.dirname "$(file)"
 	
 ### os.exists
 Tests whether a file exists. Returns 1 if the file exists, 0 otherwise.
@@ -189,8 +191,11 @@ Tests whether a file is a directory. Returns 1 if the file is a directory, 0 oth
 ### os.listfiles
 Puts the filenames of a given directory into a buffer. Returns the count of files.
 
+If at least one of the keywords "files" "dirs" or "links" is given than only that kind of files will be found.
+Otherwise all kind of files will be found.
+
 #### Syntax
-    os.listfiles <buffer> <directory> [including <search_expression>] [excluding <search_expression>] [files] [dirs] [links]
+    os.listfiles <buffer> <directory> including <search_expression>] [excluding <search_expression>] [files] [dirs] [links]
 
 #### Examples
     countFiles =  os.listfiles ~files "/home" including r/\.[ch]pp$/ excluding r/test/i files
@@ -210,6 +215,7 @@ Returns the current directory.
 
 #### Syntax
     os.pwd
+
 #### Examples
     path =  os.pwd
 	
@@ -219,6 +225,7 @@ This is the counterpart of **os.pushd**.
 
 #### Syntax
     os.popd
+
 #### Examples
     path =  os.popd
 	
@@ -334,8 +341,11 @@ If the pattern is not found an empty string is returned.
 ### string.substring
 Returns a part of a given string
 
+The start position can be specified with "from" (including) and "behind" (excluding).
+The end position can be specified with "excluding" or "including" or with the specification "count".
+
 #### Syntax
-    string.substring <string> <start> [{ count=<count> | including=<end_position> | excluding=<end_position> }]
+    string.substring <string> <start> [{ count <count> | {including | excluding} <end_position>]]
 
 #### Parameters:
 - __start__: the position of the first character to copy: 1..N
@@ -344,9 +354,11 @@ Returns a part of a given string
 - __returns__: the substring.
 
 #### Examples
-    name2 = string.substring "$(name)" 3
-    name2 = string.substring /$(name)/ 3 count=2 
-    name2 = string.substring =$(name)= 3 including=5
-    name2 = string.substring '$(name)' 3 excluding=9
+    name1 = string.substring "$(name)" from 3
+    name2 = string.substring /$(name)/ from 3 count 2 
+    name3 = string.substring =$(name)= from 3 including 5
+    name4 = string.substring '$(name)' behind $(pos1) excluding 9
+    name5 = string.substring "$(name)" excluding 7
+    name5 = string.substring "$(name)" count 3
     
 	

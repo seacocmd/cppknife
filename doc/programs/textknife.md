@@ -8,11 +8,21 @@ That program offers services for text searching/manipulating.
 
 ## Examples
 ```
-# Adapt standard values for the PHP configuration:
-textknife adapt --template=php /etc/php/8.2/php*.conf
+(# Adapt standard values for the PHP configuration:
+textknife adapt --template=php /etc/php/8.2/php*.ini
+# Show the adapting parameters:
+cat /etc/cppknife/adapt/php.conf
 
 # Adapt a configuration file: change the variable "max_memory" if it exists or set it otherwise.
 textknife adapt --anchor=/#.*max_memory/i '--pattern=/^max_memory\s*=/' "--replacement=max_memory=512k" /etc/php/8.2/fpm/php.ini
+
+# Find the strings in all sourcefiles (*.cpp and *.hpp) in the directory /home/ws and subdirs:
+textknife strings /home/ws/*.cpp,*.hpp
+# Find strings in files older than 7 days and maximum nesting depth of 3:
+textknife strings /home/ws/*.cpp,*.hpp --days=+7 --max-depth=3
+
+# Describe the usage:
+textknife --help
 ```
 
 ## Usage
@@ -26,6 +36,8 @@ textknife [<options>]  MODE
     Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG, e.g. --log-level=123 -l0
   -v,--verbose
     Show more information, e.g. --verbose -v
+  --examples
+    Show usage examples, e.g. --examples --examples --examples --examples --examples
   MODE
     What should be done:
     adapt
@@ -92,4 +104,5 @@ textknife strings [<options>]  SOURCE BASE
     The found files must have a size lower  (if < 0) or larger (if > 0) than that size. Units: [kmgt], e.g. --size=1234 -s3k
   -t TYPE,--type=TYPE
     The file type: f(ile) d(irectory) l(ink) s(ocket) b(lock) p(ipe) c(har), e.g. --type=f,d,l -td
++++ help requested
 ```

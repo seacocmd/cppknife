@@ -16,7 +16,7 @@ static const char *decimalChars = "0123456789";
 static const char *signChars = "+-";
 
 bool StringComparism::operator()(char const *a, char const *b) const {
-  return std::strcmp(a, b) < 0;
+  return strcmp(a, b) < 0;
 }
 
 char*
@@ -606,7 +606,7 @@ std::vector<std::string> splitString(const std::string &text,
     ++count;
   }
   std::vector<std::string> rc;
-  rc.reserve(count);
+  rc.reserve(count + 1);
   std::sregex_token_iterator iter2(text.begin(), text.end(), delimiter, -1);
   for (; iter2 != end; ++iter2) {
     rc.push_back(*iter2);
@@ -666,7 +666,7 @@ std::string stringToRegularExpression(const char *pattern, ssize_t length) {
   rc.reserve(length * 2);
   for (auto ix = 0; ix < length; ix++) {
     char cc = pattern[ix];
-    if (std::strchr(metacharacters, cc)) {
+    if (strchr(metacharacters, cc)) {
       rc.push_back('\\');
     }
     rc.push_back(cc);

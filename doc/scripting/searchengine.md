@@ -113,20 +113,15 @@ __*Note__: the predefined global variables starts with two underlines.
 - $(__date): the current date, e.g. 2023.01.25
 - $(__time): the current time, e.g. 22:44
 
-### Interpreted script lines
-The lines in the script may contain variable names in any position. That will be replaced by the value of the variable before the 
-"normal" processing of the line starts. This is named __interpretation of the line__.
-
-- Numeric assignments are always interpreted.
-- To switch on interpretation a '!' must be set at the end of the command name.
-- Using '!!' as suffix means "use a numerical context": if the variable is empty or the variable does not exist: '0' is replaced.
-That is neccessary for a correct syntax. The numeric assignment automatically uses the numerical context.
+### Interpolated script lines
+The lines in the script may contain variable names at any position. These will be replaced by the value of the variable before the 
+"normal" processing of the line starts. This is called __interpolation of the line__.
 
 Examples:
-    log! "the buffer has $(_lines) lines"
+    log "the buffer has $(_lines) lines"
     $(counter) := $(counter) + $(_lines) + 2
-    if!! $(counter) > 0
-      move!! $(counter):0
+    if $(counter) > 0
+      move +$(counter)
     endif
 
 ## String Constants

@@ -22,7 +22,7 @@ TEST(FunctionEngineTest, bufferShiftPop) {
   auto fnTarget = temporaryFile("data.out", "unittest", true);
   std::string script(
       R"""(
-load! ~_main "$(input)"
+load ~_main "$(input)"
 line1 = buffer.shift ~_main
 line3 = buffer.pop ~_main
 if "$(line1)" -ne "Line1"
@@ -31,7 +31,7 @@ endif
 if "$(line1)" -ne "Line1"
   stop "line1"
 endif
-store! ~_main "$(output)"
+store ~_main "$(output)"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   std::string data(R"""(
@@ -63,7 +63,7 @@ TEST(FunctionEngineTest, bufferJoinSplitSort) {
 count1 = buffer.split ~data "Jonny,Charly,Adam,Berta" ","
 dummy = buffer.sort ~data
 names = buffer.join ~data ";"
-if!! $(count1) != 4
+if $(count1) != 4
   stop "count1"
 endif
 if "$(names)" -ne "Adam;Berta;Charly;Jonny"
@@ -84,8 +84,8 @@ TEST(FunctionEngineTest, mathRandom) {
   std::string script(
       R"""(
 number = math.random 20 10
-log! "random: $(number)"
-if!! $(number) > 20
+log "random: $(number)"
+if $(number) > 20
   stop ">"
 endif
 if $(number) < 10
@@ -107,7 +107,7 @@ TEST(FunctionEngineTest, osBasenameDirnameChangeextension) {
       R"""(
 name = os.basename "/tmp/abc/def.txt"
 if "$(name)" -ne "def.txt"
-  stop! "basename: $(name)"
+  stop "basename: $(name)"
 endif
 name = os.dirname "/tmp/abc/def.txt"
 if "$(name)" -ne "/tmp/abc"
@@ -139,11 +139,11 @@ TEST(FunctionEngineTest, osCdPwd) {
 dir = os.pwd
 dir2 = os.cd "/home"
 if "$(dir)" -ne "$(dir2)"
-  stop! "$(dir) -ne $(dir2)"
+  stop "$(dir) -ne $(dir2)"
 endif
 dir = os.pwd
 if "$(dir)" -ne "/home"
-  stop! "$(dir) -ne /home"
+  stop "$(dir) -ne /home"
 endif
 )""");
   writeText(fnSource.c_str(), script.c_str());
@@ -164,14 +164,14 @@ dir = os.pwd
 dummy = os.pushd "/home"
 dir2 = os.pwd
 if "$(dir2)" -ne "/home"
-  stop! "1: $(dir2) -ne /home"
+  stop "1: $(dir2) -ne /home"
 endif
 dummy2 = os.popd
 dir3 = os.pwd
 if "$(dir3)" -ne "$(dir)"
-  stop! "2: $(dir) -ne $(dir3)"
+  stop "2: $(dir) -ne $(dir3)"
 endif
-log! "$(dir) $(dir2) $(dir3)"
+log "$(dir) $(dir2) $(dir3)"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -188,26 +188,30 @@ TEST(FunctionEngineTest, stringLengthSubstring) {
   std::string script(
       R"""(
 len = string.length "abcd"
-if!! $(len) != 4
-  stop! "len != 4"
+if $(len) != 4
+  stop "len != 4"
 endif
-s1 = string.substring "123456" 3
+s1 = string.substring "123456" from 3
 if "$(s1)" -ne "3456"
-  stop! "substr 1: $(s1)"
+  stop "substr 1: $(s1)"
 endif
-s2 = string.substring "123456" 3 count=2
+s2 = string.substring "123456" from 3 count 2
 if "$(s2)" -ne "34"
-  stop! "substr 2: $(s2)"
+  stop "substr 2: $(s2)"
 endif
-s3 = string.substring "123456" 3 excluding=6
+s3 = string.substring "123456" from 3 excluding 6
 if "$(s3)" -ne "345"
-  stop! "substr 3: $(s3)"
+  stop "substr 3: $(s3)"
 endif
-s4 = string.substring "123456" 3 including=5
+s4 = string.substring "123456" from 3 including 5
 if "$(s4)" -ne "345"
-  stop! "substr 4: $(s4)"
+  stop "substr 4: $(s4)"
 endif
-log! "$(s1) $(s2) $(s3) $(s4)"
+s5 = string.substring "123456" behind 3 including 33
+if "$(s5)" -ne "456"
+  stop "substr 5: $(s5)"
+endif
+log "$(s1) $(s2) $(s3) $(s4)"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -218,20 +222,20 @@ log! "$(s1) $(s2) $(s3) $(s4)"
 }
 
 TEST(FunctionEngineTest, stringReplace) {
-  FEW_TESTS();
+  //FEW_TESTS();
   auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto fnSource = temporaryFile("example.script", "unittest", true);
   std::string script(
       R"""(
-s1 = string.replace "Hello" r/L/i "L" count=1
+s1 = string.replace "Hello" r/L/i "L" count 1
 if "$(s1)" -ne "HeLlo"
-  stop! "replace 1: $(s1)"
+  stop "replace 1: $(s1)"
 endif
 s2 = string.replace "Hello" r/L/i "L"
 if "$(s2)" -ne "HeLLo"
-  stop! "replace 2: $(s2)"
+  stop "replace 2: $(s2)"
 endif
-log! "$(s1) $(s2)"
+log "$(s1) $(s2)"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -248,20 +252,20 @@ TEST(FunctionEngineTest, osMkdirIsdirExists) {
   std::string script(
       R"""(
 rc = os.mkdir "/tmp/fetest"
-if!! $(rc) != 1
+if $(rc) != 1
   stop "mkdir"
 endif
 rc = os.isdir "/tmp/fetest"
-if!! $(rc) != 1
+if $(rc) != 1
   stop "isdir"
 endif
 rc = os.exists "/tmp/fetest"
-if!! $(rc) != 1
+if $(rc) != 1
   stop "exists"
 endif
 rc = os.exists "/tmp/rtlpfrmpft"
-if!! $(rc) != 0
-  stop "! exists"
+if $(rc) != 0
+  stop " exists"
 endif
 )""");
   writeText(fnSource.c_str(), script.c_str());
@@ -286,7 +290,7 @@ store ~_main "/tmp/fetest/file3.txt"
 store ~_main "/tmp/fetest/jonny.doc"
 rc := os.listfiles ~_main "/tmp/fetest" including r/file/ excluding s/.doc/ files
 if $(rc) != 2
-  stop! "wrong count: $(rc)"
+  stop "wrong count: $(rc)"
 endif
 if s/file2/
   stop "excluding failed"
@@ -326,7 +330,7 @@ TEST(FunctionEngineTest, osCopy) {
       formatCString(
           R"""(rc1 := os.copy '%s' '%s'
 rc2 := os.exists '%s'
-if!! $(rc2) != 1
+if $(rc2) != 1
   stop "copy: missing target rc-copy: $(rc1)"
 endif
 )""",
@@ -365,19 +369,19 @@ line 1
 Line 2
 EOS
 diff1 := buffer.difference ~buffer1 ~buffer2
-if!! $(diff1) != 3
-  stop! "wrong diff (buffer1 + buffer2): $(diff1) / 3"
+if $(diff1) != 3
+  stop "wrong diff (buffer1 + buffer2): $(diff1) / 3"
 endif
 diff2 := buffer.difference ~buffer1 ~buffer3
-if!! $(diff2) != 0
-  stop! "wrong diff (buffer1 + buffer3): $(diff2) / 0"
+if $(diff2) != 0
+  stop "wrong diff (buffer1 + buffer3): $(diff2) / 0"
 endif
 diff3 := buffer.difference ~buffer2 ~buffer1
-if!! $(diff3) != 3
-  stop! "wrong diff (buffer2 + buffer1): $(diff3) / 3"
+if $(diff3) != 3
+  stop "wrong diff (buffer2 + buffer1): $(diff3) / 3"
 endif
 diff4 := buffer.difference ~buffer4 ~buffer1
-if!! $(diff4) != 2
+if $(diff4) != 2
   stop "wrong diff (buffer4 + buffer1): $(diff2) / 2"
 endif
 )""");
@@ -395,12 +399,12 @@ TEST(FunctionEngineTest, stringIndex) {
   auto fnScript = temporaryFile("example.ses", "unittest", true);
   std::string script(
       R"""(ix := string.index "b" "a,b,c" ","
-if!! $(ix) != 1
-  stop! "unexpected index: $(ix) / 1"
+if $(ix) != 1
+  stop "unexpected index: $(ix) / 1"
 endif
 ix := string.index "a1" "a b c"
-if!! $(ix) != -1
-  stop! "unexpected index: $(ix) / -1"
+if $(ix) != -1
+  stop "unexpected index: $(ix) / -1"
 endif
 )""");
   writeText(fnScript.c_str(), script.c_str());
@@ -418,19 +422,20 @@ TEST(FunctionEngineTest, stringPiece) {
   std::string script(
       R"""(item = string.piece 1 "a,b,c" ","
 if "$(item)" -ne "b"
-  stop! "unexpected item: $(item) / b"
+  stop "unexpected item: $(item) / b"
 endif
 item = string.piece 2 "a b c"
 if "$(item)" -ne "c"
-  stop! "unexpected item: $(item) / c"
+  stop "unexpected item: $(item) / c"
 endif
 item = string.piece 4 "a b c"
 if "$(item)" -ne ""
-  stop! "unexpected item: '$(item)' / ''"
+  stop "unexpected item: '$(item)' / ''"
 endif
 )""");
   writeText(fnScript.c_str(), script.c_str());
   SearchEngine engine(*logger);
+  //engine.setTrace("-");
   engine.loadScript("example", fnScript.c_str());
   engine.selectScript("example");
   ASSERT_EQ(0, engine.testAndRun());

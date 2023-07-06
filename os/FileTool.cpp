@@ -54,12 +54,12 @@ bool copyFile(const char *source, const char *target,
     FILE *fpSource = fopen(source, "rb");
     if (fpSource == nullptr) {
       *errorMessage = formatCString("cannot open (%d): %s [%s]", errno, source,
-          std::strerror(errno));
+          strerror(errno));
     } else {
       FILE *fpTarget = fopen(target, "wb");
       if (fpTarget == nullptr) {
         *errorMessage = formatCString("cannot open (%d): %s [%s]", errno,
-            source, std::strerror(errno));
+            source, strerror(errno));
       } else {
         char buffer[64000];
         ssize_t readBytes = 0;
@@ -69,7 +69,7 @@ bool copyFile(const char *source, const char *target,
           if ((writtenBytes = fwrite(buffer, 1, readBytes, fpTarget))
               != readBytes) {
             *errorMessage = formatCString("cannot write (%d): %s [%s]", errno,
-                target, std::strerror(errno));
+                target, strerror(errno));
             rc = false;
             break;
           }

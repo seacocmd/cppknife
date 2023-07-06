@@ -9,6 +9,26 @@
 #include "textknife.hpp"
 namespace cppknife {
 
+void examples() {
+  printf(
+      R"""((# Adapt standard values for the PHP configuration:
+textknife adapt --template=php /etc/php/8.2/php*.ini
+# Show the adapting parameters:
+cat /etc/cppknife/adapt/php.conf
+
+# Adapt a configuration file: change the variable "max_memory" if it exists or set it otherwise.
+textknife adapt --anchor=/#.*max_memory/i '--pattern=/^max_memory\s*=/' "--replacement=max_memory=512k" /etc/php/8.2/fpm/php.ini
+
+# Find the strings in all sourcefiles (*.cpp and *.hpp) in the directory /home/ws and subdirs:
+textknife strings /home/ws/*.cpp,*.hpp
+# Find strings in files older than 7 days and maximum nesting depth of 3:
+textknife strings /home/ws/*.cpp,*.hpp --days=+7 --max-depth=3
+
+# Describe the usage:
+textknife --help
+)""");
+}
+
 std::string ensurePhpConfig(Logger *logger) {
   std::string rc = "/etc/cppknife/adapt/php";
   if (!fileExists(rc.c_str())) {
@@ -287,6 +307,7 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
       "Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG",
       "5");
   parser.add("--verbose", "-v", DT_BOOL, "Show more information");
+  parser.add("--examples", nullptr, DT_BOOL, "Show usage examples", "false");
   parser.addMode("mode", "What should be done:", "adapt,string");
 
   ArgumentParser adaptParser("adapt", logger, "Adapts configuration files.");
@@ -332,6 +353,8 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
   ArgVector argVector(argc, argv);
   if (!parser.parseAndCheck(argVector)) {
     rc = 2;
+  } else if (parser.asBool("examples")) {
+    examples();
   } else {
     auto level = static_cast<LogLevel>(parser.asInt("log-level", LV_SUMMARY));
     logger->setLevel(level);
@@ -344,12 +367,11 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
     } else {
       printf("%s\n", parser.usage("unknown mode", nullptr, false).c_str());
     }
-
-  }
-  if (verbose) {
-    logger->say(LV_SUMMARY,
-        timeDifferenceToString(nowAsDouble() - start,
-            "= runtime: %hh%mm%s.%3s"));
+    if (verbose) {
+      logger->say(LV_SUMMARY,
+          timeDifferenceToString(nowAsDouble() - start,
+              "= runtime: %hh%mm%s.%3s"));
+    }
   }
   if (logger != loggerExtern) {
     delete logger;

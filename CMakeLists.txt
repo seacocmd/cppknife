@@ -1,5 +1,5 @@
-cmake_minimum_required(VERSION 3.10)
-
+cmake_minimum_required(VERSION 3.20)
+cmake_policy(SET CMP0115 NEW)
 # Set some basic project attributes
 project (ccppknife
 	VERSION 0.1
@@ -12,7 +12,7 @@ set(CMAKE_BUILD_TYPE Debug)
 include(FindPkgConfig)
 
 set(BASIC_SOURCES basic/BaseRandom.cpp basic/CharRandom.cpp basic/Logger.cpp basic/PortableRandom.cpp
-	basic/StringTool.cpp basic/TimeTool.cpp basic/InternalError)
+	basic/StringTool.cpp basic/TimeTool.cpp basic/InternalError.cpp)
 
 set(BASIC_UNITTEST_SOURCES unittest/BaseRandom_test.cpp unittest/CharRandom_test.cpp unittest/Logger_test.cpp
 	unittest/PortableRandom_test.cpp unittest/StringTool_test.cpp unittest/TimeTool_test.cpp)

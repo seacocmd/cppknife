@@ -150,11 +150,14 @@ public:
   char firstChar();
   /**
    * Tests whether the top of the unprocessed data contains a given string (word).
-   * If true the word will be parsed.
-   * @param word That string is compared with the head of the unprocessed data.
-   * @return <em>true</em>: the <em>word</em> has been found and is "eaten" (removed from the unprocessed data).
+   * If true the word will be parsed (removed from the unprocessed data).
+   * @param word1 The first word to search. That string is compared with the head of the unprocessed data.
+   * @param word2 The second word to search.
+   * @param word3 The third word to search.
+   * @return 0: None of the words found. Otherwise: the number of the found word: 1..3
    */
-  bool hasWaitingWord(const char *word);
+  int hasWaitingWord(const char *word1, const char *word2 = nullptr,
+      const char *word3 = nullptr);
   /**
    * Returns the index of a given list where the current token is found or -1.
    * @param words A list of words, ending with <em>nullptr</em>.

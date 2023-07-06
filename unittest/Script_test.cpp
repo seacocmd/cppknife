@@ -50,7 +50,7 @@ copy <<'EOS' ~_main
 line$(no)
 line2
 EOS
-store! ~_main "$(file)" 
+store ~_main "$(file)" 
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -129,9 +129,9 @@ TEST(ScriptTest, numericAssignment) {
   std::string script(
       R"""(no := 3
 no := $(no) + 1 - 2
-log! "No: $(no) expected: 2"
+log "No: $(no) expected: 2"
 no := $(no) * 6 / 3 % 3
-log! "No: $(no) expected: 1"
+log "No: $(no) expected: 1"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -154,14 +154,14 @@ two men
 EOS
 count := 0
 while r/m[ae]n/
-  move! $(__end)
+  move $(__end)
   count := $(count) + 1
-  log! "loop $(count)"
+  log "loop $(count)"
   if $(count) > 3
     stop "loop overflow"
   endif
 endwhile
-log! "count: $(count) expected: 2"
+log "count: $(count) expected: 2"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -179,9 +179,9 @@ TEST(ScriptTest, predefinedVariables) {
   std::string script(
       R"""(load ~_main "###"
 if r/m[ae]n/
-  log! "file: $(__file) line: $(__line) lines: $(__lines)"
-  log! "hit: $(__hit)"
-  log! "date: $(__date) $(__time)"
+  log "file: $(__file) line: $(__line) lines: $(__lines)"
+  log "hit: $(__hit)"
+  log "date: $(__date) $(__time)"
 else
   log "unexpected"
 endif
@@ -208,15 +208,15 @@ TEST(ScriptTest, move) {
   std::string script(
       R"""(load ~_main "###"
 move s/e3/
-log! "4 expected: start: $(__start) end: $(__end) hit: $(__hit) current: $(__position)"
+log "4 expected: start: $(__start) end: $(__end) hit: $(__hit) current: $(__position)"
 move 1:3
-log! "expected: 1:3 $(__position)"
+log "expected: 1:3 $(__position)"
 move +1:-1
-log! "expected: 2:2 $(__position)"
+log "expected: 2:2 $(__position)"
 move +1
-log! "expected: 3:2 $(__position)"
+log "expected: 3:2 $(__position)"
 move 0:+99
-log! "expected: 3:6 $(__position) 1:1 $(__mark)"
+log "expected: 3:6 $(__position) 1:1 $(__mark)"
 )""");
   replaceString(script, "###", fnData, 1);
   writeText(fnScript.c_str(), script.c_str());
@@ -242,15 +242,15 @@ TEST(ScriptTest, mark) {
       R"""(load ~_main "###"
 mark save $(pos1)
 move 2:3
-log! "expected: 1:1 2:3 $(__mark) $(__position)"
+log "expected: 1:1 2:3 $(__mark) $(__position)"
 mark set
-log! "expected: 2:3 2:3 $(__mark) $(__position)"
+log "expected: 2:3 2:3 $(__mark) $(__position)"
 move +1:-1
-log! "expected: 3:2 $(__position)"
+log "expected: 3:2 $(__position)"
 mark exchange
-log! "expected: 3:2 2:3 $(__mark) $(__position)"
+log "expected: 3:2 2:3 $(__mark) $(__position)"
 mark restore $(pos1)
-log! "expected: 1:1 $(__mark)"
+log "expected: 1:1 $(__mark)"
 )""");
   replaceString(script, "###", fnData, 1);
   writeText(fnScript.c_str(), script.c_str());
@@ -300,7 +300,44 @@ Line4
   delete logger;
 }
 
-TEST(ScriptTest, deleteStatement) {
+TEST(ScriptTest, deleteStatementInline) {
+  FEW_TESTS();
+  auto logger = buildMemoryLogger(100, LV_DEBUG);
+  auto fnScript = temporaryFile("example.ses", "unittest", true);
+  auto fnData = temporaryFile("data.inp", "unittest", true);
+  auto fnOut = replaceString(fnData, ".inp", ".out");
+  std::string script(
+      R"""(load ~_main "#1"
+delete from 2:2 including 2:4 in ~_main
+delete behind 3:2 excluding 3:5 in ~_main
+delete from 4:2 count 3 in ~_main
+store ~_main "#2"
+)""");
+  replaceString(script, "#1", fnData, 1);
+  replaceString(script, "#2", fnOut, 1);
+  writeText(fnScript.c_str(), script.c_str());
+  std::string data(R"""(abcd
+a23456
+b23456
+c23456
+)""");
+  writeText(fnData.c_str(), data.c_str());
+  SearchEngine engine(*logger);
+  //engine.setTrace("-");
+  engine.loadScript("example", fnScript.c_str());
+  engine.selectScript("example");
+  engine.setTrace("-");
+  engine.testAndRun();
+  auto output = readAsString(fnOut.c_str(), logger);
+  ASSERT_STREQ(output.c_str(), R"""(abcd
+a3456
+b256
+c56
+)""");
+  delete logger;
+}
+
+TEST(ScriptTest, deleteStatementMultiline) {
   FEW_TESTS();
   auto logger = buildMemoryLogger(100, LV_DEBUG);
 	auto fnScript = temporaryFile("example.ses", "unittest", true);
@@ -310,18 +347,17 @@ TEST(ScriptTest, deleteStatement) {
       R"""(load ~_main "#1"
 move 2:2
 mark set 
-move s/abc/
-delete! $(__mark) $(__start)
-delete 1:0 2:0
+move s/c2/
+delete from $(__mark) excluding $(__start) in ~_main
 store ~_main "#2"
 )""");
   replaceString(script, "#1", fnData, 1);
   replaceString(script, "#2", fnOut, 1);
   writeText(fnScript.c_str(), script.c_str());
   std::string data(R"""(Line1
-Line2
-Line3 abc
-Line4
+a23456
+b23456
+c23456
 )""");
   writeText(fnData.c_str(), data.c_str());
   SearchEngine engine(*logger);
@@ -330,8 +366,8 @@ Line4
   engine.selectScript("example");
   engine.testAndRun();
   auto output = readAsString(fnOut.c_str(), logger);
-  ASSERT_STREQ(output.c_str(), R"""(Labc
-Line4
+  ASSERT_STREQ(output.c_str(), R"""(Line1
+ac23456
 )""");
   delete logger;
 }
@@ -345,7 +381,7 @@ TEST(ScriptTest, replace) {
   std::string script(
       R"""(load ~_main "#1"
 replace r/line(.)/i "Y$1" if s/4/
-replace r/line(.)/i "X$1" 2:1 3:1
+replace r/line(.)/i "X$1" from 2:1 excluding 3:1
 replace r/line(.)/iL "l$1"  
 store ~_main "#2"
 )""");
@@ -499,11 +535,10 @@ b := 5
 copy <<EOS ~params
 a=$(a)
 b=$(b)
-result=~_result
 EOS
 call "###" ~params
 sum = buffer.shift ~_result
-if!! $(sum) != 8
+if $(sum) != 8
   stop "expecting 8 but found: $(sum)"
 endif
 )""");
@@ -511,7 +546,7 @@ endif
   writeText(fnSource.c_str(), script.c_str());
 	std::string script2(R"""(
 rc := $(a) + $(b)
-copy! "$(rc)" $(result)
+copy "$(rc)" ~_result
 )""");
   writeText(fnSource2.c_str(), script2.c_str());
 	SearchEngine engine(*logger);
@@ -548,7 +583,7 @@ script sum
   _rc := $(a) + $(b)
 endscript
 script max
-  if!! $(a) > $(b)
+  if $(a) > $(b)
     _rc := $(a)
   else
     _rc := $(b)
@@ -559,7 +594,7 @@ a=3
 b=5
 EOS
 call sum ~params
-log! "sum of 3 + 5: $(_rc)"
+log "sum of 3 + 5: $(_rc)"
 call max "a=-3" "b=5"
 if "$(_rc)" -ne "5"
   stop "wrong max"
@@ -583,8 +618,8 @@ TEST(ScriptTest, assert) {
 a := 1
 b = ""
 _rc := 1
-copy! "" ~data
-assert $(a) $(b) ~data ~_main $(_rc)
+copy "" ~data
+assert a b ~data ~_main _rc
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -616,7 +651,7 @@ else
   stop "failed b1"
 endif
 select pop
-if s/Buffer2/
+if s/Buffer2/<
   log "OK"
 else
   stop "failed b2-2"
@@ -639,12 +674,12 @@ TEST(ScriptTest, conditionalAssignment) {
       R"""(
 x := 3
 x ?= 2
-if!! $(x) != 3
-  stop! "ensure 3 $(x)"
+if $(x) != 3
+  stop "ensure 3 $(x)"
 endif
 y ?= "Hi"
-if! "$(y)" -ne "Hi"
-  stop! "ensure y $(y)"
+if "$(y)" -ne "Hi"
+  stop "ensure y $(y)"
 endif
 )""");
   writeText(fnSource.c_str(), script.c_str());

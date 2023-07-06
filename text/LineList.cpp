@@ -325,7 +325,7 @@ int LineList::indexOfFirstDifference(const LineList &other, int start,
 }
 
 void LineList::insert(const BufferPosition &position,
-    const std::vector<std::string> &lines) {
+    const std::vector<std::string> &lines, bool addNewline) {
   if (position._lineIndex >= _lines.size()) {
     // Append all lines:
     _lines.insert(_lines.end(), lines.begin(), lines.end());
@@ -337,7 +337,7 @@ void LineList::insert(const BufferPosition &position,
     if (position._columnIndex > 0) {
       top = line.substr(0, position._columnIndex);
     }
-    if (position._columnIndex < line.size()) {
+    if (position._columnIndex > 0 && position._columnIndex < line.size()) {
       tail = line.substr(position._columnIndex);
     }
     if (lines.size() == 1) {
@@ -355,12 +355,19 @@ void LineList::insert(const BufferPosition &position,
         _lines.reserve(needed);
       }
       if (lastLine > 0) {
-        _lines.insert(_lines.begin() + ixInsert + 1, lines.begin() + firstLine,
-            lines.begin() + lastLine);
+        auto offset = position._columnIndex == 0 ? 0 : 1;
+        _lines.insert(_lines.begin() + ixInsert + offset,
+            lines.begin() + firstLine,
+            lines.end());
       }
       // Add the tail to the last line:
-      _lines.insert(_lines.begin() + ixInsert + lastLine,
-          lines[lastLine] + tail);
+      if (!tail.empty()) {
+        if (addNewline) {
+          _lines.insert(_lines.begin() + ixInsert + lastLine + 1, tail);
+        } else {
+          _lines[ixInsert + lastLine] += tail;
+        }
+      }
     }
   }
 }

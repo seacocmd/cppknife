@@ -56,45 +56,49 @@ If the marker is not delimited the text is interpolated: variable names will be 
 ### Examples
     copy "Hello" main
     copy ~csv:1:2 main append # copy the first 2 lines onto the main buffer
-    copy! from ~_main starting $(start) excluding $(end) to ~csv
+    copy from ~_main starting $(start) excluding $(end) to ~csv
     copy <<EOS append
     line $(start)
     line $(end)
     EOS
     copy <<'EOS'
-    line1 $(this_will_be_not_interpreted)
+    line1 $(this_will_be_not_interpolated)
     line2
     EOS
     
 
 ## delete
-Delete some lines from the current buffer. It can be controlled by:
+Delete a piece from the current buffer. It can be controlled by:
 
-- The start of the lines to delete
-- The end of the lines to delete
-- The key word exclude-start means: the line defined by start is not deleted
-- The key word include-end means: the line defined by start will be deleted too
-- The expression count=&lt;count> defines the number of lines to delete. Can be used instead of an end expression.
-- If the end and the count is given, the minimum of both will be used.
+- A start position
+    - "from &lt;position>" deletes including the position
+    - "behind &lt;position>" deletes excluding the position
+- An end position:
+    - "including &lt;position>" deletes including the position
+    - "excluding &lt;position>" deletes excluding the position
+- A count: 
+    - "count &lt;count>" deletes &lt;count> characters in the line defined by the start position.
+- Only one of count or end position can be used.
 
 ### Syntax
-    delete <start-position> <end-position [<buffer>] [excluding-start] [including-end] 
+    delete { from | behind ] <start-position> { excluding | including } <end-position> in [<buffer>]
+    delete { from | behind ] <start-position> count <count> in <buffer>
 
 ### Parameters
 - __start-position__: the deletion starts at that position. Syntax of the position is __line:column__.
 - __end-position__: the deletion ends at that position. Syntax of the position is __line:column__.
-- __buffer__: a buffer name. Default is the current buffer.
-- __excluding-start__: if that keywords are given the deletition starts one character behind the __start-position-__.
-- __including-end__: if that keywords are given the deletition includes the character defined by __end-position__. Otherwise it ends above the __end-position__.
+- __count__: that count of characters in the line defined by the start position will be deleted. If the line is too short than fewer characters will be deleted.
+- __buffer__: a buffer name. 
 
 ### Examples
    	if s/Bob/
-   	  $(bob) = $(_start)
+   	  bob = $(__start)
    	  if s/Eve/
-   	    delete! $(bob) $(_start)
+   	    delete starting $(bob) excluding $(_start) in ~_main
    	  endif
    	endif
-   	delete 1:1 1:3 ~csv including-end
+   	delete starting 1:1 including 1:3 in ~csv
+   	delete starting 3:4 count 3 in ~_data
 
 ## insert
 Puts a text at a given position.
@@ -110,10 +114,10 @@ Puts a text at a given position.
 ### Examples
     insert ~csv 1:1 "id;name"
     if r/Alice/
-      insert! $(_start) "Bob and "
+      insert $(__start) "Bob and "
     endif
     move s/end of file/
-    insert! $(_position) ~csv
+    insert! $(__position) ~csv
 
 ## load
 Loads a textfile into a buffer.
@@ -123,10 +127,10 @@ Loads a textfile into a buffer.
 
 ### Parameters
 - __buffer__: the buffer name.
-- __filename__: the buffer is filled by the contents of that file.
+- __filename__: A string: the buffer is filled by the contents of that file.
 
 ### Examples
-    load ~_main unprocessed_data.txt
+    load ~_main "unprocessed_data.txt"
 
 ## log
 Puts a text into the buffer named log and display it.
@@ -174,5 +178,4 @@ Stores a buffer into a textfile.
 
 ### Examples
     store ~main "processed_data.txt"
-
-    store ~main "processed_data.txt" append
+    store ~main "all_together.txt" append

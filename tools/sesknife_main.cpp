@@ -23,8 +23,6 @@ int main(int argc, char **argv) {
     //filter = "ConfigurationTest.*";
     //filter = "FileTest.*";
     //filter = "FileToolTest.*";
-    //filter = "FunctionEngineTest.*";
-    //filter = "SesKnifeTest.*";
     //filter = "JsonReaderTest.*";
     //filter = "LinesStreamTest.*";
     //filter = "LineReaderTest.*";
@@ -33,14 +31,18 @@ int main(int argc, char **argv) {
     //filter = "MatcherTest.*";
     //filter = "ParserTest.*";
     //filter = "PathTest.*";
-    filter = "ScriptTest.*";
-    //filter = "SearchEngineTest.*";
+    //filter = "SesKnifeTest.*";
     //filter = "StorageTest.*";
     //filter = "StringListTest.*";
     //filter = "StringToolTest.*";
     //filter = "TimeToolTest.*";
     //filter = "TraverserTest.*";
     //filter = "TextKnifeTest.*";
+
+    //filter = "FunctionEngineTest.*";
+    //filter = "SearchEngineTest.*";
+    //filter = "ScriptTest.*";
+    filter = "SesKnifeTest.*";
     std::string arg = "--gtest_filter=";
     arg += filter;
     char *args[] = { (char*) "dummy", const_cast<char*>(arg.c_str()), nullptr };

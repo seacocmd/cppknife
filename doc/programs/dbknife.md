@@ -3,10 +3,29 @@
 ## Objectives
 That program allows database administration for Mysql (Mariadb) and Postgres.
 
+## Examples
+
+```
+# Create a mysql database "dbwiki" and the administrator user "jonny" with passwd "TopSecret":
+dbknife create-db --driver=mysql --user=jonny:TopSecret --administrator dbwiki
+
+# Describe the postgresql database "dbstock":
+dbknife info --driver=postgres dbstock
+# Describe the table "persons" in the mysql database "mycompany" with details:
+dbknife info --details --driver=mysql mycompany.persons
+
+# show all databases, the system databases too:
+dbknife list-dbs --systems --driver=mysql
+# show the databases matching the pattern "db*":
+dbknife list-dbs --driver=mysql --pattern=db*
+
+# Describe the usage:
+dbknife --help
+```
+
 ## Usage
 
 ```
-dbknife --help
 dbknife [<options>]  MODE
     Database management and more
   -?,--help
@@ -15,6 +34,8 @@ dbknife [<options>]  MODE
     Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG, e.g. --log-level=123 -l0
   -v,--verbose
     Show more information, e.g. --verbose -v
+  --examples
+    Show usage examples, e.g. --examples --examples --examples --examples --examples
   MODE
     What should be done:
     create-db
@@ -118,4 +139,5 @@ dbknife veil [<options>]  APPLICATION INPUT OUTPUT
     The file to encrypt. If '~' stdin is used., e.g. /data/myfile.txt yourfile.pdf
   OUTPUT
     The encrypted file. If '~' stdout is used. If '~' (empty) the input file is changed., e.g. mydata
++++ help requested
 ```

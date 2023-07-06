@@ -7,28 +7,30 @@ That program offers services of files and directories.
 ```
 # Show a statistic about the filetree in path /home ignoring the .git subdirectories:
 fileknife du /home --directories=-.git
-# Ignore all .git directories, show only *.cpp and *.hpp files:
-fileknife du --files=,*.cpp,*.hpp /home
+# Ignore all .git directories, show only *.cpp and *.hpp files without the test file:
+fileknife du --files=,*.cpp,*.hpp,-*test.?pp /home
 
 # Show the 20 youngest, newest, largest files from /etc.
 fileknife extrema /etc
 # Show the 5 youngest, newest directories and symbolic links from /var/spool.
 fileknife extrema --count=5 --type=d,l /var/spool
 
-# Show all logfiles from /var/log that ar younger than 3 days and a size larger than 1 kByte:
-fileknife list --files=,*.log /var/log --days=-3 --size=+1k
+# Show all log files with *.log and *.gz from /var/log that are older than 30 days and a size larger than 5 kByte:
+fileknife list '/var/log/*.log,*.gz' --days=+30 --size=+5k
 # Show all HTML files unless index.html and modified in more than 5 minutes and limit the path depth to 3:
 fileknife list --files=,*.html,-index.html --max-depth=3 --minutes=+5 /srv/www
+# Show only the filename without attributes: larger than 1GByte, the *.deb and *.zip and *.gz files. 
+fileknife list --name-only --size=+1G /opt/downloads/*.deb,*.zip,*.gz
 
 # Count the lines, words and characters of all source files without the generated files in build:
-fileknife wc --files=,*.cpp /home/ws/cpp --directories=,-build
+fileknife wc /home/ws/cpp/*.cpp,*.hpp --directories=,-build
 ```
 
 ## Usage
 
 ```
 fileknife [<options>]  MODE
-    Version Jul  4 2023
+    Version Jul  8 2023
     A universal tool working on files and directories
   -?,--help
     Shows the usage information., e.g. --help -?
@@ -152,4 +154,5 @@ fileknife wc [<options>]  BASE
     The found files must have a size lower  (if < 0) or larger (if > 0) than that size. Units: [kmgt], e.g. --size=1234 -s3k
   -t TYPE,--type=TYPE
     The file type: f(ile) d(irectory) l(ink) s(ocket) b(lock) p(ipe) c(har), e.g. --type=f,d,l -td
++++ help requested
 ```

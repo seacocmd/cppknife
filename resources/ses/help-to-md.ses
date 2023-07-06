@@ -1,0 +1,98 @@
+#! /usr/local/sesknife
+
+assert source target helpOutput
+
+#---
+#  in: $(source): the C++ file with the example
+# out: ~_example: the buffer with the example text
+script findExample
+  load ~_main "$(source)"
+  if r/^void example/
+    start := $(__start)
+    move $(start)
+    move s/R"""(/
+    diff := $(__line) - $(start)
+    if $(diff) > 3
+      stop "distance from 'void example' to string is too large: $(diff)"
+    endif
+    if $(diff) < 1
+      stop "string start not found in $(source)"
+    endif
+    mark set
+    if s/)"""/
+      copy from ~_main starting $(__mark) excluding $(__start) to ~_example
+    else
+      stop "missing string end in $(source)"
+    endif
+  else
+    stop "missing 'void example' in $(source)"
+  endif
+endscript
+
+#---
+#  in: $(target): the MD file to change
+#  in: ~_example: the buffer with the example text
+# out: ~_origin: the original MD file
+script writeExample
+  assert target ~_example
+  load ~_main "$(target)"
+  copy ~_main ~_origin
+  if s/## Example/
+    start := $(__line)
+    move s/```/
+    move +1:1
+    mark set
+    diff := $(__line) - $(start)
+    if $(diff) > 3
+      stop "distance from '## Example' to ``` is too large: $(diff) in $(target)"
+    endif
+    if s/```/
+      delete from $(__mark) excluding $(__start) in ~_main
+      #insert ~_main $(__mark) "\n"
+      insert ~_main $(__mark) ~_example
+    else
+      stop "missing second ``` in $(target)"
+    endif
+  else
+    stop "missing '## example' in $(target)"
+  endif
+endscript
+
+#---
+#  in: $(target): the MD file to change
+#  in: ~_help: the buffer with the help text
+script addHelp
+  assert target ~_help
+  if s/## Usage/<
+    start := $(__line)
+    move s/```/
+    move +1:1
+    mark set
+    diff := $(__line) - $(start)
+    if $(diff) > 3
+      stop "distance from '## Usage' to ``` is too large: $(diff) in $(target)"
+    endif
+    if s/```/
+      delete from $(__mark) excluding $(__start) in ~_main
+      insert ~_main $(__mark) ~_help
+    else
+      stop "missing second ``` of usage in $(target)"
+    endif
+  else
+    stop "missing '## Usage' in $(target)"
+  endif
+endscript
+
+call findExample "source=$(source)"
+rc := os.copy "$(target)" "/tmp" unique
+call writeExample "target=$(target)"
+load ~_help "$(helpOutput)"
+call addHelp "target=$(target)"
+rc := buffer.difference ~_main ~_origin
+if $(rc) == 0
+  log "unchanged: $(target)"
+else
+  store ~_main "$(target)"
+  log "written: $(target) Difference in line $(rc)"
+endif
+  

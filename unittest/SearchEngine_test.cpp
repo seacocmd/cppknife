@@ -99,9 +99,9 @@ TEST(SearchEngineTest, numericAssignment) {
   std::string script(
       R"""(no := 3
 no = $(no) + 1 - 2
-log! "No: $(no) expected: 2"
+log "No: $(no) expected: 2"
 no = $(no) * 6 / 3 % 3
-log! "No: $(no) expected: 1"
+log "No: $(no) expected: 1"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -125,9 +125,9 @@ EOS
 count = 0
 while r/m[ae]n/
   count = $(count) + 1
-  log! "loop $(count)"
+  log "loop $(count)"
 endwhile
-log! "count: $(count) expected: 2"
+log "count: $(count) expected: 2"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
@@ -145,9 +145,9 @@ TEST(SearchEngineTest, predefinedVariables) {
   std::string script(
       R"""(load ~_main "###"
 if r/m[ae]n/
-  log! "file: $(__file) line: $(__line) lines: $(__lines)"
-  log! "hit: $(__hit)"
-  log! "date: $(__date) $(__time)"
+  log "file: $(__file) line: $(__line) lines: $(__lines)"
+  log "hit: $(__hit)"
+  log "date: $(__date) $(__time)"
 else
   log "unexpected"
 endif
@@ -174,15 +174,15 @@ TEST(SearchEngineTest, move) {
   std::string script(
       R"""(load ~_main "###"
 move s/e3/
-log! "3 expected: $(__start) $(__hit) $(__position)"
+log "3 expected: $(__start) $(__hit) $(__position)"
 move 1:3
-log! "expected: 1:3 $(__position)"
+log "expected: 1:3 $(__position)"
 move +1:-1
-log! "expected: 2:2 $(__position)"
+log "expected: 2:2 $(__position)"
 move +1
-log! "expected: 3:2 $(__position)"
+log "expected: 3:2 $(__position)"
 move 0:+99
-log! "expected: 3:6 $(__position) 1:1 $(__mark)"
+log "expected: 3:6 $(__position) 1:1 $(__mark)"
 )""");
   replaceString(script, "###", fnData, 1);
   writeText(fnScript.c_str(), script.c_str());
@@ -208,15 +208,15 @@ TEST(SearchEngineTest, mark) {
       R"""(load ~_main "###"
 mark save $(pos1)
 move 2:3
-log! "expected: 1:1 2:3 $(__mark) $(__position)"
+log "expected: 1:1 2:3 $(__mark) $(__position)"
 mark set
-log! "expected: 2:3 2:3 $(__mark) $(__position)"
+log "expected: 2:3 2:3 $(__mark) $(__position)"
 move +1:-1
-log! "expected: 3:2 $(__position)"
+log "expected: 3:2 $(__position)"
 mark exchange
-log! "expected: 3:2 2:3 $(__mark) $(__position)"
+log "expected: 3:2 2:3 $(__mark) $(__position)"
 mark restore $(pos1)
-log! "expected: 1:1 $(__mark)"
+log "expected: 1:1 $(__mark)"
 )""");
   replaceString(script, "###", fnData, 1);
   writeText(fnScript.c_str(), script.c_str());
@@ -277,8 +277,8 @@ TEST(SearchEngineTest, deleteStatement) {
 move 2:2
 mark set 
 move s/abc/
-delete! $(__mark) $(__start)
-delete 1:0 2:0
+delete from $(__mark) excluding $(__start) in ~_main
+delete from 1:0 excluding 2:0 in ~_main 
 store ~_main "#2"
 )""");
   replaceString(script, "#1", fnData, 1);
@@ -311,7 +311,7 @@ TEST(SearchEngineTest, replace) {
   std::string script(
       R"""(load ~_main "#1"
 replace r/line(.)/i "Y$1" if s/4/
-replace r/line(.)/i "X$1" 2:1 3:1
+replace r/line(.)/i "X$1" from 2:1 excluding 3:1
 replace r/line(.)/iL "l$1"  
 store ~_main "#2"
 )""");
@@ -389,7 +389,7 @@ TEST(SearchEngineTest, conditionStringCondition) {
   auto fnScript = temporaryFile("example.script", "unittest", true);
   std::string script(
       R"""(string = "B"
-if!! "$(string)" -gt "B"
+if "$(string)" -gt "B"
   stop "-gt"
 else
   log "-gt ok"
@@ -438,7 +438,7 @@ TEST(SearchEngineTest, leave) {
       R"""(count := 0
 while 1
   count := $(count) + 1
-  if!! $(count) > 5
+  if $(count) > 5
     leave 2
     stop "leave"
   endif

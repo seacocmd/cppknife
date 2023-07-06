@@ -1,0 +1,10 @@
+#! /bin/bash
+FILES="sesknife textknife fileknife geoknife dbknife"
+HELP="/tmp/help.txt"
+OPT="--trace=-"
+OPT=
+for file in $FILES; do
+  $file --help >$HELP 
+  sesknife resources/ses/help-to-md.ses -Dsource=tools/$file.cpp \
+    -Dtarget=doc/programs/$file.md -DhelpOutput=$HELP $OPT
+done

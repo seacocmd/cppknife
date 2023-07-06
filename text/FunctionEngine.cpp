@@ -144,6 +144,7 @@ std::string FunctionEngine::asString(bool testOnly,
   case M_B_SORT:
   case M_B_SPLIT:
   case M_M_RANDOM:
+  case M_O_COPY:
   case M_O_EXISTS:
   case M_O_ISDIR:
   case M_O_LISTFILES:
@@ -336,6 +337,9 @@ int FunctionEngine::osCopy(bool testOnly) {
   if (testOnly) {
     _parser.assertCurrentToken(TT_EOF);
   } else {
+    if (isDirectory(target.c_str())) {
+      target = joinPath(target.c_str(), basename(source.c_str()).c_str());
+    }
     std::string error;
     if (unique) {
       target = uniqueFilename(target.c_str());
@@ -559,18 +563,15 @@ std::string FunctionEngine::stringPiece(bool testOnly) {
   return rc;
 }
 std::string FunctionEngine::stringReplace(bool testOnly) {
-// string.replace <string> <pattern> <replacement> [count=<count>]
+// string.replace <string> <pattern> <replacement> [count <count>]
   std::string rc;
   SearchExpression searchExpression;
   auto text = _parser.parseString(testOnly, "text");
   _parser.parsePattern(testOnly, "search", true, searchExpression);
   std::string replacement = _parser.parseString(testOnly, "replacement");
-  static ParameterSet parameters(
-      new ParameterInfo("count", ParameterInfo::DT_INT));
-  auto parameter = _script->hasParameter(parameters);
   int count = 0x7fffffff;
-  if (parameter == "count") {
-    count = parameters.asInt("count");
+  if (_parser.hasWaitingWord("count") > 0) {
+    count = _parser.parseInt(testOnly, "count", true);
   }
   if (testOnly) {
     _parser.assertToken(TT_EOF);
@@ -607,32 +608,38 @@ std::string FunctionEngine::stringSearch(bool testOnly) {
   return rc;
 }
 std::string FunctionEngine::stringSubstring(bool testOnly) {
-// string.substring <string> <start> [{ count=<count> | including=<end_position> | excluding=<end_position> }]
+// string.substring <string> [ { from | behind } <start> [{ excluding | including | length } <end> ]
   std::string rc;
   int end = 0x7fffffff;
   auto text = _parser.parseString(testOnly, "text");
-  auto start = _parser.parseInt(testOnly, "start", false, 0) - 1;
-  static ParameterInfo *parameters[] = { new ParameterInfo("count",
-      ParameterInfo::DT_INT), new ParameterInfo("including",
-      ParameterInfo::DT_INT), new ParameterInfo("excluding",
-      ParameterInfo::DT_INT), nullptr };
-  static ParameterSet parameterSet(parameters);
-  auto parameter = _script->hasParameter(parameterSet);
+  int start = 1;
+  int startMode = _parser.hasWaitingWord("from", "behind");
+  if (startMode > 0) {
+    start = _parser.parseInt(testOnly, "start", true);
+    if (startMode == 2) {
+      start++;
+    }
+  }
+  int endMode = _parser.hasWaitingWord("excluding", "including", "count");
+  if (endMode > 0) {
+    end = _parser.parseInt(testOnly, endMode != 3 ? "end" : "count", true);
+    switch (endMode) {
+    case 1:
+      break;
+    case 2:
+      end++;
+      break;
+    case 3:
+      end = start + end;
+      break;
+    }
+  }
   if (testOnly) {
     _parser.assertToken(TT_EOF);
   } else {
-    if (parameter == "count") {
-      end = start + parameterSet.asInt("count");
-    } else if (parameter == "including") {
-      end = parameterSet.asInt("including");
-    } else if (parameter == "excluding") {
-      end = parameterSet.asInt("excluding") - 1;
-    }
-    if (end > static_cast<int>(text.size())) {
-      end = text.size();
-    }
+    end = min(text.size() + 1, end);
     if (start >= 0 && start < static_cast<int>(text.size())) {
-      rc = text.substr(start, end - start);
+      rc = text.substr(start - 1, end - start);
     }
   }
   return rc;

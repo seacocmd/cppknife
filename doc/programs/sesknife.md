@@ -6,6 +6,14 @@ That program is an interpreter of the __Search Enginge Script__ language.
 ## Links
 - [Search Enginge Script](searchengine.md)
 
+## Examples
+```
+# Executes a script "build_summary.ses" with 2 parameters: "source" and "target":
+sesknife build_summary.ses -Dsource=data/year2023.csv -Dtarget=/tmp/result.doc
+# Describe the usage:
+sesknife --help
+```
+
 ## Usage
 
 ```
@@ -21,8 +29,11 @@ sesknife [<options>]  SCRIPT INPUT
     Log each statement of the script., e.g. --trace -t
   -D DEFINE,--define=DEFINE
     Defines a variable/parameter. Can be used multiple times, e.g. --define=path=/usr/local/bin -Dcount=10
+  --examples
+    Show usage examples, e.g. --examples --examples --examples --examples --examples
   SCRIPT
     The script to process., e.g. /data/myfile.txt yourfile.pdf
   INPUT
     The files to process. Use '' for no files.
++++ help requested
 ```

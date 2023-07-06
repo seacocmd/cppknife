@@ -14,6 +14,27 @@ namespace cppknife {
 
 bool dbknifeUnderTest = false;
 
+void examples() {
+  printf(
+      R"""(# Create a mysql database "dbwiki" and the administrator user "jonny" with passwd "TopSecret":
+dbknife create-db --driver=mysql --user=jonny:TopSecret --administrator dbwiki
+
+# Describe the postgresql database "dbstock":
+dbknife info --driver=postgres dbstock
+# Describe the table "persons" in the mysql database "mycompany" with details:
+dbknife info --details --driver=mysql mycompany.persons
+
+# show all databases, the system databases too:
+dbknife list-dbs --systems --driver=mysql
+# show the databases matching the pattern "db*":
+dbknife list-dbs --driver=mysql --pattern=db*
+
+# Describe the usage:
+dbknife --help
+)""");
+}
+
+
 int daemon(ArgumentParser &parser, Logger &logger) {
   int rc = 0;
   return rc;
@@ -152,7 +173,7 @@ SqlDriver* _getDriver(const char *driver, const char *database,
   }
 #endif
   if (dbms == nullptr) {
-    throw InternalError("_getAllDbs: unknown driver ", driver);
+    throw InternalError("_getDriver: unknown driver ", driver);
   }
   return dbms;
 }
@@ -411,6 +432,7 @@ int dbknife(int argc, char **argv, Logger *loggerExtern) {
       "Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG",
       "5");
   parser.add("--verbose", "-v", DT_BOOL, "Show more information");
+  parser.add("--examples", nullptr, DT_BOOL, "Show usage examples", "false");
   parser.addMode("mode", "What should be done:",
       "install,uninstall,daemon,veil,unveil");
   ArgumentParser veilParser("veil", logger, "Encrypt a file or stdin.");
@@ -497,6 +519,8 @@ int dbknife(int argc, char **argv, Logger *loggerExtern) {
   ArgVector argVector(argc, argv);
   if (!parser.parseAndCheck(argVector)) {
     rc = 2;
+  } else if (parser.asBool("examples")) {
+    examples();
   } else {
     auto level = static_cast<LogLevel>(parser.asInt("log-level", LV_SUMMARY));
     logger->setLevel(level);

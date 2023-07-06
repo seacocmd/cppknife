@@ -296,9 +296,10 @@ public:
    * Inserts a given list of lines at a given position.
    * @param position The text is inserted here. If the position is behind the end of buffer the text is appended.
    * @param lines The lines to insert.
+   * @param addNewline <em>true</em>: the last inserted line does not contain the tail of the insertion line.
    */
   void insert(const BufferPosition &position,
-      const std::vector<std::string> &lines);
+      const std::vector<std::string> &lines, bool addNewline = true);
   /**
    * Inserts a given text at a given position.
    * @param position The text is inserted here. If the position is behind the end of buffer the text is appended.

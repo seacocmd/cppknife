@@ -21,6 +21,8 @@
 ## assert
 Tests the existence of variables or buffers. If one does not exist than an error occurs.
 
+__Note__: the variables must be noted by their identifiers, not as '$(&lt;id>).
+
 ### Syntax
     assert <variable-or-buffer1> [<variable-or-buffer2>...]]
 
@@ -28,7 +30,7 @@ Tests the existence of variables or buffers. If one does not exist than an error
 - __variable-or-bufferN__: the name of a variable or the name of a buffer
 
 ### Examples
-    assert ~csv $(name) $(age) $(_varbose)
+    assert ~csv name age _verbose
 
 ## Assignment
 An assignment defines a variable. There are three alternatives:
@@ -70,7 +72,7 @@ An assignment defines a variable. There are three alternatives:
 ### Examples
     start = "3" 
     end := $(start) + 3
-    file := function os.basename $(fullname)
+    file := function os.basename "$(fullname)"
     data ?= "buffer: " ~data:1-3
 
 ## call
@@ -100,15 +102,15 @@ The other way to define parameters is a sequence of strings with the parameter d
     call "../basic/login.ses" ~parameters
     rc = buffer.pop ~result
     script maximum
-      assert $(a) $(b)
-      if!! $(b) > $(a)
+      assert a b
+      if $(b) > $(a)
         _rc := $(b)
       else
         _rc := $(a)
       endif
     endscript
     call maximum "a=7" "b=-3"
-    log! "max(7, 3): $(_rc)
+    log "max(7, 3): $(_rc)
 
 ## exit
 Finishes the script or all scripts.
@@ -205,14 +207,18 @@ It is possible to leave multiple nested blocks if a __count__ is given.
 ## script
 Defines a (sub-)script. That script can be called with __call__ like an external script file.
 
-Parameters can be take from a buffer: each line contains an assignment &lt;name>=&lt;value>.
+Parameters can be take from a buffer (each line contains an assignment &lt;name>=&lt;value>) 
+or from strings given in the call statement.
 
-Example:
+Example of a parameter buffer:
     lineNo=3
     name=Joe
 
+Example of parameters by strings:
+	call myScript "line=123" "greeting=Hello"
+
 ### Syntax
-    script <name> [<parameters>]
+    script <name>
     <body>
     endscript
     
@@ -222,15 +228,17 @@ Example:
 - __body__: an amount of lines belonging to the script.
 
 ### Examples
-    script sum "$(a) $(b)"
+    script sum
       _rc := $(a) + $(b)
     endscript
     copy <<EOS ~param
     a=3
     b=7
     EOS
-    call "sum" ~param
+    call sum ~param
     echo "sum of 3+7: $(_rc)
+    call sum "a=99" "b=-3"
+    echo "sum of 99 and -3: $(_rc)
 
 ## stop
 That command stops the script.
@@ -270,5 +278,5 @@ See [if](#if) for the description of a condition.
       count := $(count) + 1
       move +1
     endwhile
-    log! "$(count) persons found"
+    log "$(count) persons found"
 

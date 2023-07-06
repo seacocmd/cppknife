@@ -171,7 +171,9 @@ int SearchEngine::testAndRun(const char *scriptName) {
     if (scriptName != nullptr) {
       selectScript(scriptName);
     }
+    auto globalSafe = _globalVariables;
     _currentScript->check();
+    _globalVariables = globalSafe;
     _currentScript->run();
     rc = 0;
   } catch (const ParserError &e) {

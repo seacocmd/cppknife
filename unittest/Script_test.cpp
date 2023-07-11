@@ -10,7 +10,7 @@
 using namespace cppknife;
 
 static bool onlyFewTests() {
-  return false;
+  return true;
 }
 #define FEW_TESTS() if (onlyFewTests()) return
 
@@ -165,7 +165,7 @@ log "count: $(count) expected: 2"
 )""");
   writeText(fnSource.c_str(), script.c_str());
   SearchEngine engine(*logger);
-  //engine.setTrace(fnTrace.c_str());
+  //engine.setTrace("-");
   engine.loadScript("example", fnSource.c_str());
   engine.selectScript("example");
   engine.testAndRun();
@@ -552,7 +552,7 @@ copy "$(rc)" ~_result
 	SearchEngine engine(*logger);
 	engine.loadScript("example", fnSource.c_str());
 	engine.selectScript("example");
-  engine.setTrace("/tmp/ses.log");
+  //engine.setTrace("-");
   ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }
@@ -568,7 +568,7 @@ exit 3 global
   SearchEngine engine(*logger);
   engine.loadScript("example", fnSource.c_str());
   engine.selectScript("example");
-  engine.setTrace("/tmp/ses.log");
+  //engine.setTrace("-");
   ASSERT_EQ(3, engine.testAndRun());
   delete logger;
 }
@@ -604,7 +604,7 @@ endif
   SearchEngine engine(*logger);
   engine.loadScript("example", fnSource.c_str());
   engine.selectScript("example");
-  engine.setTrace("/tmp/ses.log");
+  //engine.setTrace("-");
   ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }
@@ -625,7 +625,7 @@ assert a b ~data ~_main _rc
   SearchEngine engine(*logger);
   engine.loadScript("example", fnSource.c_str());
   engine.selectScript("example");
-  engine.setTrace("/tmp/ses.log");
+  //engine.setTrace("-");
   ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }
@@ -661,7 +661,7 @@ endif
   SearchEngine engine(*logger);
   engine.loadScript("example", fnSource.c_str());
   engine.selectScript("example");
-  engine.setTrace("/tmp/ses.log");
+  //engine.setTrace("-");
   ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }
@@ -686,7 +686,7 @@ endif
   SearchEngine engine(*logger);
   engine.loadScript("example", fnSource.c_str());
   engine.selectScript("example");
-  engine.setTrace("/tmp/ses.log");
+  engine.setTrace("-");
   ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 }
@@ -706,5 +706,49 @@ TEST(ScriptTest, buildCppHeader) {
   ASSERT_EQ(0, engine.testAndRun());
   delete logger;
 #endif
+}
+
+TEST(ScriptTest, markStoreRestore) {
+  //FEW_TESTS();
+  auto logger = buildMemoryLogger(100, LV_DEBUG);
+  auto fnSource = temporaryFile("example.ses", "unittest", true);
+  std::string script(
+      R"""(
+copy <<EOS ~_main
+1: abcdefg
+2: defghij
+3: 1234567
+EOS
+move s/bc/
+mark set search
+mark save pos1
+move s/hij/
+mark save pos2
+mark restore pos1
+if "$(__mark)" -ne "1:5"
+  stop "not 1:5: $(pos1)"
+endif
+mark set 3:2
+if "$(__mark)" -ne "3:2"
+  stop "not 3:2: $(__mark)"
+endif
+move 2:2
+mark set
+move 1:1
+mark exchange
+if "$(__mark)" -ne "1:1"
+  stop "not 1:1: $(__mark)"
+endif
+if "$(__position)" -ne "2:2"
+  stop "not 2:2 after exchange: $(__position)"
+endif
+)""");
+  writeText(fnSource.c_str(), script.c_str());
+  SearchEngine engine(*logger);
+  engine.loadScript("example", fnSource.c_str());
+  engine.selectScript("example");
+  engine.setTrace("-");
+  ASSERT_EQ(0, engine.testAndRun());
+  delete logger;
 }
 

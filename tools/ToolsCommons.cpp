@@ -150,6 +150,12 @@ void CommandHandler::traverse(const char *nameSources) {
     }
     auto base = _argumentParser.asString(nameSources, ".", ix);
     bool exists = false;
+    std::string base2;
+    if (strchr(base, ',') == nullptr
+        && (strchr(base, '*') != nullptr || strchr(base, '?') != nullptr)) {
+      base2 = formatCString("%s,\t", base);
+      base = base2.c_str();
+    }
     if (!isDirectory(base, &exists) && exists) {
       FsEntryLinux status;
       _status = &status;

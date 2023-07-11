@@ -16,6 +16,7 @@ int main(int argc, char **argv) {
   if (argc > 1 && strcmp(arg1, "--test") == 0) {
     const char *filter = "*";
     //filter = "ArgumentParserTest.*";
+    //filter = "Base64Test.*";
     //filter = "BaseRandomTest.*";
     //filter = "ByteStorageTest.*";
     //filter = "CsvFileTest.*";
@@ -26,6 +27,7 @@ int main(int argc, char **argv) {
     //filter = "JsonReaderTest.*";
     //filter = "LinesStreamTest.*";
     //filter = "LineReaderTest.*";
+    //filter = "LineAgentTest.*";
     //filter = "LineListTest.*";
     //filter = "LoggerTest.*";
     //filter = "MatcherTest.*";
@@ -37,7 +39,7 @@ int main(int argc, char **argv) {
     //filter = "StringToolTest.*";
     //filter = "TimeToolTest.*";
     //filter = "TraverserTest.*";
-    //filter = "TextKnifeTest.*";
+    filter = "TextKnifeTest.*";
     std::string arg = "--gtest_filter=";
     arg += filter;
     char *args[] = { (char*) "dummy", const_cast<char*>(arg.c_str()), nullptr };

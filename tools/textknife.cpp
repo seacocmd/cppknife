@@ -183,6 +183,72 @@ public:
 }
 ;
 
+class SearchCommandHandler: public CommandHandler {
+private:
+  std::regex _pattern;
+  bool _onlyMatching;
+  bool _listFiles;
+  bool _invertMatch;
+  int _maxCount;
+public:
+  SearchCommandHandler(ArgumentParser &argumentParser, Logger *logger) :
+      CommandHandler(argumentParser, logger), _pattern(), _onlyMatching(false), _listFiles(
+          false), _invertMatch(false), _maxCount(0) {
+    _onlyMatching = argumentParser.asBool("only-matching");
+    _listFiles = argumentParser.asBool("list");
+    _invertMatch = argumentParser.asBool("invert-match");
+    if (_invertMatch) {
+      _onlyMatching = false;
+    }
+    _maxCount = argumentParser.asInt("max-count");
+    _pattern = _argumentParser.asRegExpr("pattern");
+  }
+  virtual ~SearchCommandHandler() {
+  }
+  virtual bool check() {
+    bool rc = true;
+    return rc;
+  }
+
+  virtual bool oneFile() {
+    bool rc = true;
+    auto filename = _status->accessFullName();
+    LineAgent file(_logger);
+
+    size_t length = 0;
+    size_t count = 0;
+    if (file.openFile(filename)) {
+      const char *line = nullptr;
+      bool found = false;
+      std::cmatch match;
+      int lineNo = 0;
+      while ((line = file.nextLine(length)) != nullptr) {
+        lineNo++;
+        bool found = std::regex_search(line, match, _pattern);
+        if ((_invertMatch && !found) || (!_invertMatch && found)) {
+          count++;
+          if (_listFiles) {
+            _logger->say(LV_INFO, filename);
+            break;
+          } else if (_onlyMatching) {
+            auto hit = match.str(0);
+            _logger->say(LV_INFO, hit);
+          } else {
+            _logger->say(LV_INFO,
+                formatCString("%s-%d: %s", filename, lineNo, line));
+          }
+          if (_maxCount > 0 && count >= _maxCount) {
+            _logger->say(LV_FINE,
+                formatCString("= %s: max-count reached: %d", filename, count));
+            break;
+          }
+        }
+      }
+    }
+    return rc;
+  }
+};
+
 class StringsCommandHandler: public CommandHandler {
 private:
   std::map<std::string, int> _strings;
@@ -271,13 +337,28 @@ int adapt(ArgumentParser &parser, Logger &logger) {
 }
 
 /**
- * Manages the "adapt" sub command.
+ * Manages the "replace" sub command.
  * @param parser Contains the program argument info.
  * @param logger Manages the output.
  * @return 0: success Otherwise: the exit code.
  */
 int replace(ArgumentParser &parser, Logger &logger) {
   ReplaceCommandHandler handler(parser, &logger);
+  int rc = handler.run("source");
+  return rc;
+}
+
+/**
+ * Manages the "search" sub command.
+ * @param parser Contains the program argument info.
+ * @param logger Manages the output.
+ * @return 0: success Otherwise: the exit code.
+ */
+int search(ArgumentParser &parser, Logger &logger) {
+  if (parser.asString("pattern")[0] == '\0') {
+    throw ArgumentException("missing pattern: -P or --pattern");
+  }
+  SearchCommandHandler handler(parser, &logger);
   int rc = handler.run("source");
   return rc;
 }
@@ -328,15 +409,34 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
       "/etc/php/8.4/*.conf", true);
   addTraverserOptions(adaptParser);
 #ifdef REPLACE
-  ArgumentParser replaceParser("replace", logger,
-      "Replaces a pattern in files.");
-  parser.addSubParser("mode", "replace", replaceParser);
-  replaceParser.add("--pattern", "-P", DT_REGEXPR, "The pattern to replace.", "",
-      "/Jenny Smith/i");
-  replaceParser.add("--replacement", "-R", DT_STRING,
-      "The replacement of the pattern", nullptr, "Jenny Miller");
-  addTraverserOptions(replaceParser);
+    ArgumentParser replaceParser("replace", logger,
+        "Replaces a pattern in files.");
+    parser.addSubParser("mode", "replace", replaceParser);
+    replaceParser.add("--pattern", "-P", DT_REGEXPR, "The pattern to replace.", "",
+        "/Jenny Smith/i");
+    replaceParser.add("--replacement", "-R", DT_STRING,
+        "The replacement of the pattern", nullptr, "Jenny Miller");
+    addTraverserOptions(replaceParser);
 #endif
+
+  ArgumentParser searchParser("strings", logger,
+      "Searches regular expressions.");
+  parser.addSubParser("mode", "search", searchParser);
+  searchParser.add("--pattern", "-P", DT_REGEXPR,
+      "The pattern describing the key.", "", "/^max_memory\\s*=");
+  searchParser.add("--only-matching", "-o", DT_BOOL,
+      "Displayes only the matched string", "false");
+  searchParser.add("--list", "-l", DT_BOOL,
+      "Show the filename only, not the matching lines", "false");
+  searchParser.add("--invert-match", "-v", DT_BOOL,
+      "Show the lines NOT matching the patterns", "false");
+  searchParser.add("--max-count", "-m", DT_NAT,
+      "Stops file processing after that count of matching lines", "false");
+
+  searchParser.add("source", nullptr, DT_FILE_PATTERN,
+      "A directory with or without a list of file patterns.", ".", nullptr,
+      true);
+  addTraverserOptions(searchParser);
 
   ArgumentParser stringsParser("strings", logger,
       "Fetches the strings delimited by ' or \" from files.");
@@ -360,6 +460,8 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
     logger->setLevel(level);
     if (parser.isMode("mode", "adapt")) {
       rc = adapt(parser, *logger);
+    } else if (parser.isMode("mode", "search")) {
+      rc = search(parser, *logger);
     } else if (parser.isMode("mode", "replace")) {
       rc = replace(parser, *logger);
     } else if (parser.isMode("mode", "strings")) {

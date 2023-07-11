@@ -30,7 +30,7 @@ fileknife wc /home/ws/cpp/*.cpp,*.hpp --directories=,-build
 
 ```
 fileknife [<options>]  MODE
-    Version Jul  8 2023
+    Version Jul 15 2023
     A universal tool working on files and directories
   -?,--help
     Shows the usage information., e.g. --help -?

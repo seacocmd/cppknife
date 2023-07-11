@@ -12,7 +12,7 @@
 using namespace cppknife;
 
 static bool onlyFewTests() {
-  return false;
+  return true;
 }
 #define FEW_TESTS() if (onlyFewTests()) return
 
@@ -105,7 +105,7 @@ line 2
 }
 
 TEST(TextKnifeTest, strings) {
-  //FEW_TESTS();
+  FEW_TESTS();
   auto theOsInfo = osInfo();
   auto input = temporaryFile("strings.txt", "unittest", true);
   auto output = temporaryFile("strings.srt.txt", "unittest", true);
@@ -133,6 +133,55 @@ TEST(TextKnifeTest, strings) {
 'b'
 'c'
 )""");
+  delete logger;
+}
+TEST(TextKnifeTest, search) {
+  FEW_TESTS();
+  auto theOsInfo = osInfo();
+  auto input = temporaryFile("search1.txt", "unittest", true);
+  auto input2 = temporaryFile("search2.txt", "unittest", true);
+  const char *text =
+      R"""(With a little help from my friends
+No woman no cry
+Mandy)""";
+  writeText(input.c_str(), text);
+  const char *text2 = R"""(Norwegian wood
+Help
+Suzy Q)""";
+  writeText(input2.c_str(), text2);
+  auto source = input;
+  replaceString(source, "1", "*");
+  const char *argv[] = { "search", "-P/.*y.*/i", source.c_str() };
+  auto logger = buildMemoryLogger(100, LV_FINE);
+  textKnife(sizeof argv / sizeof argv[0], const_cast<char**>(argv), logger);
+  auto appender = dynamic_cast<MemoryAppender*>(logger->findAppender("memory"));
+  auto lines = appender->lines();
+  ASSERT_EQ(5, appender->count());
+  delete logger;
+}
+TEST(TextKnifeTest, searchOnlyMatch) {
+  //FEW_TESTS();
+  auto theOsInfo = osInfo();
+  auto input = temporaryFile("search1.txt", "unittest", true);
+  auto input2 = temporaryFile("search2.txt", "unittest", true);
+  const char *text =
+      R"""(With a little help from my friends
+No woman no cry
+Mandy)""";
+  writeText(input.c_str(), text);
+  const char *text2 = R"""(Norwegian wood
+Help
+Suzy Q)""";
+  writeText(input2.c_str(), text2);
+  auto source = input;
+  replaceString(source, "1", "*");
+  const char *argv[] = { "search", "-o", "-P/y/i", "--max-count=1",
+      source.c_str() };
+  auto logger = buildMemoryLogger(100, LV_FINE);
+  textKnife(sizeof argv / sizeof argv[0], const_cast<char**>(argv), logger);
+  auto appender = dynamic_cast<MemoryAppender*>(logger->findAppender("memory"));
+  auto lines = appender->lines();
+  ASSERT_EQ(3, appender->count());
   delete logger;
 }
 

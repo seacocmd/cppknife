@@ -39,7 +39,6 @@ const std::vector<std::string> SearchParser::_keywords = { "assert", "call",
     "insert", "leave", "load", "log", "mark", "move", "range", "replace",
     "script", "select", "stop", "store", "while", };
 
-
 SearchParser::SearchParser(Logger &logger) :
     Parser(logger) {
   Parser::_keywords = _keywords;
@@ -388,8 +387,7 @@ void Script::assertStatement(bool testOnly) {
     const char *name = nullptr;
     do {
       type = _parser.parseSpecial(&Parser::_regexId, TT_IDENTIFIER,
-          &SearchParser::_regexBuffer,
-          SearchParser::TT_BUFFER);
+          &SearchParser::_regexBuffer, SearchParser::TT_BUFFER);
       switch (type) {
       case TT_IDENTIFIER:
         if (!variableExists(_parser.tokenAsCString())) {
@@ -1064,14 +1062,17 @@ void Script::mark(bool testOnly) {
 // mark set exchange [<buffer>] || mark {save | restore] <variable>
   auto type = _parser.parse();
   bool search = false;
+  std::string absPosition;
   enum {
     UNKNOWN, SET, EXCHANGE, SAVE, RESTORE
   } mode = UNKNOWN;
   if (_parser.isWord("set")) {
     mode = SET;
-    type = _parser.parse();
-    if (_parser.isWord("search")) {
-      search = true;
+    search = _parser.hasWaitingWord("search") != 0;
+    if (!search) {
+      if (_parser.parseSpecial(&SearchParser::_regexAbsolutePosition, 1) == 1) {
+        absPosition = _parser.tokenAsString();
+      }
     }
   } else if (_parser.isWord("exchange")) {
     mode = EXCHANGE;
@@ -1094,7 +1095,7 @@ void Script::mark(bool testOnly) {
   }
   std::string variable;
   if (mode == SAVE || mode == RESTORE) {
-    type = _parser.parseSpecial(&SearchParser::_regexVariable, 1);
+    type = _parser.parseSpecial(&Parser::_regexId, 1);
     if (type == 1) {
       variable = _parser.tokenAsString();
     } else {
@@ -1111,6 +1112,16 @@ void Script::mark(bool testOnly) {
     case SET:
       if (search) {
         buffer->startLastHit(position);
+      } else if (!absPosition.empty()) {
+        std::smatch match;
+        if (!std::regex_search(absPosition, match,
+            SearchParser::_regexAbsolutePosition)) {
+          throw ParserError(
+              formatCString("not an absolute position: %s",
+                  absPosition.c_str()), _parser);
+        }
+        position._lineIndex = -1 + atol(match.str(1).c_str());
+        position._columnIndex = -1 + atol(match.str(2).c_str());
       } else {
         buffer->position(position);
       }
@@ -1627,13 +1638,14 @@ std::string Script::variableAsString(const std::string &name, bool quiet) {
   std::string rc;
   bool processed = false;
   BufferPosition position;
-  if (name.size() > 3 && name[2] == '_') {
+  std::string key(name[0] == '$' ? name : formatCString("$(%s)", name.c_str()));
+  if (key.size() > 3 && key[2] == '_') {
     processed = true;
     auto buffer = getBuffer();
-    if (strncmp("$(_", name.c_str(), 3) == 0) {
+    if (strncmp("$(_", key.c_str(), 3) == 0) {
       // global variable:
-      if (name[3] != '_') {
-        auto value = _engine.globalVariable(name.c_str());
+      if (key[3] != '_') {
+        auto value = _engine.globalVariable(key.c_str());
         if (value == nullptr) {
           if (quiet) {
             value = "";
@@ -1644,37 +1656,37 @@ std::string Script::variableAsString(const std::string &name, bool quiet) {
           }
         }
         rc = value;
-      } else if (name == "$(__line)") {
+      } else if (key == "$(__line)") {
         rc = formatCString("%d", buffer->position(position)._lineIndex);
-      } else if (name == "$(__column)") {
+      } else if (key == "$(__column)") {
         rc = formatCString("%d", buffer->position(position)._columnIndex);
-      } else if (name == "$(__lines)") {
+      } else if (key == "$(__lines)") {
         rc = formatCString("%d", buffer->lines().size());
-      } else if (name == "$(__position)") {
+      } else if (key == "$(__position)") {
         buffer->position(position);
         rc = formatCString("%ld:%ld", position._lineIndex + 1,
             position._columnIndex + 1);
-      } else if (name == "$(__mark)") {
+      } else if (key == "$(__mark)") {
         buffer->mark(position);
         rc = formatCString("%ld:%ld", position._lineIndex + 1,
             position._columnIndex + 1);
-      } else if (name == "$(__start)") {
+      } else if (key == "$(__start)") {
         buffer->startLastHit(position);
         rc = formatCString("%ld:%ld", position._lineIndex + 1,
             position._columnIndex + 1);
-      } else if (name == "$(__end)") {
+      } else if (key == "$(__end)") {
         buffer->startLastHit(position);
         rc = formatCString("%ld:%ld", position._lineIndex + 1,
             position._columnIndex + 1 + buffer->lastHit().size());
-      } else if (name == "$(__hit)") {
+      } else if (key == "$(__hit)") {
         rc = buffer->lastHit();
-      } else if (name == "$(__buffer)") {
+      } else if (key == "$(__buffer)") {
         rc = buffer->name();
-      } else if (name == "$(__file)") {
+      } else if (key == "$(__file)") {
         rc = buffer->filename();
-      } else if (name == "$(__date)") {
+      } else if (key == "$(__date)") {
         rc = formatDate();
-      } else if (name == "$(__time)") {
+      } else if (key == "$(__time)") {
         rc = formatTime(std::time(nullptr));
       } else {
         throw ParserError(
@@ -1686,7 +1698,7 @@ std::string Script::variableAsString(const std::string &name, bool quiet) {
     }
   }
   if (!processed) {
-    auto it = _variables.find(name);
+    auto it = _variables.find(key);
     if (it == _variables.end()) {
       if (!quiet) {
         error(

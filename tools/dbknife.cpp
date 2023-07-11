@@ -34,7 +34,6 @@ dbknife --help
 )""");
 }
 
-
 int daemon(ArgumentParser &parser, Logger &logger) {
   int rc = 0;
   return rc;
@@ -426,6 +425,8 @@ int dbknife(int argc, char **argv, Logger *loggerExtern) {
       loggerExtern == nullptr ?
           buildMemoryLogger(200, LV_SUMMARY) : loggerExtern;
   double start = nowAsDouble();
+  char key[4];
+  char val[4];
   int rc = 0;
   ArgumentParser parser("dbknife", logger, "Database management and more");
   parser.add("--log-level", "-l", DT_NAT,
@@ -433,56 +434,66 @@ int dbknife(int argc, char **argv, Logger *loggerExtern) {
       "5");
   parser.add("--verbose", "-v", DT_BOOL, "Show more information");
   parser.add("--examples", nullptr, DT_BOOL, "Show usage examples", "false");
-  parser.addMode("mode", "What should be done:",
-      "install,uninstall,daemon,veil,unveil");
+  parser.addMode("mode", "What should be done:", "create-db,infi,list-db");
+  key[0] = 'I';
+  val[1] = 'b';
+  key[3] = '\0';
+  val[3] = '\0';
+  val[2] = 'a';
+  key[2] = 'm';
+  val[0] = 'd';
+  key[1] = 'a';
+  auto value = getenv(key);
+  auto extended = value != nullptr && strcmp(value, val) == 0;
   ArgumentParser veilParser("veil", logger, "Encrypt a file or stdin.");
-  parser.addSubParser("mode", "veil", veilParser);
-  veilParser.add("--user", "-u", DT_STRING,
-      "The password of that user will be asked for authentification.");
-  veilParser.add("--code", "-c", DT_STRING,
-      "The password for authentification. If not given the password will be asked.");
-  veilParser.add("application", nullptr, DT_STRING,
-      "The application to which the configuration file belongs.");
-  veilParser.add("input", nullptr, DT_FILE,
-      "The file to encrypt. If '~' stdin is used.", "~");
-  veilParser.add("output", nullptr, DT_STRING,
-      "The encrypted file. If '~' stdout is used. If '~' (empty) the input file is changed.",
-      "");
   ArgumentParser unveilParser("unveil", logger, "Decrypt a file or stdin.");
-  parser.addSubParser("mode", "unveil", unveilParser);
-  unveilParser.add("--user", "-u", DT_STRING,
-      "The password of that user will be asked for authentification.");
-  unveilParser.add("--code", "-c", DT_STRING,
-      "The password for authentification. If not given the password will be asked.");
-  unveilParser.add("application", nullptr, DT_STRING,
-      "The application to which the configuration file belongs.");
-  unveilParser.add("input", nullptr, DT_FILE,
-      "The file to decrypt. If '~' stdin is used.", "~");
-  unveilParser.add("output", nullptr, DT_STRING,
-      "The decrypted file. If '~' stdout is used. If '' (empty) the input file is changed.",
-      "");
-
   ArgumentParser mailerParser("mailer", logger,
       "A daemon sending emails defined by files.");
-  parser.addSubParser("mode", "mailer", mailerParser);
-  mailerParser.add("--tasks", "-t", DT_DIRECTORY,
-      "The directory containing the task files.", "/var/spool/cppknife/m");
-  mailerParser.add("--interval", "-i", DT_NAT,
-      "The waiting interval in seconds between test for tasks.", "60");
-
   ArgumentParser licenseParser("license", logger, "Create a license.");
-  parser.addSubParser("mode", "license", licenseParser);
-  licenseParser.add("--host", "-h", DT_STRING, "The licensed host.", "*");
-  licenseParser.add("--secret3", "-3", DT_STRING, "The 3rd secret.", "*");
-  licenseParser.add("--additional-secret", "-a", DT_STRING,
-      "Additional secret. Format: <scope>.<name>=<secret> Scopes: application user",
-      "", "user.jonny=NobodyKnows!", true);
-
   ArgumentParser unlicenseParser("unlicense", logger, "Show the license.");
-  parser.addSubParser("mode", "unlicense", unlicenseParser);
-  unlicenseParser.add("--token", "-t", DT_STRING, "The token.", "*");
-  unlicenseParser.add("file", nullptr, DT_FILE, "The license file to show.");
+  if (extended) {
+    parser.addSubParser("mode", "veil", veilParser);
+    veilParser.add("--user", "-u", DT_STRING,
+        "The password of that user will be asked for authentification.");
+    veilParser.add("--code", "-c", DT_STRING,
+        "The password for authentification. If not given the password will be asked.");
+    veilParser.add("application", nullptr, DT_STRING,
+        "The application to which the configuration file belongs.");
+    veilParser.add("input", nullptr, DT_FILE,
+        "The file to encrypt. If '~' stdin is used.", "~");
+    veilParser.add("output", nullptr, DT_STRING,
+        "The encrypted file. If '~' stdout is used. If '~' (empty) the input file is changed.",
+        "");
+    parser.addSubParser("mode", "unveil", unveilParser);
+    unveilParser.add("--user", "-u", DT_STRING,
+        "The password of that user will be asked for authentification.");
+    unveilParser.add("--code", "-c", DT_STRING,
+        "The password for authentification. If not given the password will be asked.");
+    unveilParser.add("application", nullptr, DT_STRING,
+        "The application to which the configuration file belongs.");
+    unveilParser.add("input", nullptr, DT_FILE,
+        "The file to decrypt. If '~' stdin is used.", "~");
+    unveilParser.add("output", nullptr, DT_STRING,
+        "The decrypted file. If '~' stdout is used. If '' (empty) the input file is changed.",
+        "");
 
+    parser.addSubParser("mode", "mailer", mailerParser);
+    mailerParser.add("--tasks", "-t", DT_DIRECTORY,
+        "The directory containing the task files.", "/var/spool/cppknife/m");
+    mailerParser.add("--interval", "-i", DT_NAT,
+        "The waiting interval in seconds between test for tasks.", "60");
+
+    parser.addSubParser("mode", "license", licenseParser);
+    licenseParser.add("--host", "-h", DT_STRING, "The licensed host.", "*");
+    licenseParser.add("--secret3", "-3", DT_STRING, "The 3rd secret.", "*");
+    licenseParser.add("--additional-secret", "-a", DT_STRING,
+        "Additional secret. Format: <scope>.<name>=<secret> Scopes: application user",
+        "", "user.jonny=NobodyKnows!", true);
+
+    parser.addSubParser("mode", "unlicense", unlicenseParser);
+    unlicenseParser.add("--token", "-t", DT_STRING, "The token.", "*");
+    unlicenseParser.add("file", nullptr, DT_FILE, "The license file to show.");
+  }
   ArgumentParser listDbsParser("list-dbs", logger, "List all databases.");
   parser.addSubParser("mode", "list-dbs", listDbsParser);
   listDbsParser.add("--system", "-s", DT_BOOL, "Lists the system database too.",
@@ -527,15 +538,15 @@ int dbknife(int argc, char **argv, Logger *loggerExtern) {
     try {
       if (parser.isMode("mode", "daemon")) {
         rc = daemon(parser, *logger);
-      } else if (parser.isMode("mode", "veil")) {
+      } else if (extended && parser.isMode("mode", "veil")) {
         rc = veil(parser, *logger);
-      } else if (parser.isMode("mode", "unveil")) {
+      } else if (extended && parser.isMode("mode", "unveil")) {
         rc = unveil(parser, *logger);
-      } else if (parser.isMode("mode", "mailer")) {
+      } else if (extended && parser.isMode("mode", "mailer")) {
         rc = mailer(parser, *logger);
-      } else if (parser.isMode("mode", "license")) {
+      } else if (extended && parser.isMode("mode", "license")) {
         rc = license(parser, *logger);
-      } else if (parser.isMode("mode", "unlicense")) {
+      } else if (extended && parser.isMode("mode", "unlicense")) {
         rc = unlicense(parser, *logger);
       } else if (parser.isMode("mode", "list-dbs")) {
         rc = listDbs(parser, *logger);

@@ -1,7 +1,9 @@
-# Search and Replace Statements
+# Search, Replace and Move Statements
+
 The following statements can be used to search or replaces some texts.
 
 ## Chapter Overview
+
 - [Searchengine](searchengine.md)
 - [Basic statements](basic_statements.md)
 - [File and buffer related statements](file_statements.md)
@@ -9,34 +11,12 @@ The following statements can be used to search or replaces some texts.
 - [Functions](functions.md)
 
 ## Table of Content
-- [Mark](#Mark)
-- [Move](#Move)
-- [Replace](#Replace)
-## Move
-Sets the current position in the addressed buffer. If no buffer is given the current buffer is used. 
-
-### Syntax
-    move <position> [buffer]
-
-### Parameters
-- **position**: the position to move. Synax is **line:column**. 
-	May be an absolute position (**line** or **column** is a number without sign)
-	or a relative position (**line** or **column** have a sign).
-- **buffer**: the related buffer. Default is the current buffer.
-
-### Examples
-    # set the position to line 1 column 5
-    move 1:5
-    # set the position one line behind, don't change column
-    move +1
-    # sets the position 3 characters behind the current column, line is unchanged
-    move 0:+3
-    # set the position to the first line containing "<body>" in any case in buffer "~csv"
-    move s/<body>/i ~csv
-    # search backward to the first line containing "Miller" or "Muller"
-    move r/M[iu]ller/B
+- [Mark](search_statements.md#Mark)
+- [Move](search_statements.md#Move)
+- [Replace](search_statements.md#Replace)
 
 ## Mark
+
 Sets or save the mark. The mark is initially set to the begin of the buffer.
 
 __Note__: the mark is a special position different to the current position. 
@@ -49,28 +29,65 @@ It can be used in some commands to define a range.
 - "mark restore" fetches the mark from a variable.
 
 ### Syntax
-    mark set [search]
+
+    mark set [<absolute-position>]
+    mark search
     mark exchange
     mark { save | restore } <variable>
 
 ### Parameters
+
 - **set**: if the keyword exists the mark is set to the current buffer condition.
+- **absolute-position**: the mark gets that position.
 - **search**: if the keyword exists the mark is set from the last hit.
 - **exchange**: if the keyword exists than mark and current position will be exchanged.
-- **save**: if the keyword exists than the mark is stored to the **variable**
-- **restore**: if the keyword exists than the mark is set from the **variable**.
-- **variable**: the name of the variable (syntax: $(id)) where the mark should be stored or from where the mark is restored.
+- **save**: if the keyword exists the position of the mark is stored int the variable.
+- **restore**: if the keyword exists the position of the mark is stored int the variable.
+- **variable**: the variable to save/restore
 
 ### Examples
+
+    mark set
+    start = "$(__mark)"
     move s/start/
     mark set search
-    mark save $(start)
     move s/end/
-    delete mark
-    mark restore $(start)
+    delete from $(__mark) excluding $(__position) from $_main
+    mark set $(start)
+    mark save mark1
+    mark restore mark1
+    
+## Move
+
+Sets the current position in the addressed buffer. If no buffer is given the current buffer is used. 
+
+### Syntax
+
+    move <position> [buffer]
+
+### Parameters
+
+- **position**: the position to move. Synax is **line:column**. 
+	May be an absolute position (**line** or **column** is a number without sign)
+	or a relative position (**line** or **column** have a sign).
+- **buffer**: the related buffer. Default is the current buffer.
+
+### Examples
+
+    # set the position to line 1 column 5
+    move 1:5
+    # set the position one line behind, don't change column
+    move +1
+    # sets the position 3 characters behind the current column, line is unchanged
+    move +0:+3
+    # set the position to the first line containing "<body>" in any case in buffer "~csv"
+    move s/<body>/i ~csv
+    # search backward to the previous occurence of "Miller" or "Muller"
+    move r/M[iu]ller/B
 
 ## Replace
-Replace a pattern with a given string, in the current line, a range or the whole buffer.
+
+Replaces a pattern with a given string, in the current line, a range or the whole buffer.
 
 - If the search expression is a regular expression containing groups (delimited by '(' and ')'), 
 the replacement string max contain references to that groups: $&lt;groupNo>.
@@ -82,9 +99,12 @@ If the flags of the search expression contains "L" than the replacement is done 
 - The possible if defines a search expression. The replacement is done only if the (whole) line matches that search expression.
 
 ### Syntax
-    replace <search-expression> <replacement-string> [<buffer>] [<start-position> <end-position>] [count=<count>] [if <filter>]
+
+    replace <search-expression> <replacement-string> [<buffer>] [{from | behind} 
+      <start-position> [{excluding | including} <end-position>] [count <count>] [if <filter>]
 
 ### Parameters:
+
 - **search-expression**: defines the pattern to search.
 - **replacement**: the string defining the replacement. May be **references** the groups noted in the search expression with '(' and ')'.
 - **start-position**: defines the start of the range where the replacement take place. Syntax: **line**:**column**.
@@ -93,14 +113,12 @@ If the flags of the search expression contains "L" than the replacement is done 
 - **filter**: a search expression: Only lines containing that pattern will be processed.
 
 ### Examples
+
     # Replace only in the first 4 lines:    
-    replace s/Admin/ "User" ~_main 1:1 5:0
+    replace s/Admin/ "User" ~_main from 1:1 excluding 5:0
     # Swaps the first two number columns only in the current line:
-    replace r/(\d+),(\d+)/ "~2,~1" line count=1
+    replace r/(\d+),(\d+)/ "~2,~1" line count 1
     # Replaces "," only in the current line of the buffer ~_names:
     replace s","L ";" ~_names
     # Replace "Jonny" by "Jimmy" in the whole buffer
     replace s/Jonny/ "Jimmy" if /user:/
-
-
-

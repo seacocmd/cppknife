@@ -62,7 +62,7 @@ int geoknife(int argc, char **argv, Logger *loggerExtern) {
       nullptr, "47329882.7 27339487.2|east: 47329882.7 north: 27339487.2");
   ArgumentParser fromGpsParser("from-gps", logger,
       "Translate a coordinate pair to GPS");
-  parser.addSubParser("mode", "to-gps", toGpsParser);
+  parser.addSubParser("mode", "from-gps", fromGpsParser);
   fromGpsParser.add("--srid", "-S", DT_NAT,
       "The identifier of the coordinate system (see POSTGIS).", "3035", "3035");
   fromGpsParser.add("coordinate", nullptr, DT_STRING,

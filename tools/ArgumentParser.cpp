@@ -269,7 +269,14 @@ std::regex Argument::asRegExpr(size_t index) const {
     pattern = std::string(value + 1, patternLength);
     flags = ptr + 1;
   }
-  std::regex_constants::syntax_option_type flags2 = std::regex_constants::icase;
+  if (strchr(flags.c_str(), 'w') != nullptr) {
+    pattern = "\\b" + pattern + "\\b";
+    if (strchr(pattern.c_str(), '[') != nullptr) {
+      replaceString(pattern, ".", "\\B");
+    }
+  }
+  std::regex_constants::syntax_option_type flags2 =
+      std::regex_constants::ECMAScript;
   if (!flags.empty()) {
     if (strchr(flags.c_str(), 'i') != nullptr) {
       flags2 |= std::regex_constants::icase;

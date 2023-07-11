@@ -1,4 +1,4 @@
-# sesknife
+# geoknife
 
 ## Objectives
 That program offers services for geometry/geography.
@@ -27,14 +27,29 @@ geoknife [<options>]  MODE
     Log level: 1=FATAL 2=ERROR 3=WARNING 4=INFO 5=SUMMARY 6=DETAIL 7=FINE 8=DEBUG, e.g. --log-level=123 -l0
   -v,--verbose
     Show more information, e.g. --verbose -v
+  --examples
+    Show usage examples, e.g. --examples --examples --examples --examples --examples
   MODE
     What should be done:
+    from-gps
+      Translate a coordinate pair to GPS
     to-gps
       Translate a coordinate pair to GPS
-geoknife to-gps    Translate a coordinate pair to GPS
+geoknife from-gps [<options>]  COORDINATE
+    Translate a coordinate pair to GPS
   -?,--help
     Shows the usage information., e.g. --help -?
   -S SRID,--srid=SRID
     The identifier of the coordinate system (see POSTGIS)., e.g. --srid=3035
+  COORDINATE
+    The coordinates: the first two floating numbers will be taken as latitude longitude, e.g. 47.928392 11.3829283 @47.928392,11.3829283,
+geoknife to-gps [<options>]  COORDINATE
+    Translate a coordinate pair to GPS
+  -?,--help
+    Shows the usage information., e.g. --help -?
+  -S SRID,--srid=SRID
+    The identifier of the coordinate system (see POSTGIS)., e.g. --srid=3035
+  COORDINATE
+    The coordinates: the first two floating numbers will be taken as east-north coordinates, e.g. 47329882.7 27339487.2 east: 47329882.7 north: 27339487.2
 +++ help requested
 ```

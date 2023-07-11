@@ -323,6 +323,8 @@ public:
    * @param name: the name of the argument.
    * @param defaultValue: The result if the parameter is not in the program arguments.
    * @param index: 0 or the index (when multiple values are allowed).
+   * @param flags: a string with some of the following flag characters: 'i': ignore case 'w': pattern is a word
+   *  'w' word boundaries on top and at the end.
    * @return The value of the argument.
    */
   int64_t

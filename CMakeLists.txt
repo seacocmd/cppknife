@@ -38,11 +38,11 @@ set(OS_UNITTEST_SOURCES unittest/File_test.cpp unittest/FileDb_test.cpp unittest
 
 set(TEXT_SOURCES text/Configuration.cpp text/CsvFile.cpp text/FunctionEngine.cpp text/JsonReader.cpp text/LineList.cpp
 	text/LineReader.cpp text/LinesStream.cpp text/Matcher.cpp text/Parser.cpp text/ParserError.cpp text/Script.cpp
-	text/SearchEngine.cpp text/StringList.cpp)
+	text/SearchEngine.cpp text/StringList.cpp text/Base64.cpp)
 
 set(TEXT_UNITTEST_SOURCES unittest/Configuration_test.cpp unittest/CsvFile_test.cpp unittest/FunctionEngine_test.cpp unittest/JsonReader_test.cpp unittest/LineList_test.cpp
 	unittest/LineReader_test.cpp unittest/LinesStream_test.cpp unittest/Matcher_test.cpp unittest/Parser_test.cpp unittest/ParserError_test.cpp unittest/Script_test.cpp
-	unittest/SearchEngine_test.cpp unittest/StringList_test.cpp)
+	unittest/SearchEngine_test.cpp unittest/StringList_test.cpp unittest/Base64_test.cpp)
 
 set(TOOLS_SOURCES tools/ArgumentParser.cpp tools/ToolsCommons.cpp tools/VeilEngine.cpp tools/SecretConfiguration.cpp)
 

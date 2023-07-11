@@ -42,6 +42,8 @@ textknife [<options>]  MODE
     What should be done:
     adapt
       Adapts configuration files.
+    search
+      Searches regular expressions.
     strings
       Fetches the strings delimited by ' or " from files.
 textknife adapt [<options>]  SOURCE BASE
@@ -60,6 +62,40 @@ textknife adapt [<options>]  SOURCE BASE
     Insert above the anchor line., e.g. --above-anchor -A
   SOURCE
     A directory with or without a list of file patterns., e.g. /etc/php/8.4/*.conf
+  BASE
+    The start directory or a list of file patterns delimited by ',', first with path. Preceding '-' defines a NOT pattern, e.g. . /home/jonny/*.c,*.h,-*tmp*
+  -f FILES,--files=FILES
+    Only files matching that patterns will be found, e.g. --files=;*.cpp;*.hpp;-test*
+  -p DIRECTORIES,--directories=DIRECTORIES
+    Only directories matching that patterns will inspected, e.g. --directories=;-.git;-*tmp*;-*temp*
+  -d MIN-DEPTH,--min-depth=MIN-DEPTH
+    The minimum path depth (0 is the depth of the start directory), e.g. --min-depth=0 -d3
+  -D MAX-DEPTH,--max-depth=MAX-DEPTH
+    The maximum path depth (0 is the depth of the start directory), e.g. --max-depth=1 -D99
+  -m MINUTES,--minutes=MINUTES
+    The found files must be older (if < 0) or newer (if > 0) than that amount of minutes, e.g. --minutes=123 -m-1793
+  -y DAYS,--days=DAYS
+    The found files must be older (if < 0) or newer (if > 0) than that amount of days, e.g. --days=10 -y-60
+  -s SIZE,--size=SIZE
+    The found files must have a size lower  (if < 0) or larger (if > 0) than that size. Units: [kmgt], e.g. --size=1234 -s3k
+  -t TYPE,--type=TYPE
+    The file type: f(ile) d(irectory) l(ink) s(ocket) b(lock) p(ipe) c(har), e.g. --type=f,d,l -td
+textknife strings [<options>]  SOURCE BASE
+    Searches regular expressions.
+  -?,--help
+    Shows the usage information., e.g. --help -?
+  -P PATTERN,--pattern=PATTERN
+    The pattern describing the key., e.g. --pattern=/^max_memory\s*=
+  -o,--only-matching
+    Displayes only the matched string, e.g. --only-matching -o
+  -l,--list
+    Show the filename only, not the matching lines, e.g. --list -l
+  -v,--invert-match
+    Show the lines NOT matching the patterns, e.g. --invert-match -v
+  -m MAX-COUNT,--max-count=MAX-COUNT
+    Stops file processing after that count of matching lines, e.g. --max-count=123 -m0
+  SOURCE
+    A directory with or without a list of file patterns., e.g. *.cpp,*.hpp,src/test* src1,src2 /home/joe
   BASE
     The start directory or a list of file patterns delimited by ',', first with path. Preceding '-' defines a NOT pattern, e.g. . /home/jonny/*.c,*.h,-*tmp*
   -f FILES,--files=FILES

@@ -41,8 +41,8 @@ int main(int argc, char **argv) {
 
     //filter = "FunctionEngineTest.*";
     //filter = "SearchEngineTest.*";
-    //filter = "ScriptTest.*";
-    filter = "SesKnifeTest.*";
+    filter = "ScriptTest.*";
+    //filter = "SesKnifeTest.*";
     std::string arg = "--gtest_filter=";
     arg += filter;
     char *args[] = { (char*) "dummy", const_cast<char*>(arg.c_str()), nullptr };

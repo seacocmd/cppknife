@@ -1,4 +1,4 @@
-# geoknife
+# sesknife
 
 ## Objectives
 That program is an interpreter of the __Search Enginge Script__ language.

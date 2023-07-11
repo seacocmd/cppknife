@@ -10,85 +10,167 @@
 
 namespace cppknife {
 
-LineAgent::LineAgent(Logger *logger) :
+FileBuffer::FileBuffer(size_t bufferSize = 0x10000) :
+/* _staticBuffer, */
+    _buffer(_staticBuffer), _bufferSize(bufferSize), _endOfBuffer(nullptr), _nextLine(
+        nullptr), _restLength(0), _filePosition(0), _offsetCurrentLine(0), _lineNo(
+        0) {
+  if (bufferSize < sizeof _staticBuffer - 1) {
+    _buffer = _staticBuffer;
+  } else {
+    _buffer = new char[bufferSize + 1];
+  }
+  _endOfBuffer = _buffer + bufferSize;
+  _nextLine = _buffer;
+  _endOfBuffer[0] = '\0';
+}
+FileBuffer::~FileBuffer() {
+  if (_buffer != _staticBuffer) {
+    delete _buffer;
+    _buffer = nullptr;
+  }
+}
+void FileBuffer::clone(FileBuffer &other) {
+  _restLength = other._restLength;
+  _nextLine = _buffer + (other._nextLine - other._buffer);
+  _filePosition = other._filePosition;
+  if (other._endOfBuffer - other._buffer > _bufferSize) {
+    increaseBuffer(other._bufferSize - _bufferSize);
+  }
+  _endOfBuffer = _buffer + (other._endOfBuffer - other._buffer);
+}
+void FileBuffer::increaseBuffer(size_t clusterSize) {
+  if (clusterSize == 0) {
+    clusterSize = _bufferSize;
+  }
+  if (_bufferSize + clusterSize < sizeof _staticBuffer - 1) {
+    _bufferSize += clusterSize;
+    _endOfBuffer += clusterSize;
+  } else {
+    _bufferSize += clusterSize;
+    char *newBuffer = new char[_bufferSize + 1];
+    _endOfBuffer = newBuffer + _bufferSize;
+    size_t length = _nextLine - _buffer + _restLength;
+    memcpy(newBuffer, _buffer, length);
+    if (_buffer != _staticBuffer) {
+      delete _buffer;
+    }
+    _buffer = newBuffer;
+  }
+  _endOfBuffer[0] = '\0';
+}
+void FileBuffer::reset() {
+  _endOfBuffer = _buffer + _bufferSize;
+  *_endOfBuffer = '\0';
+  _nextLine = _buffer;
+  _restLength = 0;
+}
+void FileBuffer::setBufferSize(size_t bufferSize) {
+  if (bufferSize >= sizeof _staticBuffer) {
+    if (_buffer != _staticBuffer) {
+      delete _buffer;
+    }
+    _buffer = new char[bufferSize + 1];
+    _bufferSize = bufferSize;
+    reset();
+  } else {
+    _bufferSize = bufferSize;
+    reset();
+  }
+}
+
+LineAgent::LineAgent(Logger *logger, size_t startBufferSize, size_t clusterSize) :
     _logger(logger), _handle(-1), _filename(),
-    /* _staticBuffer */_buffer(_staticBuffer), _bufferSize(
-        sizeof _staticBuffer - 1), _endOfBuffer(
-        _staticBuffer + sizeof _staticBuffer - 1), _nextLine(_staticBuffer), _restLength(
-        0), _eofReached(false), _hasBinaryData(false) {
-  _staticBuffer[sizeof _nextLine - 1] = '\0';
+    _currentBuffer(nullptr), _previousBuffer(
+        nullptr), _eofReached(false), _hasBinaryData(false), _clusterSize(
+        clusterSize) {
+  _currentBuffer = new FileBuffer(startBufferSize);
+  _previousBuffer = new FileBuffer(startBufferSize);
 }
 LineAgent::~LineAgent() {
   if (_handle > 0) {
     close(_handle);
   }
-  if (_buffer != _staticBuffer) {
-    delete _buffer;
-    _buffer = nullptr;
-  }
+  delete _currentBuffer;
+  _currentBuffer = nullptr;
+  delete _previousBuffer;
+  _previousBuffer = nullptr;
+
 }
 int LineAgent::estimateLineCount() {
   size_t rc = -1;
   struct stat state;
   if (::stat(_filename.c_str(), &state) == 0) {
     auto fileSize = state.st_size;
-    if (_restLength == 0) {
-      fillBuffer(_buffer);
+    if (_currentBuffer->_restLength == 0) {
+      fillBuffer(0);
     }
     size_t lines = 1;
-    char *ptr = _buffer;
+    char *ptr = _currentBuffer->_buffer;
     char *last = ptr;
-    auto restLength = _restLength;
+    auto restLength = _currentBuffer->_restLength;
     while ((ptr = static_cast<char*>(memchr(static_cast<void*>(last), '\n',
         restLength))) != nullptr) {
       lines++;
       restLength -= (ptr - last) - 1;
       last = ptr + 1;
     }
-    rc = 1 + int(static_cast<double>(fileSize) / _restLength * lines);
+    rc = 1
+        + int(
+            static_cast<double>(fileSize) / _currentBuffer->_restLength
+                * lines);
   }
   return rc;
+}
+char* LineAgent::previousLine(int no, size_t &size) {
+  size = 0;
+  return nullptr;
 }
 const char* LineAgent::nextLine(size_t &length) {
   const char *rc = nullptr;
   if (_handle > 0) {
-    rc = _restLength == 0 ? _buffer : _nextLine;
-    if (!_eofReached && _restLength == 0) {
-      fillBuffer(_buffer);
+    if (!_eofReached && _currentBuffer->_restLength == 0) {
+      fillBuffer(0);
     }
+    rc =
+        _currentBuffer->_restLength == 0 ?
+            _currentBuffer->_buffer : _currentBuffer->_nextLine;
+    _currentBuffer->_lineNo++;
     bool again = false;
     do {
       again = false;
-      if (_restLength > 0
-          && (_nextLine = static_cast<char*>(memchr(
-              static_cast<void*>(_nextLine), '\n', _restLength))) != nullptr) {
-        *_nextLine = '\0';
-        length = _nextLine - rc;
-        if (++_nextLine > _endOfBuffer) {
-          _nextLine = _endOfBuffer;
+      if (_currentBuffer->_restLength > 0
+          && (_currentBuffer->_nextLine = static_cast<char*>(memchr(
+              static_cast<void*>(_currentBuffer->_nextLine), '\n',
+              _currentBuffer->_restLength))) != nullptr) {
+        *_currentBuffer->_nextLine = '\0';
+        length = _currentBuffer->_nextLine - rc;
+        if (++(_currentBuffer->_nextLine) > _currentBuffer->_endOfBuffer) {
+          _currentBuffer->_nextLine = _currentBuffer->_endOfBuffer;
         }
         if (_eofReached) {
-          _restLength -= length + 1;
+          _currentBuffer->_restLength -= length + 1;
         } else {
-          _restLength = _endOfBuffer - _nextLine;
+          _currentBuffer->_restLength = _currentBuffer->_endOfBuffer
+              - _currentBuffer->_nextLine;
         }
       } else if (_eofReached) {
-        if (_restLength <= 0) {
+        if (_currentBuffer->_restLength <= 0) {
           rc = nullptr;
           length = 0;
         } else {
           length = strlen(rc);
-          _nextLine += length;
-          _restLength = 0;
+          _currentBuffer->_nextLine += length;
+          _currentBuffer->_restLength = 0;
         }
-      } else if (_restLength == _bufferSize) {
-        length = _restLength;
-        _restLength = 0;
-        _nextLine = _buffer;
+      } else if (_currentBuffer->_restLength == _currentBuffer->_bufferSize) {
+        length = _currentBuffer->_restLength;
+        _currentBuffer->_restLength = 0;
+        _currentBuffer->resetNextLine();
       } else {
-        _nextLine = const_cast<char*>(rc);
-        fillBuffer(_nextLine);
-        rc = _nextLine = _buffer;
+        _currentBuffer->_nextLine = const_cast<char*>(rc);
+        fillBuffer(_currentBuffer->_nextLine - _currentBuffer->_buffer);
+        rc = _currentBuffer->resetNextLine();
         again = true;
       }
     } while (again);
@@ -104,28 +186,41 @@ const char* LineAgent::nextLine(size_t &length) {
       }
     }
   }
+  _currentBuffer->_offsetCurrentLine = rc - _currentBuffer->_buffer;
   return rc;
 }
-void LineAgent::fillBuffer(const char *start) {
-  if (_restLength > 0) {
-    memmove(_buffer, start, _restLength);
+void LineAgent::fillBuffer(size_t startOffset) {
+  // Swap the two buffers:
+  auto swap = _currentBuffer;
+  _currentBuffer = _previousBuffer;
+  _previousBuffer = swap;
+  _currentBuffer->clone(*_previousBuffer);
+  if (_currentBuffer->_restLength > 0) {
+    memmove(_currentBuffer->_buffer, _previousBuffer->_buffer + startOffset,
+        _previousBuffer->_restLength);
   }
-  _nextLine = _buffer + _restLength;
-  ssize_t requested = _endOfBuffer - _nextLine;
-  auto bytes = read(_handle, _nextLine, requested);
+  _currentBuffer->addOffset();
+  _currentBuffer->_nextLine = _currentBuffer->_buffer
+      + _currentBuffer->_restLength;
+  ssize_t requested = _currentBuffer->_endOfBuffer - _currentBuffer->_nextLine;
+  auto bytes = read(_handle, _currentBuffer->_nextLine, requested);
   if (bytes < 0) {
     bytes = 0;
   }
-  if (_restLength + bytes < _bufferSize) {
-    _endOfBuffer = _nextLine + bytes;
-    *_endOfBuffer = '\0';
+  if (_currentBuffer->_restLength + bytes < _currentBuffer->_bufferSize) {
+    _currentBuffer->_endOfBuffer = _currentBuffer->_nextLine + bytes;
+    *(_currentBuffer->_endOfBuffer) = '\0';
   }
-  if (bytes > 0 && memchr(_nextLine, '\0', bytes) != nullptr) {
+  if (bytes > 0 && memchr(_currentBuffer->_nextLine, '\0', bytes) != nullptr) {
     _hasBinaryData = true;
   }
   _eofReached = bytes < requested;
-  _restLength += bytes;
-  _nextLine = _buffer;
+  _currentBuffer->_restLength += bytes;
+  _currentBuffer->_nextLine = _currentBuffer->_buffer;
+}
+
+size_t LineAgent::offsetCurrentLine() const {
+  return _currentBuffer->_filePosition + _currentBuffer->_offsetCurrentLine;
 }
 bool LineAgent::openFile(const char *filename) {
   if (_handle > 0) {
@@ -148,25 +243,15 @@ bool LineAgent::openFile(const char *filename) {
 }
 
 void LineAgent::reset() {
-  _endOfBuffer = _buffer + _bufferSize;
-  *_endOfBuffer = '\0';
-  _nextLine = _buffer;
-  _restLength = 0;
+  _currentBuffer->reset();
+  _previousBuffer->reset();
 }
-
 void LineAgent::setBufferSize(size_t bufferSize) {
-  if (_nextLine != _staticBuffer) {
+  if (_currentBuffer->_nextLine != _currentBuffer->_buffer) {
     _logger->say(LV_ERROR, "setBufferSize(): illegal state. No change done.");
-  } else if (bufferSize >= sizeof _staticBuffer) {
-    if (_buffer != _staticBuffer) {
-      delete _buffer;
-    }
-    _buffer = new char[bufferSize + 1];
-    _bufferSize = bufferSize;
-    reset();
   } else {
-    _bufferSize = bufferSize;
-    reset();
+    _currentBuffer->setBufferSize(bufferSize);
+    _previousBuffer->setBufferSize(bufferSize);
   }
 }
 } /* namespace */

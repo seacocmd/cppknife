@@ -2,6 +2,27 @@
 
 ## [Unreleased]
 
+## [0.5.3] - 2023-07-xx
+
+## Added:
+- SearchEngine: mark set <absolute-position>
+- SearchEngine::variableAsString(): works now with $(<id>) pattern
+- extended mode in dbknife
+- LineAgent:
+	- Automatic buffer resizing for unlimited line length.
+	- File position of the current line
+	- Line number of the current line
+	- Access to predesessors of the current line.
+- ArgumentParser: regular expressions know the flag 'w' (word) now
+- ArgumentParser: regular expressions always uses the mode ECMAScript now
+- Base64.cpp
+- textknife: subcommand "search"
+
+## Fixed:
+- Improvements in the whole documentation: programs and SES language.
+- Corrections in the "mark" statement: <id> as variable not as $(<id>)
+- 
+
 ## [0.5.2] - 2023-07-10
 
 ### Added

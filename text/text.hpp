@@ -11,6 +11,7 @@
 #ifndef CORE_HPP_
 #include "../core/core.hpp"
 #endif
+#include "Base64.hpp"
 #include "StringList.hpp"
 #include "Matcher.hpp"
 #include "LineReader.hpp"

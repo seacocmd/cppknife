@@ -2,16 +2,16 @@
 
 ## Table of Content
 ## Content
-* [The Purpose](#The Purpose)
-* [Script Engine Process](#Script Engine Process)
-* [Script File Structure](#File Structure)
-* [Buffers](#Buffers)
-* [Variables](#Variables)
-* [String Constants](#String Constants)
-* [Positions](#Positions)
-* [Range](#Range)
-* [Conditions](#Conditions)
-* [Statements](#Statements)
+* [The Purpose](searchengine.md#the-purpose)
+* [Script Engine Process](searchengine.md#script-Engine-process)
+* [Script File Structure](searchengine.md#file-Structure)
+* [Buffers](searchengine.md#Buffers)
+* [Variables](searchengine.md#Variables)
+* [String Constants](searchengine.md#string-constants)
+* [Positions](searchengine.md#Positions)
+* [Range](searchengine.md#Range)
+* [Conditions](searchengine.md#Conditions)
+* [Statements](searchengine.md#Statements)
 
 ## Content of External Documents
 
@@ -70,7 +70,7 @@ The file is a sequence of statements, empty lines and comments.
   - a single line: ~&lt;name&gt;:&lt;line_number>
   - line numbers starts with 1
   - a range of lines: ~&lt;name&gt;:&lt;start>-&lt;end> The end line is included. if &lt;end> &lt; 0: it is relative to the end. -1: last line
-  - a range of lines: ~&lt;name&gt;:&lt;start>:&lt<count>
+  - a range of lines: ~&lt;name&gt;:&lt;start>:&lt;count>
   - &lt;start> is a start position
   - &lt;end> is an end position (exclusive)
   - &lt;count> is the number of lines
@@ -95,7 +95,7 @@ and global variables, accessable in all scripts. Global variables starts with "$
 - A variable will be defined by the assignment statement: __&lt;name> = &lt;text>__ or __&lt;name> := &lt;numeric-expression>__
 
 ### Predefined Variables:
-__*Note__: the predefined global variables starts with two underlines.
+**Note**: the predefined global variables starts with two underlines.
 
 - $(__line): the current line (1-based): 1..N
 - $(__line0): the current line (0-based): 0..N-1 
@@ -107,7 +107,7 @@ __*Note__: the predefined global variables starts with two underlines.
 - $(__start): the start position of the last search. Undefined if no hit.
 - $(__end): the position behind the last search. Undefined if no hit.
 - $(__hit): the result of the last search statement: empty string if not found, the found string otherwise
-- $(__length): the length of $(hit). 0 if there was no hit.
+- $(__length): the length of **$(__hit)**. 0 if there was no hit.
 - $(__buffer): the name of the current buffer
 - $(__file): the filename of the current buffer
 - $(__date): the current date, e.g. 2023.01.25
@@ -118,8 +118,9 @@ The lines in the script may contain variable names at any position. These will b
 "normal" processing of the line starts. This is called __interpolation of the line__.
 
 Examples:
+
     log "the buffer has $(_lines) lines"
-    $(counter) := $(counter) + $(_lines) + 2
+    counter := $(counter) + $(_lines) + 2
     if $(counter) > 0
       move +$(counter)
     endif
@@ -180,7 +181,11 @@ A position is a location in a buffer, specified by:
 
 The position can be stored in a variable: Than the format is &lt;line>:&lt;column>, for example "344:12".
 
-There is a special positon named __mark__. Some commands operate from that mark to the current position.
+There is a special positon named __mark__. It is uses to have a second position to define a range:
+- Search the start of the range
+- Set the mark
+- Search the end of the range
+- Copy or delete from **$(__mark)** to **$(__position)**
 
 ## Text
 A text is:
@@ -198,7 +203,3 @@ The __if__ and the __while__ statement uses a condition. That may be a
 - A single value:
     - A number: 0 means false, otherwise means __true__.
     - A string: "" (empty string) means false, otherwise means __true__.
-
-
-
- 

@@ -19,6 +19,19 @@ cat /etc/cppknife/adapt/php.conf
 # Adapt a configuration file: change the variable "max_memory" if it exists or set it otherwise.
 textknife adapt --anchor=/#.*max_memory/i '--pattern=/^max_memory\s*=/' "--replacement=max_memory=512k" /etc/php/8.2/fpm/php.ini
 
+# Shows the CRC-32 checksum for all files in /etc and an over all checksum. Ignore the .git subdirectories:
+textknife checksum --directories=,-.git checksum /etc
+
+# Search the the title in HTML files, show only the hits (not the whole line), ignore case
+# Note: the pattern uses '=' as delimiter because the '/' is part of the pattern
+textknife search -o '-P=<title>.*</title>=i /srv/www/*.html
+# Quick search of the word max_memory in *.ini and *.conf files, older than 3 days
+textknife search --days=+3 -Smemory_limit /etc/php/*.ini,*.conf
+# List only the filenames (not the lines) of the files containing "Jonny", path depth is lower or equal 3:
+textknife search --list -SJonny --max-depth=3 /home
+# List only the filenames not containing "License" ignoring case:
+textknife search -v --list -P/license/i /home/ws/*.cpp
+
 # Find the strings in all sourcefiles (*.cpp and *.hpp) in the directory /home/ws and subdirs:
 textknife strings /home/ws/*.cpp,*.hpp
 # Find strings in files older than 7 days and maximum nesting depth of 3:
@@ -127,9 +140,13 @@ public:
     _above = _argumentParser.asBool("above-anchor");
     return rc;
   }
+  virtual bool isValid() {
+    bool rc = !_status->isDirectory();
+    return rc;
+  }
   virtual bool oneFile() {
     bool rc = true;
-    auto filename = _status->accessFullName();
+    auto filename = _status->fullName();
     LineList lines;
     lines.readFromFile(filename);
     bool hasChanged = false;
@@ -146,6 +163,43 @@ public:
       lines.writeToFile(filename);
     }
     return rc;
+  }
+};
+
+class CheckSumHandler: public CommandHandler {
+private:
+  uint32_t _totalCheckSum;
+public:
+  CheckSumHandler(ArgumentParser &argumentParser, Logger *logger) :
+      CommandHandler(argumentParser, logger), _totalCheckSum(0) {
+  }
+  virtual ~CheckSumHandler() {
+  }
+  virtual bool isValid() {
+    bool rc = !_status->isDirectory();
+    return rc;
+  }
+  virtual bool oneFile() {
+    bool rc = true;
+    auto filename = _status->fullName();
+    FILE *file = fopen(filename, "rb");
+    if (file != nullptr) {
+      uint8_t buffer[512 * 1024];
+      ssize_t length;
+      bool first = true;
+      uint32_t checkSum = 0xffffffff;
+      while ((length = fread(buffer, 1, sizeof buffer, file)) > 0) {
+        crc32Update(buffer, length, checkSum, false);
+      }
+      crc32Update(buffer, 0, checkSum, true);
+      _totalCheckSum ^= checkSum;
+      _logger->say(LV_INFO,
+          formatCString("%08x %s", checkSum, filename));
+    }
+    return rc;
+  }
+  inline uint32_t totalCheckSum() const {
+    return _totalCheckSum;
   }
 };
 
@@ -186,14 +240,15 @@ public:
 class SearchCommandHandler: public CommandHandler {
 private:
   std::regex _pattern;
+  std::string _string;
   bool _onlyMatching;
   bool _listFiles;
   bool _invertMatch;
   int _maxCount;
 public:
   SearchCommandHandler(ArgumentParser &argumentParser, Logger *logger) :
-      CommandHandler(argumentParser, logger), _pattern(), _onlyMatching(false), _listFiles(
-          false), _invertMatch(false), _maxCount(0) {
+      CommandHandler(argumentParser, logger), _pattern(), _string(), _onlyMatching(
+          false), _listFiles(false), _invertMatch(false), _maxCount(0) {
     _onlyMatching = argumentParser.asBool("only-matching");
     _listFiles = argumentParser.asBool("list");
     _invertMatch = argumentParser.asBool("invert-match");
@@ -202,36 +257,61 @@ public:
     }
     _maxCount = argumentParser.asInt("max-count");
     _pattern = _argumentParser.asRegExpr("pattern");
+    _string = argumentParser.asString("string");
+    auto pattern2 = argumentParser.asString("pattern");
+    auto length2 = strlen(pattern2);
+    // Are there flags or meta characters in the pattern?
+    if (length2 > 2 && pattern2[0] == pattern2[length2 - 1]
+        && strcspn(pattern2, "^$()[]{}.*+?\\") == length2) {
+      _string = std::string(pattern2 + 1, length2 - 2);
+    }
   }
   virtual ~SearchCommandHandler() {
   }
-  virtual bool check() {
-    bool rc = true;
+  virtual bool isValid() {
+    bool rc = !_status->isDirectory();
     return rc;
   }
 
   virtual bool oneFile() {
     bool rc = true;
-    auto filename = _status->accessFullName();
+    auto filename = _status->fullName();
     LineAgent file(_logger);
 
-    size_t length = 0;
     size_t count = 0;
-    if (file.openFile(filename)) {
+    if (file.openFile(filename, true, true)) {
+      const char *simpleString = _string.empty() ? nullptr : _string.c_str();
       const char *line = nullptr;
       bool found = false;
       std::cmatch match;
       int lineNo = 0;
+      size_t length = 0;
       while ((line = file.nextLine(length)) != nullptr) {
+        if (file.hasBinaryData()) {
+          break;
+        }
         lineNo++;
-        bool found = std::regex_search(line, match, _pattern);
-        if ((_invertMatch && !found) || (!_invertMatch && found)) {
+        bool found =
+            simpleString != nullptr ?
+                strstr(line, simpleString) != nullptr :
+                std::regex_search(line, match, _pattern);
+        if (_listFiles) {
+          if (!_invertMatch && found) {
+            _logger->say(LV_INFO, filename);
+          }
+          if (found) {
+            count++;
+            break;
+          }
+        } else if ((_invertMatch && !found) || (!_invertMatch && found)) {
           count++;
           if (_listFiles) {
-            _logger->say(LV_INFO, filename);
-            break;
+            if (found) {
+              _logger->say(LV_INFO, filename);
+              break;
+            }
           } else if (_onlyMatching) {
-            auto hit = match.str(0);
+            auto hit = simpleString == nullptr ? match.str(0) : simpleString;
             _logger->say(LV_INFO, hit);
           } else {
             _logger->say(LV_INFO,
@@ -243,6 +323,9 @@ public:
             break;
           }
         }
+      }
+      if (_invertMatch && count == 0) {
+        _logger->say(LV_INFO, filename);
       }
     }
     return rc;
@@ -258,8 +341,8 @@ public:
   }
   virtual ~StringsCommandHandler() {
   }
-  virtual bool check() {
-    bool rc = true;
+  virtual bool isValid() {
+    bool rc = !_status->isDirectory();
     return rc;
   }
 
@@ -335,6 +418,19 @@ int adapt(ArgumentParser &parser, Logger &logger) {
   int rc = handler.run("source");
   return rc;
 }
+/**
+ * Manages the "crc32" sub command.
+ * @param parser Contains the program argument info.
+ * @param logger Manages the output.
+ * @return 0: success Otherwise: the exit code.
+ */
+int checkSum(ArgumentParser &parser, Logger &logger) {
+  CheckSumHandler handler(parser, &logger);
+  int rc = handler.run("source");
+  logger.say(LV_INFO, formatCString("%08x <total>", handler.totalCheckSum()));
+  return rc;
+}
+
 
 /**
  * Manages the "replace" sub command.
@@ -355,8 +451,10 @@ int replace(ArgumentParser &parser, Logger &logger) {
  * @return 0: success Otherwise: the exit code.
  */
 int search(ArgumentParser &parser, Logger &logger) {
-  if (parser.asString("pattern")[0] == '\0') {
-    throw ArgumentException("missing pattern: -P or --pattern");
+  if (parser.asString("pattern")[0] == '\0'
+      && parser.asString("string")[0] == '\0') {
+    throw ArgumentException(
+        "missing pattern or string: -P / --pattern or -S / --string");
   }
   SearchCommandHandler handler(parser, &logger);
   int rc = handler.run("source");
@@ -408,6 +506,13 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
       "A directory with or without a list of file patterns.", ".",
       "/etc/php/8.4/*.conf", true);
   addTraverserOptions(adaptParser);
+  ArgumentParser checkSumParser("checksum", logger,
+      "Builds a checksum for the filtered files.");
+  parser.addSubParser("mode", "checksum", checkSumParser);
+  checkSumParser.add("source", nullptr, DT_FILE_PATTERN,
+      "A directory with or without a list of file patterns.", ".", nullptr,
+      true);
+  addTraverserOptions(checkSumParser);
 #ifdef REPLACE
     ArgumentParser replaceParser("replace", logger,
         "Replaces a pattern in files.");
@@ -419,11 +524,13 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
     addTraverserOptions(replaceParser);
 #endif
 
-  ArgumentParser searchParser("strings", logger,
-      "Searches regular expressions.");
+  ArgumentParser searchParser("search", logger,
+      "Searches a pattern in the filtered files.");
   parser.addSubParser("mode", "search", searchParser);
   searchParser.add("--pattern", "-P", DT_REGEXPR,
       "The pattern describing the key.", "", "/^max_memory\\s*=");
+  searchParser.add("--string", "-S", DT_STRING,
+      "Search for that string: faster than a regular expression.", "", "Jonny");
   searchParser.add("--only-matching", "-o", DT_BOOL,
       "Displayes only the matched string", "false");
   searchParser.add("--list", "-l", DT_BOOL,
@@ -432,7 +539,6 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
       "Show the lines NOT matching the patterns", "false");
   searchParser.add("--max-count", "-m", DT_NAT,
       "Stops file processing after that count of matching lines", "false");
-
   searchParser.add("source", nullptr, DT_FILE_PATTERN,
       "A directory with or without a list of file patterns.", ".", nullptr,
       true);
@@ -460,6 +566,8 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
     logger->setLevel(level);
     if (parser.isMode("mode", "adapt")) {
       rc = adapt(parser, *logger);
+    } else if (parser.isMode("mode", "checksum")) {
+      rc = checkSum(parser, *logger);
     } else if (parser.isMode("mode", "search")) {
       rc = search(parser, *logger);
     } else if (parser.isMode("mode", "replace")) {
@@ -471,8 +579,9 @@ int textKnife(int argc, char **argv, Logger *loggerExtern) {
     }
     if (verbose) {
       logger->say(LV_SUMMARY,
-          timeDifferenceToString(nowAsDouble() - start,
-              "= runtime: %hh%mm%s.%3s"));
+          formatCString("= runtime: %s processed files: %d",
+              timeDifferenceToString(nowAsDouble() - start, "%hh%mm%s.%3s").c_str(),
+              CommandHandler::lastInstance()->processedFiles()));
     }
   }
   if (logger != loggerExtern) {

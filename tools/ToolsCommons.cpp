@@ -10,6 +10,8 @@
 
 namespace cppknife {
 
+CommandHandler *CommandHandler::_lastInstance = nullptr;
+
 void addTraverserOptions(ArgumentParser &parser) {
   parser.add("base", nullptr, DT_FILE_PATTERN,
       "The start directory or a list of file patterns delimited by ',', first with path. Preceding '-' defines a NOT pattern",
@@ -116,7 +118,9 @@ void populateFilter(const ArgumentParser &parser, DirEntryFilter &filter) {
 }
 CommandHandler::CommandHandler(ArgumentParser &argumentParser, Logger *logger) :
     _argumentParser(argumentParser), _logger(logger), _filter(), _level(0), _status(
-        nullptr), _traverser(nullptr, &_filter, nullptr, _logger) {
+        nullptr), _traverser(nullptr, &_filter, nullptr, _logger), _processedFiles(
+        0) {
+  _lastInstance = this;
 }
 CommandHandler::~CommandHandler() {
 }
@@ -129,6 +133,11 @@ void CommandHandler::finish() {
 void CommandHandler::initialize() {
   populateFilter(_argumentParser, _filter);
 }
+
+bool CommandHandler::isValid() {
+  return true;
+}
+
 int CommandHandler::run(const char *nameSources) {
   int rc = 0;
   initialize();
@@ -157,7 +166,8 @@ void CommandHandler::traverse(const char *nameSources) {
       base = base2.c_str();
     }
     if (!isDirectory(base, &exists) && exists) {
-      FsEntryLinux status;
+      FsEntryLinux status(
+          *dynamic_cast<FileAgentLinux*>(_traverser.fileAgent()));
       _status = &status;
       _status->setCertainFile(base);
       bool stop = !oneFile();
@@ -174,8 +184,11 @@ void CommandHandler::traverse(const char *nameSources) {
       }
       while ((_status = _traverser.nextFile(_level)) != nullptr) {
         std::string format;
-        if (!oneFile()) {
-          break;
+        if (isValid()) {
+          _processedFiles++;
+          if (!oneFile()) {
+            break;
+          }
         }
       }
     }

@@ -84,6 +84,12 @@ set_target_properties(cppknifebasic cppknifecore cppknifedb cppknifetext cppknif
 
 find_package(GTest REQUIRED)
 
+target_compile_options(cppknifebasic PRIVATE -Wall)
+target_compile_options(cppknifecore PRIVATE -Wall)
+target_compile_options(cppknifeos PRIVATE -Wall)
+target_compile_options(cppknifegeo PRIVATE -Wall)
+target_compile_options(cppknifetext PRIVATE -Wall)
+
 add_executable(fileknife tools/fileknife_main.cpp tools/fileknife.cpp 
 	unittest/google_test.cpp unittest/fileknife_test.cpp)
 target_link_libraries(fileknife

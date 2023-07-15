@@ -30,7 +30,7 @@ fileknife wc /home/ws/cpp/*.cpp,*.hpp --directories=,-build
 
 ```
 fileknife [<options>]  MODE
-    Version Jul 15 2023
+    Version Jul 16 2023
     A universal tool working on files and directories
   -?,--help
     Shows the usage information., e.g. --help -?
@@ -106,7 +106,7 @@ fileknife list [<options>]  BASE
     The start directory or a list of file patterns delimited by ',', first with path. Preceding '-' defines a NOT pattern, e.g. . /home/jonny/*.c,*.h,-*tmp*
   -f FILES,--files=FILES
     Only files matching that patterns will be found, e.g. --files=;*.cpp;*.hpp;-test*
-  -p DIRECTORIES,--directories=DIRECTORIES
+  -p DIRECTORIES,--directories=DIRECTOR
     Only directories matching that patterns will inspected, e.g. --directories=;-.git;-*tmp*;-*temp*
   -d MIN-DEPTH,--min-depth=MIN-DEPTH
     The minimum path depth (0 is the depth of the start directory), e.g. --min-depth=0 -d3

@@ -110,6 +110,27 @@ size_t countCharInCString(const char *source, char toSearch);
 size_t countCString(const char *source, int sourceLength, const char *subString,
     int subStringLength = -1);
 /**
+ * Calculates the CRC-32 check sum.
+ * @param buffer The buffer to inspect.
+ * @param bufferLength The length of <em>buffer</em>.
+ * @param lastCall <em>true</em>The last part of the data is processed.
+ *  In this case the result is inverted. Set it to <em>false</em> to process more data.
+ * @return The CRC-32 checksum.
+ */
+uint32_t crc32(uint8_t *buffer, size_t bufferLength, bool lastCall = true);
+/**
+ * Updates a CRC-32 checksum with data from a buffer.
+ * @param buffer The buffer to inspect.
+ * @param bufferLength The length of <em>buffer</em>.
+ * @param[in out] checkSum This checksum will be updated.
+ *  That is usable to build a checksum over multiple data buffers. Use <em>crc32()</em> to initialize it.
+ * @param lastCall <em>true</em>The last part of the data is processed.
+ *  In this case the result is inverted. Set it to <em>false</em> to process more data.
+ * @return <em>checkSum</em> (for chaining)
+ */
+uint32_t crc32Update(uint8_t *buffer, size_t bufferLength, uint32_t &checkSum,
+    bool lastCall);
+/**
  * Tests whether a given string is the end of a given text.
  * @param source The string to inspect
  * @param sourceLength -1 or the length of source to inspect.

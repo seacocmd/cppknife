@@ -143,6 +143,7 @@ public:
 
 };
 class TraverserLinux;
+class FileAgentLinux;
 class DirEntryFilter;
 /**
  * @brief The Linux implementation of <em>FsEntry</em>.
@@ -150,6 +151,7 @@ class DirEntryFilter;
 class FsEntryLinux: public FsEntry {
   friend TraverserLinux;
 protected:
+  FileAgentLinux &_parent;
   FTS *_singleFileFts;
   bool _intrinsicStatInfo;
   FTSENT *_state;
@@ -158,7 +160,7 @@ protected:
   struct stat *_statInfo;
   struct stat _statBuffer;
 public:
-  FsEntryLinux();
+  FsEntryLinux(FileAgentLinux &parent);
   virtual
   ~FsEntryLinux();
 public:
@@ -460,8 +462,14 @@ public:
   virtual ~FileAgent() {
   }
 public:
+  /**
+   * Changes the starting directory for the traverse.
+   */
   virtual void
   changeBase(const char *base) = 0;
+  /**
+   * Returns the next file without filtering.
+   */
   virtual FsEntry*
   rawNextFile(int &level) = 0;
 };
@@ -553,12 +561,9 @@ public:
   virtual
   ~FileAgentLinux();
 public:
-  virtual void
-  changeBase(const char *base);
-  virtual FsEntry*
-  rawNextFile(int &level);
-  FsEntry*
-  nextFile(int &level);
+  virtual void changeBase(const char *base);
+  virtual FsEntry* rawNextFile(int &level);
+  FsEntry* nextFile(int &level);
 };
 /**
  * @brief Allows to traverse a directory tree file by file with many filter options.
@@ -609,6 +614,9 @@ public:
    */
   FsEntry*
   nextFile(int &level);
+  inline FileAgent* fileAgent() {
+    return _fileAgent;
+  }
 };
 } /* cppknife */
 

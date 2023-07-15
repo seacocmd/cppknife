@@ -173,7 +173,7 @@ int FunctionEngine::bufferDifference(bool testOnly) {
   if (testOnly) {
     _parser.assertToken(TT_EOF);
   } else {
-    int lineNo = 0;
+    size_t lineNo = 0;
     for (auto line : buffer1->constLines()) {
       lineNo++;
       if (lineNo > buffer2->constLines().size()) {
@@ -329,13 +329,9 @@ int FunctionEngine::osCopy(bool testOnly) {
   int rc = 0;
   auto source = _parser.parseString(testOnly, "source");
   auto target = _parser.parseString(testOnly, "target");
-  auto type = _parser.parse();
-  bool unique = _parser.isWord("unique");
-  if (unique) {
-    type = _parser.parse();
-  }
+  bool unique = _parser.hasWaitingWord("unique") > 0;
   if (testOnly) {
-    _parser.assertCurrentToken(TT_EOF);
+    _parser.assertToken(TT_EOF);
   } else {
     if (isDirectory(target.c_str())) {
       target = joinPath(target.c_str(), basename(source.c_str()).c_str());
@@ -549,7 +545,7 @@ std::string FunctionEngine::stringPiece(bool testOnly) {
 // string.piece <index> <list> <separator>
   std::string rc;
   _parser.assertToken(TT_NUMBER);
-  auto index = atol(_parser.tokenAsCString());
+  size_t index = atol(_parser.tokenAsCString());
   auto list = _parser.parseString(testOnly, "list");
   auto separator = _parser.parseString(testOnly, "separator", " ");
   if (testOnly) {
@@ -600,7 +596,7 @@ std::string FunctionEngine::stringSearch(bool testOnly) {
       }
     } else if (std::regex_search(text, matches, *searchExpression.regExpr())) {
       rc = matches[0].str();
-      for (int no = 1; no <= matches.size(); no++) {
+      for (size_t no = 1; no <= matches.size(); no++) {
         rc += separator + matches[no].str();
       }
     }

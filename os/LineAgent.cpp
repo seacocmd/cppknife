@@ -34,7 +34,7 @@ void FileBuffer::clone(FileBuffer &other) {
   _restLength = other._restLength;
   _nextLine = _buffer + (other._nextLine - other._buffer);
   _filePosition = other._filePosition;
-  if (other._endOfBuffer - other._buffer > _bufferSize) {
+  if (static_cast<size_t>(other._endOfBuffer - other._buffer) > _bufferSize) {
     increaseBuffer(other._bufferSize - _bufferSize);
   }
   _endOfBuffer = _buffer + (other._endOfBuffer - other._buffer);
@@ -67,15 +67,33 @@ void FileBuffer::reset() {
 }
 void FileBuffer::setBufferSize(size_t bufferSize) {
   if (bufferSize >= sizeof _staticBuffer) {
-    if (_buffer != _staticBuffer) {
-      delete _buffer;
+    if (_endOfBuffer == _buffer) {
+      // no copy needed:
+      if (bufferSize > _bufferSize) {
+        auto newBuffer = new char[bufferSize + 1];
+        if (_buffer != _staticBuffer) {
+          delete _buffer;
+        }
+        _buffer = _endOfBuffer = newBuffer;
+        _bufferSize = bufferSize;
+      }
+    } else {
+      // Copy needed:
+      if (bufferSize > _bufferSize) {
+        auto newBuffer = new char[bufferSize + 1];
+        auto oldLength = _endOfBuffer - _buffer;
+        memcpy(newBuffer, _buffer, oldLength);
+        _endOfBuffer = newBuffer + oldLength;
+        _nextLine = newBuffer + (_nextLine - _buffer);
+        if (_buffer != _staticBuffer) {
+          delete _buffer;
+        }
+        _buffer = newBuffer;
+        _bufferSize = bufferSize;
+      }
     }
-    _buffer = new char[bufferSize + 1];
-    _bufferSize = bufferSize;
-    reset();
   } else {
     _bufferSize = bufferSize;
-    reset();
   }
 }
 
@@ -203,6 +221,10 @@ void LineAgent::fillBuffer(size_t startOffset) {
   _currentBuffer->_nextLine = _currentBuffer->_buffer
       + _currentBuffer->_restLength;
   ssize_t requested = _currentBuffer->_endOfBuffer - _currentBuffer->_nextLine;
+  if (requested <= 0) {
+    _currentBuffer->_nextLine = _currentBuffer->_buffer;
+    requested = _currentBuffer->_bufferSize;
+  }
   auto bytes = read(_handle, _currentBuffer->_nextLine, requested);
   if (bytes < 0) {
     bytes = 0;
@@ -222,7 +244,8 @@ void LineAgent::fillBuffer(size_t startOffset) {
 size_t LineAgent::offsetCurrentLine() const {
   return _currentBuffer->_filePosition + _currentBuffer->_offsetCurrentLine;
 }
-bool LineAgent::openFile(const char *filename) {
+bool LineAgent::openFile(const char *filename, bool checkBinary,
+    bool ignoreError) {
   if (_handle > 0) {
     close(_handle);
   }
@@ -232,13 +255,36 @@ bool LineAgent::openFile(const char *filename) {
   _hasBinaryData = false;
   bool rc = true;
   if (_handle < 0) {
+    if (!ignoreError) {
     char buffer[512];
     _logger->say(LV_ERROR,
-        formatCString("cannot read: %s (%d) cwd: %s", filename, errno,
+        formatCString("cannot open: %s (%d) cwd: %s", filename, errno,
             getcwd(buffer, sizeof buffer)));
+    }
     rc = false;
   }
   reset();
+  if (checkBinary) {
+    size_t tempSize = min(_currentBuffer->_bufferSize, 4096);
+    auto bytes = read(_handle, _currentBuffer->_buffer, tempSize);
+    if (bytes <= 0) {
+      if (!ignoreError) {
+        char buffer[512];
+        _logger->say(LV_ERROR,
+            formatCString("cannot read: %s (%d) cwd: %s", filename, errno,
+                getcwd(buffer, sizeof buffer)));
+      }
+      rc = false;
+    } else {
+      if (memchr(_currentBuffer->_nextLine, '\0', bytes) != nullptr) {
+        _hasBinaryData = true;
+        rc = false;
+      }
+      _eofReached = static_cast<size_t>(bytes) < tempSize;
+      _currentBuffer->_restLength += bytes;
+      _currentBuffer->_nextLine = _currentBuffer->_buffer;
+    }
+  }
   return rc;
 }
 

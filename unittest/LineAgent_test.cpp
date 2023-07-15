@@ -51,21 +51,18 @@ Tx
 .
 )");
   auto logger = buildMemoryLogger(100, LV_DEBUG);
-  LineAgent agent(logger);
   size_t length = 0;
   for (auto size = 4; size < 16; size++) {
+    LineAgent agent(logger);
     ASSERT_TRUE(agent.openFile(fn.c_str()));
     agent.setBufferSize(size);
     ASSERT_STREQ("1", agent.nextLine(length));
     ASSERT_EQ(1, length);
     ASSERT_STREQ("abc", agent.nextLine(length));
     ASSERT_EQ(3, length);
-    ASSERT_STREQ("ABCD", agent.nextLine(length));
+    auto line = agent.nextLine(length);
+    ASSERT_STREQ("ABCD", line);
     ASSERT_EQ(4, length);
-    if (size == 4) {
-      ASSERT_STREQ("", agent.nextLine(length));
-      ASSERT_EQ(0, length);
-    }
     ASSERT_STREQ("one", agent.nextLine(length));
     ASSERT_EQ(3, length);
     if (size == 6) {

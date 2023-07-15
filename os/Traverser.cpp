@@ -50,9 +50,10 @@ char FsEntry::typeAsChar() {
   }
   return rc;
 }
-FsEntryLinux::FsEntryLinux() :
-    _singleFileFts(nullptr), _intrinsicStatInfo(false), _state(nullptr), _linkReference(), _type(
-        FsEntry::TF_UNDEF), _statInfo(nullptr), _statBuffer() {
+FsEntryLinux::FsEntryLinux(FileAgentLinux &parent) :
+    _parent(parent), _singleFileFts(nullptr), _intrinsicStatInfo(false), _state(
+        nullptr), _linkReference(), _type(FsEntry::TF_UNDEF), _statInfo(
+        nullptr), _statBuffer() {
 }
 FsEntryLinux::~FsEntryLinux() {
   if (_singleFileFts != nullptr) {
@@ -73,7 +74,6 @@ FsEntryLinux::accessFullName() {
 
 FileSize_t FsEntryLinux::fileSize() {
   return getStatus()->st_size;
-
 }
 
 std::string FsEntryLinux::filetimeAsString() {
@@ -1043,9 +1043,11 @@ FileAgentWithStack::topOfStack(int offsetFromTop) {
 
 FileAgentLinux::FileAgentLinux(const char *base, const DirEntryFilter *filter,
     TraceUnit *tracer, Logger *logger, DirTreeStatistic &statistics) :
-    FileAgent(), _base(base == nullptr ? "." : base), _filter(filter), _tracer(
-        tracer), _logger(logger), _fts(nullptr), _statistics(statistics), _currentRawEntry(
-        nullptr), _currentEntry(), _currentNo(0), _lastLevel(0) {
+    FileAgent(), _base(base == nullptr ? "." : base), _filter(
+        filter), _tracer(tracer), _logger(logger), _fts(nullptr), _statistics(
+        statistics), _currentRawEntry(nullptr), _currentEntry(*this), _currentNo(
+        0), _lastLevel(
+        0) {
   bool intrinsic = !filter->testNameFirst();
   _currentEntry.setIntrinsicStatInfo(intrinsic);
   if (base != nullptr) {

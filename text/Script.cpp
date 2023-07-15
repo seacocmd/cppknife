@@ -218,7 +218,7 @@ void Script::_check() {
     id += 0;
   }
   auto len = _variables.size();
-  printf("%d: %d\n", ++id, len);
+  printf("%d: %ld\n", ++id, len);
 }
 std::string Script::asBuffer() const {
 // remove the preceding '~':
@@ -403,6 +403,11 @@ void Script::assertStatement(bool testOnly) {
         break;
       case TT_UNKNOWN:
         again = false;
+        break;
+      default:
+        throw ParserError(
+            formatCString("assertStatement(): unexpected type: %d", type),
+            _parser);
         break;
       }
     } while (again);

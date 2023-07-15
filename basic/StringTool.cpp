@@ -134,6 +134,40 @@ size_t countCString(const char *source, int sourceLength, const char *subString,
   }
   return rc;
 }
+uint32_t crc32(uint8_t *buffer, size_t bufferLength, bool lastCall) {
+  uint32_t checkSum = 0xFFFFFFFF;
+  crc32Update(buffer, bufferLength, checkSum, lastCall);
+  return checkSum;
+}
+uint32_t crc32Update(uint8_t *buffer, size_t bufferLength, uint32_t &checkSum,
+    bool lastCall) {
+  // use a local variable:
+  uint32_t localSum = checkSum;
+  for (size_t ix = 0; ix < bufferLength; ix++) {
+    uint8_t byte = buffer[ix];
+    localSum = localSum ^ byte;
+    // Eight times:
+    unsigned int mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+    mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+    mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+    mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+    mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+    mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+    mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+    mask = -(localSum & 1);
+    localSum = (localSum >> 1) ^ (0xedb88320 & mask);
+  }
+  checkSum = lastCall ? ~localSum : localSum;
+  return checkSum;
+}
+
 bool endsWith(const char *source, int sourceLength, const char *tail,
     int tailLength, bool ignoreCase) {
   bool rc = false;
@@ -277,8 +311,8 @@ int indexOf(const std::vector<std::string> &list, const char *element,
       rc = std::distance(list.begin(), it);
     }
   } else {
-    for (int ix = 0; ix < list.size(); ix++) {
-      if (list[ix].size() == elementLength
+    for (size_t ix = 0; ix < list.size(); ix++) {
+      if (list[ix].size() == static_cast<size_t>(elementLength)
           && strncmp(list[ix].c_str(), element, elementLength) == 0) {
         rc = ix;
         break;

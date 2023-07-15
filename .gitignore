@@ -9,3 +9,13 @@ build/
 /V
 .git.01/
 cppknife.doxy/
+CMakeFiles/
+Makefile
+Prof
+cmake_install.cmake
+compile_commands.json
+gmon.out
+perf.data
+prof
+CMakeCache.txt
+/Doxy

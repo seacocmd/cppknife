@@ -16,6 +16,19 @@ cat /etc/cppknife/adapt/php.conf
 # Adapt a configuration file: change the variable "max_memory" if it exists or set it otherwise.
 textknife adapt --anchor=/#.*max_memory/i '--pattern=/^max_memory\s*=/' "--replacement=max_memory=512k" /etc/php/8.2/fpm/php.ini
 
+# Shows the CRC-32 checksum for all files in /etc and an over all checksum. Ignore the .git subdirectories:
+textknife checksum --directories=,-.git checksum /etc
+
+# Search the the title in HTML files, show only the hits (not the whole line), ignore case
+# Note: the pattern uses '=' as delimiter because the '/' is part of the pattern
+textknife search -o '-P=<title>.*</title>=i /srv/www/*.html
+# Quick search of the word max_memory in *.ini and *.conf files, older than 3 days
+textknife search --days=+3 -Smemory_limit /etc/php/*.ini,*.conf
+# List only the filenames (not the lines) of the files containing "Jonny", path depth is lower or equal 3:
+textknife search --list -SJonny --max-depth=3 /home
+# List only the filenames not containing "License" ignoring case:
+textknife search -v --list -P/license/i /home/ws/*.cpp
+
 # Find the strings in all sourcefiles (*.cpp and *.hpp) in the directory /home/ws and subdirs:
 textknife strings /home/ws/*.cpp,*.hpp
 # Find strings in files older than 7 days and maximum nesting depth of 3:
@@ -42,8 +55,10 @@ textknife [<options>]  MODE
     What should be done:
     adapt
       Adapts configuration files.
+    checksum
+      Builds a checksum for the filtered files.
     search
-      Searches regular expressions.
+      Searches a pattern in the filtered files.
     strings
       Fetches the strings delimited by ' or " from files.
 textknife adapt [<options>]  SOURCE BASE
@@ -80,12 +95,38 @@ textknife adapt [<options>]  SOURCE BASE
     The found files must have a size lower  (if < 0) or larger (if > 0) than that size. Units: [kmgt], e.g. --size=1234 -s3k
   -t TYPE,--type=TYPE
     The file type: f(ile) d(irectory) l(ink) s(ocket) b(lock) p(ipe) c(har), e.g. --type=f,d,l -td
-textknife strings [<options>]  SOURCE BASE
-    Searches regular expressions.
+textknife checksum [<options>]  SOURCE BASE
+    Builds a checksum for the filtered files.
+  -?,--help
+    Shows the usage information., e.g. --help -?
+  SOURCE
+    A directory with or without a list of file patterns., e.g. *.cpp,*.hpp,src/test* src1,src2 /home/joe
+  BASE
+    The start directory or a list of file patterns delimited by ',', first with path. Preceding '-' defines a NOT pattern, e.g. . /home/jonny/*.c,*.h,-*tmp*
+  -f FILES,--files=FILES
+    Only files matching that patterns will be found, e.g. --files=;*.cpp;*.hpp;-test*
+  -p DIRECTORIES,--directories=DIRECTORIES
+    Only directories matching that patterns will inspected, e.g. --directories=;-.git;-*tmp*;-*temp*
+  -d MIN-DEPTH,--min-depth=MIN-DEPTH
+    The minimum path depth (0 is the depth of the start directory), e.g. --min-depth=0 -d3
+  -D MAX-DEPTH,--max-depth=MAX-DEPTH
+    The maximum path depth (0 is the depth of the start directory), e.g. --max-depth=1 -D99
+  -m MINUTES,--minutes=MINUTES
+    The found files must be older (if < 0) or newer (if > 0) than that amount of minutes, e.g. --minutes=123 -m-1793
+  -y DAYS,--days=DAYS
+    The found files must be older (if < 0) or newer (if > 0) than that amount of days, e.g. --days=10 -y-60
+  -s SIZE,--size=SIZE
+    The found files must have a size lower  (if < 0) or larger (if > 0) than that size. Units: [kmgt], e.g. --size=1234 -s3k
+  -t TYPE,--type=TYPE
+    The file type: f(ile) d(irectory) l(ink) s(ock
+textknife search [<options>]  SOURCE BASE
+    Searches a pattern in the filtered files.
   -?,--help
     Shows the usage information., e.g. --help -?
   -P PATTERN,--pattern=PATTERN
     The pattern describing the key., e.g. --pattern=/^max_memory\s*=
+  -S STRING,--string=STRING
+    Search for that string: faster than a regular expression., e.g. --string=Jonny
   -o,--only-matching
     Displayes only the matched string, e.g. --only-matching -o
   -l,--list

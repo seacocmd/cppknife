@@ -409,3 +409,19 @@ TEST(StringToolTest, stringIndex) {
   ASSERT_EQ(-1, indexOf(list2, "e13", -1, true));
 }
 
+TEST(StringToolTest, crc32) {
+  FEW_TESTS;
+  auto data = "With a little help from my friends";
+  ASSERT_EQ(0x3DBC3A44, crc32((uint8_t*) data, strlen(data)));
+  data = "1234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  ASSERT_EQ(0x8F0A1199, crc32((uint8_t*) data, strlen(data)));
+  data = "1234";
+  ASSERT_EQ(0x9be3e0a3, crc32((uint8_t*) data, strlen(data)));
+  data = "1235";
+  ASSERT_EQ(0xece4d035, crc32((uint8_t*) data, strlen(data)));
+  data = "With a little help";
+  auto crc = crc32((uint8_t*) data, strlen(data), false);
+  data = " from my friends";
+  ASSERT_EQ(0x3DBC3A44, crc32Update((uint8_t*) data, strlen(data), crc, true));
+}
+

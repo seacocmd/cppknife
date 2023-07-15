@@ -2,7 +2,32 @@
 
 ## [Unreleased]
 
-## [0.5.3] - 2023-07-xx
+## [0.5.4] - 2023-07-16
+
+## Added:
+- LineAgent::openFile(): new parameters checkBinary and ignoreError
+- textknife: subcommand search: new option --string
+- textknife: subcommand checksum
+- textknife: logging of processed files
+- StringTool::crc32() and StringTool::crc32Update()
+- Examples for "textknife search"
+- CommandHandler::isValid()
+- FsEntryLinux::_parent
+- CommandHandler::lastInstance()
+
+## Changed
+
+- Base64: parameters changed: encodeBase64() and decodeBase64()
+- LineAgent::setBuffer(): handles the state "already read data".
+- LineAgent::fillBuffer(): endless loop when requested bytes == 0
+
+## Fixed
+
+- FunctionEngine::osCopy(): wrong parsing of "unique"
+- textknife: filtering out directories from processing
+- textknife search: handling of '--list' common with '--invert-match'
+
+## [0.5.3] - 2023-07-15
 
 ## Added:
 - SearchEngine: mark set <absolute-position>

@@ -158,9 +158,11 @@ public:
   /**
    * Opens a file.
    * @param filename The name of the file
+   * @param ignoreError <em>true</em>: an error will be not logged.
    * @return true: success
    */
-  bool openFile(const char *filename);
+  bool openFile(const char *filename, bool testBinary = true, bool ignoreError =
+      false);
   void reset();
   /**
    * Sets the buffer size. This is the maximal possible line length.

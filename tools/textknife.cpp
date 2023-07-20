@@ -186,7 +186,6 @@ public:
     if (file != nullptr) {
       uint8_t buffer[512 * 1024];
       ssize_t length;
-      bool first = true;
       uint32_t checkSum = 0xffffffff;
       while ((length = fread(buffer, 1, sizeof buffer, file)) > 0) {
         crc32Update(buffer, length, checkSum, false);
@@ -221,6 +220,7 @@ public:
 
   virtual bool oneFile() {
     bool rc = true;
+#ifdef DOIT
     auto pattern = _argumentParser.asRegExpr("pattern");
     auto filename = _status->accessFullName();
     FileLinesStream stream(filename, *_logger);
@@ -232,6 +232,7 @@ public:
         break;
       }
     }
+#endif
     return rc;
   }
 }
@@ -244,7 +245,7 @@ private:
   bool _onlyMatching;
   bool _listFiles;
   bool _invertMatch;
-  int _maxCount;
+  size_t _maxCount;
 public:
   SearchCommandHandler(ArgumentParser &argumentParser, Logger *logger) :
       CommandHandler(argumentParser, logger), _pattern(), _string(), _onlyMatching(
@@ -291,7 +292,7 @@ public:
           break;
         }
         lineNo++;
-        bool found =
+        found =
             simpleString != nullptr ?
                 strstr(line, simpleString) != nullptr :
                 std::regex_search(line, match, _pattern);

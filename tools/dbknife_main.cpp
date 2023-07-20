@@ -8,7 +8,6 @@
 #include "../os/os.hpp"
 #include "../unittest/google_test.hpp"
 #include "dbknife.hpp"
-
 using namespace cppknife;
 
 int main(int argc, char **argv) {

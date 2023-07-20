@@ -2,9 +2,19 @@
 
 ## [Unreleased]
 
+## [0.5.5] - 2023-07-20
+
+## Added
+- cppknife_control.hpp: Controls the usage of unittests
+- unready: net/SocketServer.cpp and net/SocketClient.cpp
+
+## Changed
+- CMakeList.txt: Possibility to exclude the unittests
+- CMakeList.txt: only two libraries libcppknife and libcppknifeunittest
+
 ## [0.5.4] - 2023-07-16
 
-## Added:
+## Added
 - LineAgent::openFile(): new parameters checkBinary and ignoreError
 - textknife: subcommand search: new option --string
 - textknife: subcommand checksum

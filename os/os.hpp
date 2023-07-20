@@ -24,7 +24,6 @@
 #ifndef BASIC_HPP_
 #include "../basic/basic.hpp"
 #endif
-#include "unistd.h"
 #ifndef TEXT_HPP_
 #include "../text/text.hpp"
 #endif

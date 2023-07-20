@@ -6,8 +6,14 @@
  *     License: CC0 1.0 Universal
  */
 #include "google_test.hpp"
+#include "cppknife_control.hpp"
 
 int googleTest(int argc, char **argv) {
+#ifdef USE_UNITTESTS
   testing::InitGoogleTest (&argc, argv);
   return RUN_ALL_TESTS ();
+#else
+  fprintf(stderr, "No unittest configured!\n");
+  return 0;
+#endif
 }

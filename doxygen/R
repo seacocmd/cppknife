@@ -1,9 +1,15 @@
 #! /bin/bash
+VERBOSE=-v
+test "$1" = -q && VERBOSE=
 for dir in *; do
   if [ -e $dir/Doxyfile ]; then
     cd $dir
-    doxygen
+    if [ -n "$VERBOSE" ]; then
+      doxygen
+    else
+      doxygen >/dev/null 2>&1
+    fi
     cd ..
   fi
 done
-cp -va ../doc ../../seapluspro.github.io
+cp $VERBOSE -a ../doc ../../seapluspro.github.io

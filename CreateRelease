@@ -1,0 +1,40 @@
+#! /bin/bash
+BASE_BINARIES=releases/amd64
+BASE_BUILD=build.release
+function ChangeVersion(){
+  VERSION=$(grep "^##" CHANGELOG.md | grep -o '[0-9][0-9.]*' | head -n1)
+  VERSION2=$(grep "VERSION" CMakeLists.txt | head -n1 | grep -o '[0-9][0-9.]*')
+  echo "version: $VERSION / $VERSION2"
+  if [ "$VERSION" != "$VERSION2" ]; then
+    sed -i "s/VERSION [0-9][0-9.]*/VERSION $VERSION/;" CMakeLists.txt
+  fi
+}
+function SwitchControl(){
+  cd unittest
+  rm cppknife_control.hpp
+  ln -s cppknife_control.$1.hpp cppknife_control.hpp
+  cd ..
+}
+function PrepareBinaries(){
+  for file in dbknife fileknife geoknife netknife sesknife textknife libcppknife.so; do
+    cp -a $BASE_BUILD/$file $BASE_BINARIES
+    strip --strip-all $BASE_BINARIES/$file
+  done
+  ls -ld $BASE_BINARIES/*
+}
+function Doxy(){
+  if [ -e doxygen/R ]; then
+    cd doxygen
+    echo "= creating documentation..."
+    ./R -q
+    cd ..
+  fi
+}
+SwitchControl productive
+mkdir -p $BASE_BUILD
+cmake -Dmode=productive -DCMAKE_BUILD_TYPE=Release -S . -B $BASE_BUILD
+cmake --build build.release
+Doxy
+PrepareBinaries
+SwitchControl debug
+

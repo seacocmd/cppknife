@@ -14,3 +14,6 @@ If you want to use the library you can install it under Linux: see linux/install
 
 ## Binaries
 - Binaries for the architecture amd64: see releases/amd64
+
+## Build
+Run the script **CreateRelease**

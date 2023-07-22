@@ -132,7 +132,7 @@ dbknife veil [<options>]  APPLICATION INPUT OUTPUT
   -u USER,--user=USER
     The password of that user will be asked for authentification., e.g. --user=mydata
   -c CODE,--code=CODE
-    The password for authentification. If not given the password will be asked., e.g. --cod
+    The password for authentification. If not given the password will be asked., e.g. --cod.ÃZŽU
   APPLICATION
     The application to which the configuration file belongs., e.g. mydata
   INPUT

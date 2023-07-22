@@ -7,6 +7,11 @@ project (ccppknife
 
 set(CMAKE_CXX_STANDARD 17)
 
+if(NOT DEFINED mode)
+    set(mode debug)
+endif()
+  
+
 set(CMAKE_BUILD_TYPE Debug)
 
 include(FindPkgConfig)
@@ -33,9 +38,9 @@ set(GEO_SOURCES geo/GeoException.cpp geo/GeoHelper.cpp geo/GpsTranslator.cpp
 set(GEO_UNITTEST_SOURCES unittest/GeoException_test.cpp unittest/GeoHelper_test.cpp 
 	unittest/GpsTranslator_test.cpp unittest/Point2D_test.cpp unittest/Rectangle_test.cpp unittest/Shape_test.cpp)
 
-set(NET_SOURCES net/SocketServer.cpp net/SocketClient.cpp)
+set(NET_SOURCES  net/Agents.cpp net/SocketServer.cpp net/SocketClient.cpp )
 
-SET(NET_UNITTEST_SOURCES unittest/SocketServer_test.cpp)
+SET(NET_UNITTEST_SOURCES unittest/Agents_test.cpp unittest/SocketServer_test.cpp)
 
 set(OS_SOURCES os/File.cpp os/FileTool.cpp os/LineAgent.cpp os/OsException.cpp os/Path.cpp os/Process.cpp os/Traverser.cpp)
 
@@ -58,9 +63,11 @@ set(TOOLS_SOURCES tools/ArgumentParser.cpp tools/ToolsCommons.cpp tools/VeilEngi
 set (DB_LIBS -lmysqlcppconn	-lpqxx -lpq)
 set (GEO_LIBS gdal)
 set (UNITTEST_LIB cppknifeunittest)
-set (CPPKNIFE_LIBS cppknife ${UNITTEST_LIB})
+set (GOOGLE_TEST_LIB GTest::gtest GTest::gtest_main)
+set (CPPKNIFE_LIBS cppknife ${UNITTEST_LIB}  ${GOOGLE_TEST_LIB})
 
-add_library(cppknife SHARED ${BASIC_SOURCES} ${CORE_SOURCES} ${OS_SOURCES} ${TEXT_SOURCES} ${TOOLS_SOURCES} unittest/google_test.cpp)
+add_library(cppknife SHARED ${BASIC_SOURCES} ${CORE_SOURCES} ${NET_SOURCES} ${OS_SOURCES} ${TEXT_SOURCES} 
+	${TOOLS_SOURCES} unittest/google_test.cpp)
 target_compile_options(cppknife PRIVATE -Wall)
 
 add_library(cppknifeunittest SHARED ${BASIC_UNITTEST_SOURCES} ${CORE_UNITTEST_SOURCES} ${NET_UNITTEST_SOURCES} 
@@ -68,14 +75,10 @@ add_library(cppknifeunittest SHARED ${BASIC_UNITTEST_SOURCES} ${CORE_UNITTEST_SO
 	${TOOLS_UNITTEST_SOURCES})
 target_include_directories(cppknifeunittest PRIVATE /usr/include/gdal gdal)
 
-#set_target_properties(cppknifebasic cppknifecore cppknifedb cppknifetext cppknifeos cppknifetools
-#	cppknifedb cppknifegeo
-#	unittestbasic unittestcore unittesttext unittestos unittestdb
-#	PROPERTIES POSITION_INDEPENDENT_CODE True)
+set_target_properties(cppknife cppknifeunittest
+	PROPERTIES POSITION_INDEPENDENT_CODE True)
 
 find_package(GTest REQUIRED)
-
-
 
 add_executable(dbknife tools/dbknife_main.cpp tools/dbknife.cpp ${DB_SOURCES})
 target_compile_options(dbknife PRIVATE -Wall)

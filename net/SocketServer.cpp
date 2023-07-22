@@ -50,22 +50,21 @@ bool AuthorizationChecker::checkToken(knifeToken_t token, time_t time,
  * @param name IP: &lt;interface>:&lt;port> Unix socket: socket name.
  * @param logger The logging manager
  */
-SocketServer::SocketServer(const char *name, Logger &logger) :
-    _socketHandle(0), _logger(logger), _isTcp(strchr(name, ':') != nullptr), _name(
-        name) {
+SocketServer::SocketServer(const char *address, Logger &logger) :
+    _socketHandle(0), _logger(logger), _isTcp(strchr(address, ':') != nullptr), _address(
+        address) {
 }
 SocketServer::~SocketServer() {
 }
 
-bool SocketServer::send(uint8_t *buffer, size_t bufferLength) {
-  auto rc = ::send(_socketHandle, buffer, bufferLength, 0);
-  return rc > 0;
-}
 bool SocketServer::listen(SocketTaskHandler &handler, bool nonBlocking,
     int maxConnections) {
   bool rc = false;
   /* First call to socket() function */
   do {
+    if (!_isTcp) {
+      ::unlink(_address.c_str());
+    }
     _socketHandle = socket(_isTcp ? AF_INET : AF_LOCAL, SOCK_STREAM, 0);
     if (_socketHandle < 0) {
       _logger.say(LV_ERROR,
@@ -82,12 +81,14 @@ bool SocketServer::listen(SocketTaskHandler &handler, bool nonBlocking,
               strerror(errno)));
       break;
     }
+#ifdef BAD_IDEA
     if (nonBlocking) {
       auto options = fcntl(_socketHandle, F_GETFL);
       if (options >= 0) {
         fcntl(_socketHandle, F_SETFL, options | O_NONBLOCK);
       }
     }
+#endif
     typedef union {
       struct sockaddr adress;
       struct sockaddr_in tcp;
@@ -97,7 +98,7 @@ bool SocketServer::listen(SocketTaskHandler &handler, bool nonBlocking,
     size_t sizeInfo = 0;
     bzero(static_cast<void*>(&socketInfo), sizeof socketInfo);
     if (_isTcp) {
-      auto parts = splitCString(_name.c_str(), ":", 2);
+      auto parts = splitCString(_address.c_str(), ":", 2);
       auto portNo = atoi(parts[1].c_str());
       if (portNo <= 0 || portNo > 65535) {
         _logger.say(LV_ERROR,
@@ -112,49 +113,68 @@ bool SocketServer::listen(SocketTaskHandler &handler, bool nonBlocking,
     } else {
       socketInfo.sun.sun_family = AF_LOCAL;
       sizeInfo = sizeof socketInfo.sun;
-      if (_name.size() >= sizeof(socketInfo.sun.sun_path)) {
-        _name.erase(sizeof socketInfo.sun.sun_path - 1);
+      if (_address.size() >= sizeof(socketInfo.sun.sun_path)) {
+        _address.erase(sizeof socketInfo.sun.sun_path - 1);
         _logger.say(LV_ERROR,
             formatCString("listen: path length to large. Changed to %s",
-                _name.c_str()));
+                _address.c_str()));
       }
-      size_t length = _name.size();
+      size_t length = _address.size();
       // copy with EOS:
-      memcpy(socketInfo.sun.sun_path, _name.c_str(), length + 1);
+      memcpy(socketInfo.sun.sun_path, _address.c_str(), length + 1);
     }
     /* Now bind the host address using bind() call.*/
     if (bind(_socketHandle, &socketInfo.adress, sizeInfo) < 0) {
       _logger.say(LV_ERROR,
-          formatCString("listen(): cannot bind to %s (%d): %s", _name.c_str(),
-          errno, strerror(errno)));
+          formatCString("listen(): cannot bind to %s (%d): %s",
+              _address.c_str(),
+              errno, strerror(errno)));
+      break;
+    }
+    if (::listen(_socketHandle, maxConnections) != 0) {
+      _logger.say(LV_ERROR,
+          formatCString("listen(): cannot listen on %s (%d): %s",
+              _address.c_str(),
+              errno, strerror(errno)));
       break;
     }
     rc = true;
     bool again = true;
     while (again) {
-      ::listen(_socketHandle, maxConnections);
       SocketInfo_t client;
-      socklen_t size = sizeof client.adress;
+      bzero((void*) &client, sizeof client);
+      socklen_t size = sizeof client;
+      errno = 0;
       auto connectionHandle = ::accept(_socketHandle, &client.adress, &size);
 
       if (connectionHandle < 0) {
         _logger.say(LV_ERROR,
             formatCString("listen(): cannot accept on %s (%d): %s",
-                _name.c_str(),
+                _address.c_str(),
                 errno, strerror(errno)));
-        continue;
+        break;
       }
-
+      handler.doIt(connectionHandle);
+      close(connectionHandle);
     }
   } while (false);
   return rc;
 }
+bool SocketServer::send(uint8_t *buffer, size_t bufferLength) {
+  auto rc = ::send(_socketHandle, buffer, bufferLength, 0);
+  return rc > 0;
+}
+
 SocketTaskHandler::SocketTaskHandler(SocketServer &server) :
     _server(server) {
 }
 SocketTaskHandler::~SocketTaskHandler() {
 }
 
+bool SocketTaskHandler::send(uint8_t *buffer, size_t bufferLength) {
+  bool rc = _server.send(buffer, bufferLength);
+  return rc;
+}
 JobAgent::JobAgent(JobKind kind, const char *name, KnifeTaskHandler &parent) :
     _kind(kind), _name(name), _parent(parent) {
 }
@@ -162,7 +182,7 @@ JobAgent::~JobAgent() {
 }
 
 bool JobAgent::sendData(uint8_t *buffer, size_t bufferLength) {
-  bool rc = true;
+  bool rc = _parent.send(buffer, bufferLength);
   return rc;
 }
 StringJobAgent::StringJobAgent(const char *name, KnifeTaskHandler &parent) :
@@ -208,12 +228,11 @@ bool KnifeTaskHandler::doIt(int socketHandle) {
             data = std::string((const char*) (buffer + headerSize),
                 bufferLength - headerSize);
           }
-          rc = (dynamic_cast<StringJobAgent*>(agent))->process(
-              header->_scope, header->_job, data);
+          rc = (dynamic_cast<StringJobAgent*>(agent))->process(header->_scope,
+              header->_job, data);
         } else {
-          rc = (dynamic_cast<BinaryJobAgent*>(agent))->process(
-              header->_scope, header->_job, buffer + headerSize,
-              bufferLength - bufferLength);
+          rc = (dynamic_cast<BinaryJobAgent*>(agent))->process(header->_scope,
+              header->_job, buffer + headerSize, bufferLength - bufferLength);
         }
       }
     }
@@ -226,23 +245,28 @@ void KnifeTaskHandler::registerAgent(JobAgent *agent) {
 
 bool KnifeTaskHandler::send(uint8_t *buffer, size_t bufferLength) {
   bool rc = false;
-  size_t tokenSize = sizeof(knifeToken_t);
-  if (bufferLength + tokenSize < _bufferSize) {
+  KnifeAnswerHeader *header = (KnifeAnswerHeader*) _buffer;
+  size_t headerSize = sizeof(*header);
+  if (bufferLength + headerSize < _bufferSize) {
     knifeToken_t token = 0;
-    memcpy((void*) _buffer, &token, tokenSize);
-    memcpy((void*) (_buffer + tokenSize), buffer, bufferLength);
-    _server.send(_buffer, bufferLength + tokenSize);
+    header->_token = token;
+    header->_length = bufferLength;
+    memcpy((void*) (_buffer + headerSize), buffer, bufferLength);
+    _server.send(_buffer, bufferLength + headerSize);
   }
   return rc;
 }
-BasicJobHandler::BasicJobHandler(KnifeTaskHandler &parent) :
+BasicJobAgent::BasicJobAgent(KnifeTaskHandler &parent) :
     StringJobAgent("basic", parent) {
-  }
-  BasicJobHandler::~BasicJobHandler() {
+}
+BasicJobAgent::~BasicJobAgent() {
 
-  }
-bool BasicJobHandler::process(scope_t scope, job_t job,
-    const std::string &data) {
+}
+bool BasicJobAgent::isResponsible(scope_t scope, job_t job) {
+  bool rc = scope == SCOPE_BASIC;
+  return rc;
+}
+bool BasicJobAgent::process(scope_t scope, job_t job, const std::string &data) {
   bool rc = true;
   if (job == JOB_ECHO) {
     _parent.send((uint8_t*) data.c_str(), data.size());
@@ -254,10 +278,6 @@ bool BasicJobHandler::process(scope_t scope, job_t job,
     auto message = "<unknown job>";
     _parent.send((uint8_t*) message, strlen(message));
   }
-  return rc;
-}
-bool BasicJobHandler::isResponsible(scope_t scope, job_t job) {
-  bool rc = scope == SCOPE_BASIC;
   return rc;
 }
 

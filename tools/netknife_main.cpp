@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
   const char *arg1 = argc < 2 ? "" : argv[1];
   if (argc > 1 && strcmp(arg1, "--test") == 0) {
     const char *filter = "*";
-    filter = "SocketServerTest.*";
+    filter = "AgentsTest.*";
     std::string arg = "--gtest_filter=";
     arg += filter;
     char *args[] = { (char*) "dummy", const_cast<char*>(arg.c_str()), nullptr };

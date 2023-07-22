@@ -18,11 +18,14 @@
 #include <netdb.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <sys/un.h>
+#include <sys/socket.h>
 #endif
 #ifndef BASIC_HPP_
 #include "../basic/basic.hpp"
 #endif
 #include "../net/SocketServer.hpp"
+#include "../net/Agents.hpp"
 #include "../net/SocketClient.hpp"
 #endif /* NET_NET_HPP_ */

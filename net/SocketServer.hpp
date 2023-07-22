@@ -43,13 +43,13 @@ protected:
   int _socketHandle;
   Logger &_logger;
   bool _isTcp;
-  std::string _name;
+  std::string _address;
 public:
-  SocketServer(const char *name, Logger &logger);
+  SocketServer(const char *address, Logger &logger);
   virtual ~SocketServer();
 public:
-  const std::string name() const {
-    return _name;
+  const std::string address() const {
+    return _address;
   }
   /**
    * Listens for jobs and process them.
@@ -70,6 +70,7 @@ public:
  * @brief Handles a request from a client in the server.
  */
 class SocketTaskHandler {
+  friend SocketServer;
 protected:
   SocketServer &_server;
 public:
@@ -93,6 +94,8 @@ class KnifeTaskHandler;
  * @brief The base class of an agent for <em>KnifeTaskHandler</em>.
  */
 class JobAgent {
+public:
+  static const std::string _ok;
 protected:
   JobKind _kind;
   std::string _name;
@@ -156,6 +159,7 @@ public:
   virtual bool process(scope_t scope, job_t job,
       const uint8_t *buffer, size_t bufferLength) = 0;
 };
+#pragma pack(push,1)
 struct KnifeHeader {
   uint32_t _crc;
   uint32_t _dataLength;
@@ -163,6 +167,12 @@ struct KnifeHeader {
   scope_t _scope;
   job_t _job;
 };
+struct KnifeAnswerHeader {
+  knifeToken_t _token;
+  uint32_t _length;
+};
+#pragma pack(pop)
+
 /**
  * @brief Handles a request from a client in the server.
  *
@@ -189,23 +199,30 @@ public:
 private:
   virtual bool doIt(int socketHandle);
 public:
+  uint8_t* buffer() {
+    return _buffer;
+  }
+  size_t bufferSize() const {
+    return _bufferSize;
+  }
   void registerAgent(JobAgent *agent);
   bool send(uint8_t *buffer, size_t bufferLength);
+
 };
 
 /**
  * @brief A job agent which implements a time server (returns the date/time) and an echo server (returns the sent data).
  */
-class BasicJobHandler: public StringJobAgent {
-  static const uint64_t SCOPE_BASIC = 0x6261736963202020;
-  static const uint64_t JOB_ECHO = 0x6563686f20202020;
+class BasicJobAgent: public StringJobAgent {
+  static const uint64_t SCOPE_BASIC = 0x2020206369736162;
+  static const uint64_t JOB_ECHO = 0x202020206f686365;
   static const uint64_t JOB_TIME = 0x20202020656d6974;
 public:
-  BasicJobHandler(KnifeTaskHandler &parent);
-  virtual ~BasicJobHandler();
+  BasicJobAgent(KnifeTaskHandler &parent);
+  virtual ~BasicJobAgent();
 public:
-  virtual bool process(scope_t scope, job_t job, const std::string &data);
   virtual bool isResponsible(scope_t scope, job_t job);
+  virtual bool process(scope_t scope, job_t job, const std::string &data);
 };
 }
 #endif /* OS_SOCKETSERVER_HPP_ */

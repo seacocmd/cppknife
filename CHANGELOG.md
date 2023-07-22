@@ -1,6 +1,17 @@
 # Changelog
 
-## [Unreleased]
+## [0.5.6] - 2023-07-22
+
+## Added
+- script CreateRelease
+- not ready: SocketServer.cpp SocketClient.cpp Agents.cpp netknife.cpp netknife_main.cpp
+- geoknife dbknife netknife
+
+## Changed
+- README.md: Describing the build process.
+
+## Fixed
+- CMakeList.txt: building with unittests
 
 ## [0.5.5] - 2023-07-20
 

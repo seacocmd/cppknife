@@ -1,8 +1,0 @@
-#! /bin/bash
-BASE=releases/amd64
-for file in fileknife sesknife textknife libcppknife.so; do
-  cp -av build/default/$file $BASE
-  strip -v --strip-all $BASE/$file
-done
-
-

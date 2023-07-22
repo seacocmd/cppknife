@@ -31,13 +31,21 @@ netknife to-hex basic
  * @param logger Manages the output.
  * @return 0: success Otherwise: the exit code.
  */
-int secrets(ArgumentParser &parser, Logger &logger) {
+int knife(ArgumentParser &parser, Logger &logger) {
   int rc = 9;
+  auto address = parser.asString("address");
+  SocketServer server(address, logger);
+  KnifeTaskHandler handler(server);
+  BasicJobAgent *basicAgent = new BasicJobAgent(handler);
+  handler.registerAgent(basicAgent);
+  auto storageAgent = new StorageJobAgent(handler);
+  handler.registerAgent(storageAgent);
+  server.listen(handler);
   return rc;
 }
 
 /**
- * Manages the "secrets" sub command.
+ * Manages the "knife" sub command.
  * @param parser Contains the program argument info.
  * @param logger Manages the output.
  * @return 0: success Otherwise: the exit code.
@@ -54,9 +62,7 @@ int toHex(ArgumentParser &parser, Logger &logger) {
     memset((void*) transformer._string, ' ', sizeof transformer._string);
     size_t length = strlen(data);
     length = min(sizeof transformer._string, length);
-    for (size_t ix = 0; ix < length; ix++) {
-      transformer._string[7 - ix] = data[ix];
-    }
+    memcpy((void*) transformer._string, data, length);
     printf("0x%016lx %s\n", transformer._int, data);
   }
   return rc;
@@ -73,12 +79,10 @@ int netknife(int argc, char **argv, Logger *loggerExtern) {
   parser.add("--verbose", "-v", DT_BOOL, "Show more information");
   parser.add("--examples", nullptr, DT_BOOL, "Show usage examples", "false");
   parser.addMode("mode", "What should be done:", "to-gps,from-gps");
-  ArgumentParser secretsParser("secrets", logger,
-      "A daemon storing and offering secrets");
-  parser.addSubParser("mode", "secrets", secretsParser);
-  secretsParser.add("address", nullptr, DT_STRING,
-      "<ip>:<port or <path_socket>", "/run/netknife.secrets",
-      "localhost:58777|/run/netknife.secrets");
+  ArgumentParser knifeParser("knife", logger, "A daemon for diverse services.");
+  parser.addSubParser("mode", "knife", knifeParser);
+  knifeParser.add("address", nullptr, DT_STRING, "<ip>:<port or <path_socket>",
+      "/run/cppknife/netknife.knife", "localhost:58777|/run/netknife.knife");
   ArgumentParser toHexParser("to-hex", logger,
       "Converts a string into a hex digit");
   parser.addSubParser("mode", "to-hex", toHexParser);
@@ -93,8 +97,8 @@ int netknife(int argc, char **argv, Logger *loggerExtern) {
     auto level = static_cast<LogLevel>(parser.asInt("log-level", LV_SUMMARY));
     logger->setLevel(level);
     try {
-      if (parser.isMode("mode", "secrets")) {
-        rc = secrets(parser, *logger);
+      if (parser.isMode("mode", "knife")) {
+        rc = knife(parser, *logger);
       } else if (parser.isMode("mode", "to-hex")) {
         rc = toHex(parser, *logger);
       } else {

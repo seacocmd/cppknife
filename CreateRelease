@@ -1,13 +1,10 @@
 #! /bin/bash
 BASE_BINARIES=releases/amd64
 BASE_BUILD=build.release
+VERSION=$(grep "^##" CHANGELOG.md | grep -o '[0-9][0-9.]*' | head -n1)
+
 function ChangeVersion(){
-  VERSION=$(grep "^##" CHANGELOG.md | grep -o '[0-9][0-9.]*' | head -n1)
-  VERSION2=$(grep "VERSION" CMakeLists.txt | head -n1 | grep -o '[0-9][0-9.]*')
-  echo "version: $VERSION / $VERSION2"
-  if [ "$VERSION" != "$VERSION2" ]; then
-    sed -i "s/VERSION [0-9][0-9.]*/VERSION $VERSION/;" CMakeLists.txt
-  fi
+  echo "$VERSION" >releases/version.txt
 }
 function SwitchControl(){
   cd unittest

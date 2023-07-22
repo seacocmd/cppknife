@@ -1,4 +1,9 @@
 # Changelog
+## [0.5.7] - 2023-07-22 Installation/Update
+
+## Added
+- script releases/amd64/InstallOrUpdate.sh
+- releases/amd64/versions.txt
 
 ## [0.5.6] - 2023-07-22
 

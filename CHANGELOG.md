@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.11] - 2023-07-22 Installation/Update
+
+## Fixed
+- readme.txt: wrong script name
+
 ## [0.5.10] - 2023-07-22 Installation/Update
 
 ## Fixed

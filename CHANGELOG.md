@@ -1,4 +1,10 @@
 # Changelog
+
+## [0.5.10] - 2023-07-22 Installation/Update
+
+## Fixed
+- InstallOrUpdate.sh: Correct download link, copying of the script
+
 ## [0.5.9] - 2023-07-22 Installation/Update
 
 ## Fixed

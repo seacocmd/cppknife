@@ -1,9 +1,9 @@
 Installation for architecture amd64:
 
-* Download the script InstallationAndUpdate.sh
-* run: sudo bash InstallationAndUpdate.sh
+* Download the script InstallationOrUpdate.sh
+* run: sudo bash InstallationOrUpdate.sh
 
 Update:
 
-sudo /usr/share/cppknife/InstallationAndInstall.sh
+sudo /usr/share/cppknife/InstallationOrUpdate.sh
 

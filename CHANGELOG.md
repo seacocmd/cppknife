@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.5.12] - 2023-07-22 Installation/Update
+
+## Fixed
+- InstallOrUpdate.sh: links to binaries and library
+
 ## [0.5.11] - 2023-07-22 Installation/Update
 
 ## Fixed

@@ -13,20 +13,18 @@ fi
 TAR=cppknife.$ARCHITECTURE.tgz
 function MkLink(){
   local name=$1
-  if [ ! -l $BASE_BIN/$name ]; then
-    ln -s $BASE_KNIFE/$name $BASE_BIN/$name
+  if [ ! -L $BASE_BIN/$name ]; then
+    ln -sv $BASE_KNIFE/$name $BASE_BIN/$name
   fi
 } 
 function PrepareBase(){
   mkdir -p $BASE_KNIFE
-  if [ "$0" = $BASE_KNIFE/InstallOrUpdate.sh ]; then
-    echo "= installing script..."
-    cp -a $0 $BASE_KNIFE/InstallOrUpdate.sh
-    chmod +x BASE_KNIFE/InstallOrUpdate.sh
-  fi
-  for file in $BINS ; do
+  for file in $BINARY_FILES ; do
     MkLink $file
   done
+  if [ ! -L /usr/lib/libcppknife.so ]; then
+    ln -vs $BASE_KNIFE/libcppknife.so /usr/lib
+  fi
 }
 function Update(){
   mkdir -p /tmp/cppknife

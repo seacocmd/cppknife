@@ -38,7 +38,6 @@ int main(int argc, char **argv) {
     //filter = "TimeToolTest.*";
     //filter = "TraverserTest.*";
     //filter = "TextKnifeTest.*";
-
     //filter = "FunctionEngineTest.*";
     //filter = "SearchEngineTest.*";
     filter = "ScriptTest.*";

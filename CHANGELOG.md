@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.6.1] - 2023-07-25 
+
+## Fixed
+- CMakeList.txt: Google test is working again
+- Json parser: recognizing negative numbers
+
+## Added
+- SocketServer/SocketClients are working
+- Version depending library names
+- JsonError
+- A Json tree can be converted into a string: decode()
+- The structure of a tree can be tested: nodeByPath(), hasAttribute(), checkStructure()
+- NodeJson
+    - encode(), encodeFromFile(), decode(), addAsString(), dataType(), 
+    - byIndex(), byAttribute(), toString(), isNull()
+- MapJson
+    - hasAttribute(), erase(), nodeByPath(), checkStructure(), operator [<string>]
+- README.md: notes about building from scratch
+
+## Changed
+- Default address for unix sockets: /var/lib/cppknife/netknife.knife
+- Renamed: JsonReader.* -> NodeJson.*
+- Refactoring: NodeJson can be used without JsonReader
+
+
 ## [0.5.12] - 2023-07-22 Installation/Update
 
 ## Fixed

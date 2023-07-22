@@ -23,7 +23,6 @@ TEST(Base64Test, encode) {
 
   ubyte_t input[] = { "With a little help from my friends" };
   auto length = strlen((const char*) input);
-  size_t outputLength = 0;
   std::string output;
   encodeBase64(input, length, output);
   ASSERT_STREQ(output.c_str(),
@@ -37,7 +36,6 @@ TEST(Base64Test, encode2) {
 
   ubyte_t input[] = { 0, 1, 2, 3, 4, 5 };
   auto length = sizeof input;
-  size_t outputLength = 0;
   std::string output;
   encodeBase64(input, length, output);
   ASSERT_STREQ(output.c_str(), "AAECAwQF");
@@ -96,7 +94,7 @@ TEST(Base64Test, base64Random) {
         memcmp((const void* ) decoded, (const void* ) data, length));
   }
   auto diff = time(nullptr) - start;
-  printf("total: %.3f Mb time: %d\n", total / 1024.0 / 1024.0, diff);
+  printf("total: %.3f Mb time: %ld\n", total / 1024.0 / 1024.0, diff);
 }
 
 

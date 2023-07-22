@@ -22,8 +22,11 @@ TEST(AgentsTest, storagePut)
   auto logger = buildMemoryLogger();
 
   KniveSocketClient client("/run/cppknife/netknife.knife", *logger);
-  auto answer = client.send(StorageJobAgent::SCOPE_STORAGE,
+  auto answer = client.request(StorageJobAgent::SCOPE_STORAGE,
       StorageJobAgent::JOB_PUT, "mything\nis known");
-  ASSERT_TRUE(answer);
+  ASSERT_STREQ(answer.c_str(), "OK");
+  auto answer2 = client.request(StorageJobAgent::SCOPE_STORAGE,
+      StorageJobAgent::JOB_GET, "mything");
+  ASSERT_STREQ(answer2.c_str(), "is known");
 
 }

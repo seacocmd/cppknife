@@ -16,7 +16,7 @@ bool netknifeUnterTest = false;
 void examples() {
   printf(
       R"""(# Starts the secrets server using unix sockets:
-netknife secrets --address=/run/netknife.secrets
+netknife secrets --address=/usr/share/cppknife/netknife.secrets
 # Starts the secrets server using tcp
 netknife secrets --address=0.0.0.0:12345
 
@@ -82,7 +82,8 @@ int netknife(int argc, char **argv, Logger *loggerExtern) {
   ArgumentParser knifeParser("knife", logger, "A daemon for diverse services.");
   parser.addSubParser("mode", "knife", knifeParser);
   knifeParser.add("address", nullptr, DT_STRING, "<ip>:<port or <path_socket>",
-      "/run/cppknife/netknife.knife", "localhost:58777|/run/netknife.knife");
+      SocketServer::_defaultAddress,
+      "localhost:58777|/var/lib/cppknife/run/netknife.knife");
   ArgumentParser toHexParser("to-hex", logger,
       "Converts a string into a hex digit");
   parser.addSubParser("mode", "to-hex", toHexParser);

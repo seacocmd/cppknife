@@ -9,6 +9,9 @@
 #include "../net/net.hpp"
 namespace cppknife {
 
+const char *SocketServer::_defaultAddress =
+    "/var/lib/cppknife/run/netknife.knife";
+
 knifeToken_t AuthorizationChecker::buildToken(time_t time,
     const char *context) {
   if (context == nullptr) {
@@ -210,7 +213,6 @@ KnifeTaskHandler::~KnifeTaskHandler() {
 }
 bool KnifeTaskHandler::doIt(int socketHandle) {
   bool again = true;
-  uint8_t *buffer = nullptr;
   size_t bufferLength = 0;
   bool rc = true;
   while (again) {
@@ -225,14 +227,14 @@ bool KnifeTaskHandler::doIt(int socketHandle) {
         again = false;
         if (agent->kind() == JK_STRING) {
           if (data.size() == 0) {
-            data = std::string((const char*) (buffer + headerSize),
+            data = std::string((const char*) (_buffer + headerSize),
                 bufferLength - headerSize);
           }
           rc = (dynamic_cast<StringJobAgent*>(agent))->process(header->_scope,
               header->_job, data);
         } else {
           rc = (dynamic_cast<BinaryJobAgent*>(agent))->process(header->_scope,
-              header->_job, buffer + headerSize, bufferLength - bufferLength);
+              header->_job, _buffer + headerSize, bufferLength - bufferLength);
         }
       }
     }

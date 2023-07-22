@@ -4,10 +4,11 @@ BASE_BUILD=build.release
 REL_TEMP=cppknife
 BASE_TEMP=/tmp/$REL_TEMP
 KNIFE_TAR=releases/cppknife.amd64.tgz
-BINARIES="dbknife fileknife geoknife netknife sesknife textknife libcppknife.so"
 VERSION=$(grep "^##" CHANGELOG.md | grep -o '[0-9][0-9.]*' | head -n1)
+BINARIES="dbknife fileknife geoknife netknife sesknife textknife libcppknife-$VERSION.so libcppknifegeo-$VERSION.so"
 ABS_KNIFE_TAR=$(pwd)/$KNIFE_TAR
 function ChangeVersion(){
+  mkdir -p ../seapluspro.github.io/releases
   echo "$VERSION" >$BASE_BINARIES/version.txt
   echo "$VERSION" >../seapluspro.github.io/releases/version.txt
 }

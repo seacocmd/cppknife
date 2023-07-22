@@ -40,8 +40,12 @@ public:
       size_t bufferKnife = 64 * 1024 + sizeof(KnifeHeader));
   virtual ~KniveSocketClient();
 public:
+  virtual bool checkToken(knifeToken_t token);
   virtual bool receive(uint8_t *buffer, size_t bufferSize,
       size_t &bufferLength);
+  virtual std::string receiveString();
+  virtual std::string request(scope_t scope, job_t job,
+      const std::string &data);
   bool send(scope_t scope, job_t job, uint8_t *buffer, size_t bufferLength);
   bool send(scope_t scope, job_t job, const std::string &data);
 };

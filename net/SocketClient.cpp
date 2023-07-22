@@ -31,7 +31,6 @@ bool SocketClient::connect(const char *address) {
       if (!setAddress(address)) {
         break;
       }
-      _address = address;
     }
     /* Create a socket point */
     _socketHandle = socket(_isTcp ? AF_INET : AF_LOCAL, SOCK_STREAM, 0);
@@ -73,18 +72,18 @@ bool SocketClient::connect(const char *address) {
     } else {
       address._sun.sun_family = AF_LOCAL;
       size_t maxSize = sizeof address._sun.sun_path - 1;
-      if (_address.size() < maxSize) {
+      if (_address.size() >= maxSize) {
         _logger.say(LV_ERROR,
             formatCString("socket path length cutted: %s (%ld) -> %*s",
-                _address, maxSize, maxSize, _address));
-        _address.erase(maxSize);
+                _address.c_str(), maxSize, maxSize, _address));
+        _address.erase(maxSize - 1);
       }
       memcpy((void*) address._sun.sun_path, _address.c_str(),
           _address.size() + 1);
     }
     /* Now connect to the server */
-    if (::connect(_socketHandle, (struct sockaddr*) &address, sizeof(address))
-        < 0) {
+    if (::connect(_socketHandle, (struct sockaddr*) &address,
+        sizeof(address._sun)) < 0) {
       _logger.say(LV_ERROR,
           formatCString("cannot connect to %s (%d) %s", _address.c_str(), errno,
               strerror(errno)));
@@ -143,6 +142,9 @@ bool SocketClient::setAddress(const char *address) {
       rc = false;
     }
   }
+  if (rc) {
+    _address = address;
+  }
   return rc;
 }
 
@@ -155,9 +157,30 @@ KniveSocketClient::~KniveSocketClient() {
   delete _buffer;
   _buffer = nullptr;
 }
+bool KniveSocketClient::checkToken(knifeToken_t token) {
+  bool rc = true;
+  return rc;
+}
 bool KniveSocketClient::receive(uint8_t *buffer, size_t bufferSize,
     size_t &bufferLength) {
   bool rc = false;
+  KnifeHeader *header = (KnifeHeader*) buffer;
+  int flags = 0;
+  auto rc2 = ::recv(this->_socketHandle, (void*) buffer, bufferSize, flags);
+  if (rc2 > 0 && checkToken(header->_token)) {
+    if (sizeof(KnifeHeader) + header->_dataLength < bufferSize) {
+      ::memmove((void*) buffer, (void*) (buffer + sizeof(KnifeHeader)), rc2);
+    }
+  }
+  return rc;
+}
+std::string KniveSocketClient::receiveString() {
+  std::string rc;
+  uint8_t buffer[0x10000];
+  size_t bufferLength = 0;
+  if (receive(buffer, sizeof buffer, bufferLength)) {
+    rc = std::string((char*) buffer, bufferLength);
+  }
   return rc;
 }
 bool KniveSocketClient::send(scope_t scope, job_t job, uint8_t *buffer,
@@ -176,8 +199,16 @@ bool KniveSocketClient::send(scope_t scope, job_t job, uint8_t *buffer,
   }
   return rc;
 }
+std::string KniveSocketClient::request(scope_t scope, job_t job,
+    const std::string &data) {
+  connect(SocketServer::_defaultAddress);
+  auto rc = send(scope, job, (uint8_t*) data.c_str(), data.size());
+  auto rc2 = receiveString();
+  return rc2;
+}
 bool KniveSocketClient::send(scope_t scope, job_t job,
     const std::string &data) {
+  connect(SocketServer::_defaultAddress);
   auto rc = send(scope, job, (uint8_t*) data.c_str(), data.size());
   return rc;
 }

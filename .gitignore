@@ -21,3 +21,6 @@ CMakeCache.txt
 /Doxy
 build.release/
 safe/
+/CTestTestfile.cmake
+/DartConfiguration.tcl
+/version.txt

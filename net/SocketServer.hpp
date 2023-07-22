@@ -39,6 +39,8 @@ class SocketTaskHandler;
  * @brief The server part of communication with Unix sockets.
  */
 class SocketServer {
+public:
+  static const char *_defaultAddress;
 protected:
   int _socketHandle;
   Logger &_logger;

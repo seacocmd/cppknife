@@ -153,8 +153,12 @@ TEST(GpsTranslatorTest, duration) {
   double start = nowAsDouble();
   for (int ix = 0; ix < 100000; ix++) {
     translator.fromGpsRaw(gps, eastWest);
-    gps._latitude += 0.01;
-    gps._longitude += 0.02;
+    if ((gps._latitude += 0.01) > 89) {
+      gps._latitude = 8.3;
+    }
+    if ((gps._longitude += 0.02) > 89) {
+      gps._longitude = 7.2;
+    }
   }
   logger->say(LV_INFO,
       timeDifferenceToString(nowAsDouble() - start,
@@ -162,8 +166,12 @@ TEST(GpsTranslatorTest, duration) {
   start = nowAsDouble();
   for (int ix = 0; ix < 100000; ix++) {
     translator.toGpsRaw(eastWest, gps);
-    eastWest._east += 7.3;
-    eastWest._north += 2.02;
+    if ((eastWest._east += 7.3) > 5100200.0) {
+      eastWest._east = 2100100.3;
+    }
+    if ((eastWest._north += 2.02) > 6100200.0) {
+      eastWest._north = 1100100.2;
+    }
   }
   logger->say(LV_INFO,
       timeDifferenceToString(nowAsDouble() - start,

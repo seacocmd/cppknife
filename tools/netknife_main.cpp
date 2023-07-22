@@ -15,6 +15,7 @@ int main(int argc, char **argv) {
   if (argc > 1 && strcmp(arg1, "--test") == 0) {
     const char *filter = "*";
     filter = "AgentsTest.*";
+    //filter = "Base64Test.*";
     std::string arg = "--gtest_filter=";
     arg += filter;
     char *args[] = { (char*) "dummy", const_cast<char*>(arg.c_str()), nullptr };

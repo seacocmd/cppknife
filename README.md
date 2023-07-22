@@ -17,3 +17,13 @@ If you want to use the library you can install it under Linux: see linux/install
 
 ## Build
 Run the script **CreateRelease**
+
+## Starting from Scratch
+```
+apt install libgtest-dev cmake libgdal-dev
+cmake -H. -Bbuild
+cmake -Dmode=productive -DCMAKE_BUILD_TYPE=Release -S . -B $BASE_BUILD
+cmake --build build.release
+```
+
+

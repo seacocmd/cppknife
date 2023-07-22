@@ -3,7 +3,7 @@ BASE=/usr/share/cppknife
 BASE_BIN=/usr/local/bin
 BASE_TEMP=/tmp/knifeinstall
 BINARY_FILES="dbknife fileknife geoknife sesknife textknife libcppknife.so"
-DOWNLOAD_URL=https://github.com/seapluspro/seapluspro.github.io/tree/main/releases
+DOWNLOAD_URL=https://github.com/seapluspro/cppknife/blob/main/releases
 DOWNLOAD_SUFFIX=?raw=true
 ARCHITECTURE=amd64
 if [ "$1" = "arm64" ]; then
@@ -34,7 +34,7 @@ function Update(){
   wget $DOWNLOAD_URL/version.txt$DOWNLOAD_SUFFIX -o version.txt
   local version=$(cat version.txt)
   local versionOld=$(cat $BASE/version.txt)
-  if [ $version = $versionOld ]; then
+  if [ "$version" = "$versionOld" ]; then
     echo "= already up to date: version: $version"
   else
     wget $DOWNLOAD_URL/$TAR$DOWNLOAD_SUFFIX -o $TAR

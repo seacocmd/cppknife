@@ -1,4 +1,9 @@
 # Changelog
+## [0.5.9] - 2023-07-22 Installation/Update
+
+## Fixed
+- InstallOrUpdate.sh: Correct download link
+
 ## [0.5.8] - 2023-07-22 Installation/Update
 
 ## Changed
@@ -7,8 +12,6 @@
 
 ## Fixed
 - InstallOrUpdate.sh: Correct download links
-
-
 
 ## [0.5.7] - 2023-07-22 Installation/Update
 

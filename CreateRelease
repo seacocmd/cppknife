@@ -1,10 +1,15 @@
 #! /bin/bash
-BASE_BINARIES=releases/amd64
+BASE_BINARIES=releases
 BASE_BUILD=build.release
+REL_TEMP=cppknife
+BASE_TEMP=/tmp/$REL_TEMP
+KNIFE_TAR=releases/cppknife.amd64.tgz
+BINARIES="dbknife fileknife geoknife netknife sesknife textknife libcppknife.so"
 VERSION=$(grep "^##" CHANGELOG.md | grep -o '[0-9][0-9.]*' | head -n1)
-
+ABS_KNIFE_TAR=$(pwd)/$KNIFE_TAR
 function ChangeVersion(){
-  echo "$VERSION" >releases/version.txt
+  echo "$VERSION" >$BASE_BINARIES/version.txt
+  echo "$VERSION" >../seapluspro.github.io/releases/version.txt
 }
 function SwitchControl(){
   cd unittest
@@ -13,11 +18,17 @@ function SwitchControl(){
   cd ..
 }
 function PrepareBinaries(){
-  for file in dbknife fileknife geoknife netknife sesknife textknife libcppknife.so; do
-    cp -a $BASE_BUILD/$file $BASE_BINARIES
-    strip --strip-all $BASE_BINARIES/$file
+  mkdir -p $BASE_TEMP
+  rm -Rf /tmp/$REL_TEMP/*
+  for file in $BINARIES; do
+    cp -a $BASE_BUILD/$file $BASE_TEMP
+    strip --strip-all $BASE_TEMP/$file
   done
-  ls -ld $BASE_BINARIES/*
+  pushd $BASE_TEMP >/dev/null 2>&1
+  ls -ld *
+  tar czf $ABS_KNIFE_TAR $BINARIES
+  ls -ld $ABS_KNIFE_TAR
+  popd >/dev/null 2>&1
 }
 function Doxy(){
   if [ -e doxygen/R ]; then
@@ -32,6 +43,7 @@ mkdir -p $BASE_BUILD
 cmake -Dmode=productive -DCMAKE_BUILD_TYPE=Release -S . -B $BASE_BUILD
 cmake --build build.release
 Doxy
+ChangeVersion
 PrepareBinaries
 SwitchControl debug
 

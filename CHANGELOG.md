@@ -1,4 +1,15 @@
 # Changelog
+## [0.5.8] - 2023-07-22 Installation/Update
+
+## Changed
+- tar archive instead of single binaries
+- CreateRelease: build of the tar archive
+
+## Fixed
+- InstallOrUpdate.sh: Correct download links
+
+
+
 ## [0.5.7] - 2023-07-22 Installation/Update
 
 ## Added

@@ -10,7 +10,7 @@
 using namespace cppknife;
 
 static bool fewTests() {
-  return false;
+  return true;
 }
 #define FEW_TESTS if (fewTests()) return
 
@@ -423,5 +423,23 @@ TEST(StringToolTest, crc32) {
   auto crc = crc32((uint8_t*) data, strlen(data), false);
   data = " from my friends";
   ASSERT_EQ(0x3DBC3A44, crc32Update((uint8_t*) data, strlen(data), crc, true));
+}
+
+TEST(StringToolTest, escapeMetaCharacters) {
+  FEW_TESTS;
+  std::string x("2slash: \\\\ Apo:\" NL: \n CR: \r TAB: \t VTAB: \v ONE: \x01");
+  const char* expected = "2slash: \\\\\\\\ Apo:\\\" NL: \\n CR: \\r TAB: \\t VTAB: \\v ONE: \\x01";
+  ASSERT_STREQ(expected, escapeMetaCharacters(x.c_str()).c_str());
+  auto y = escapeMetaCharacters(x);
+  ASSERT_STREQ(expected, x.c_str());
+  ASSERT_STREQ(expected, y.c_str());
+}
+
+TEST(StringToolTest, escapeMetaCharactersCount) {
+  //FEW_TESTS;
+  const char* x = "2slash: \\\\ Apo:\" NL: \n CR: \r TAB: \t VTAB: \v ONE: \x01";
+  ASSERT_EQ(escapeMetaCharactersCount(x), 7+3);
+  const char* a = "\x05";
+  ASSERT_EQ(escapeMetaCharactersCount(a), 3);
 }
 

@@ -144,6 +144,25 @@ bool
 endsWith(const char *source, int sourceLength, const char *tail,
     int tailLength = -1, bool ignoreCase = false);
 /**
+ * Masks C string meta characters like " or \\ with a slash.
+ * @param string The string to convert
+ * @return A copy of <em>string</em> with masked meta characters.
+ */
+std::string escapeMetaCharacters(const char *string);
+/**
+ * Masks C string meta characters like " or \\ with a slash.
+ * @param[in out] string In: The string to convert. Out: the extended string.
+ * @return <em>string</em> (for chaining).
+ */
+std::string& escapeMetaCharacters(std::string &string);
+/**
+ * Counts the additional characters from <em>escapeMetaCharacters()</em>.
+ * Example: <em>escapeMetaCharactersCount("slash: \\ NL: \n")</em> is 2.
+ * @param string The string to inspect.
+ * @return The count of characters appended from <em>escapeMetaCharacters()</em>.
+ */
+int escapeMetaCharactersCount(const char *string);
+/**
  * Formats a string into a <em>std::string</em>.
  * @param format The format with placeholders like in <em>sprintf()</em>.
  * @param ... The variable amount of arguments (like in <em>sprintf()</em>).

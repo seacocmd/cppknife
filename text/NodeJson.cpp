@@ -100,6 +100,12 @@ const NodeJson* NodeJson::byAttributeConst(const char *attribute,
   }
   return nullptr;
 }
+std::vector<NodeJson*>* NodeJson::array(bool throwException) {
+  if (throwException) {
+    throw JsonError(formatCString("node %s has no array", toString().c_str()));
+  }
+  return nullptr;
+}
 NodeJson* NodeJson::byIndex(int index, bool throwException) {
   if (throwException) {
     throw JsonError(
@@ -196,7 +202,13 @@ bool NodeJson::isNull() const {
 bool NodeJson::hasAttribute(const char *attribute) const {
   return false;
 }
-
+std::map<std::string, NodeJson*>* NodeJson::map(bool throwException) {
+  if (throwException) {
+    throw JsonError(
+        formatCString("the node %s has no map", toString().c_str()));
+  }
+  return nullptr;
+}
 const NodeJson* NodeJson::nodeByPath(const char *path[],
     JsonDataType expectedType, bool throwException) const {
   const NodeJson *rc = this;
@@ -328,6 +340,9 @@ size_t ArrayJson::addNeededBytes(size_t &needed, int indent, int level,
   return needed;
 }
 
+std::vector<NodeJson*>* ArrayJson::array(bool throwException) {
+  return &_array;
+}
 NodeJson* ArrayJson::byIndex(int index, bool throwException) {
   NodeJson *rc = nullptr;
   if (index >= 0 && index < static_cast<int>(_array.size())) {
@@ -373,12 +388,18 @@ NodeJson& MapJson::operator[](const char *attribute) {
   return *rc;
 }
 
-void MapJson::add(const char *attribute, NodeJson *item) {
+void MapJson::add(const char *attribute, NodeJson *item,
+    bool maskMetaCharacters) {
   if (hasAttribute(attribute)) {
     delete _map[attribute];
   }
-  _map[attribute] = item;
-
+  if (!maskMetaCharacters && escapeMetaCharactersCount(attribute) == 0) {
+    _map[attribute] = item;
+  } else {
+    std::string key = attribute;
+    escapeMetaCharacters(key);
+    _map[key] = item;
+  }
 }
 
 void MapJson::addAsString(std::string &jsonString, int indent, int level,
@@ -561,11 +582,13 @@ bool MapJson::hasAttribute(const char *attribute) const {
   bool rc = it != _map.end();
   return rc;
 }
+std::map<std::string, NodeJson*>* MapJson::map(bool throwException) {
+  return &_map;
+}
 std::string MapJson::toString(int maxLength) const {
   std::string rc = "<map>";
   return rc;
 }
-
 ValueJson::ValueJson(const char *value) :
     NodeJson(JNT_VALUE), _value(value == nullptr ? "null" : value) {
   if (value == nullptr) {
@@ -1001,7 +1024,7 @@ MapJson* JsonReader::parseMap() {
           formatCString("value expected, not %.20s", _token._string), _token);
       break;
     }
-    rc->add(attribute, value);
+    rc->add(attribute, value, false);
   }
   return rc;
 }

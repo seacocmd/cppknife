@@ -194,6 +194,81 @@ bool endsWith(const char *source, int sourceLength, const char *tail,
   }
   return rc;
 }
+std::string escapeMetaCharacters(const char *string) {
+  std::string rc(string);
+  escapeMetaCharacters(rc);
+  return rc;
+}
+std::string& escapeMetaCharacters(std::string &string) {
+  unsigned char cc;
+  int additional = escapeMetaCharactersCount(string.c_str());
+  if (additional > 0) {
+    string.reserve(string.size() + additional);
+    for (size_t ix = 0; ix < string.size(); ix++) {
+      switch (cc = string[ix]) {
+      case '"':
+      case '\\':
+        string.insert(ix++, "\\");
+        break;
+      case '\n':
+        string[ix] = 'n';
+        string.insert(ix++, "\\");
+        break;
+      case '\r':
+        string[ix] = 'r';
+        string.insert(ix++, "\\");
+        break;
+      case '\t':
+        string[ix] = 't';
+        string.insert(ix++, "\\");
+        break;
+      case '\v':
+        string[ix] = 'v';
+        string.insert(ix++, "\\");
+        break;
+      case '\f':
+        string[ix] = 'f';
+        string.insert(ix++, "\\");
+        break;
+      default:
+        if (cc < ' ') {
+          string.insert(ix++, "\\xA");
+          int nibble1 = (cc / 16);
+          int nibble2 = (cc % 16);
+          string[++ix] = nibble1 + (nibble1 < 10 ? '0' : 'a');
+          string[ix + 1] = nibble2 + (nibble2 < 10 ? '0' : 'a');
+        }
+        break;
+      }
+    }
+  }
+  return string;
+}
+
+int escapeMetaCharactersCount(const char *string) {
+  int rc = 0;
+  unsigned char cc;
+  while ((cc = static_cast<unsigned char>(*string++)) != '\0') {
+    switch (cc) {
+    case '"':
+    case '\\':
+    case '\n':
+    case '\r':
+    case '\t':
+    case '\v':
+    case '\f':
+      rc++;
+      break;
+    default:
+      if (cc < ' ') {
+        rc += 3;
+      }
+      break;
+    }
+  }
+  return rc;
+}
+
 std::string formatCString(const char *fmt, ...) {
   char buffer[8192];
   assert(fmt != nullptr);
@@ -596,7 +671,7 @@ std::vector<std::string> splitCString(const char *text, const char *delimiter,
   if (maxCount <= 0) {
     maxCount = 0x7fffffff;
   }
-  std::vector<std::string> rc;
+  std::vector < std::string > rc;
   assert(text != nullptr && delimiter);
   if (delimiter == nullptr) {
     delimiter = "\n";
@@ -639,7 +714,7 @@ std::vector<std::string> splitString(const std::string &text,
   for (; iter != end; ++iter) {
     ++count;
   }
-  std::vector<std::string> rc;
+  std::vector < std::string > rc;
   rc.reserve(count + 1);
   std::sregex_token_iterator iter2(text.begin(), text.end(), delimiter, -1);
   for (; iter2 != end; ++iter2) {

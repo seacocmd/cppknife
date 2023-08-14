@@ -6,7 +6,7 @@ project (ccppknife
 	DESCRIPTION "A C++ library with some applications")
 
 set(CMAKE_CXX_STANDARD 17)
-set(LIB_VERSION 0.6.1)
+set(LIB_VERSION 0.6.2)
 set(LIB_NAME cppknife-${LIB_VERSION})
 set(GEOLIB_NAME cppknifegeo-${LIB_VERSION})
 
@@ -124,7 +124,7 @@ target_compile_options(netknife PRIVATE -Wall)
 target_link_libraries(netknife ${CPPKNIFE_LIBS})
 
 add_executable(textknife tools/textknife_main.cpp tools/textknife.cpp 
-	unittest/textknife_test.cpp
+	unittest/textknife_test.cpp unittest/NodeJson_test.cpp
 	${TEXT_UNITTEST_SOURCES})
 target_link_libraries(textknife ${CPPKNIFE_LIBS})
 

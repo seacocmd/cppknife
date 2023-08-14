@@ -92,8 +92,15 @@ public:
   virtual size_t addNeededBytes(size_t &needed, int indent, int level,
       bool needsPrefix = true) const = 0;
   /**
+   * Returns the internal array of a <em>ArrayJson</em> instance or <em>nullptr</em>.
+   * @
+   */
+  virtual std::vector<NodeJson*>* array(bool throwException = true);
+  /**
    * Returns the bool value of the instance.
-   * Throws an exception if the instance is not a value node with bool type.
+   * @param throwException <em>true</em>: throws an exception if null is returned.
+   * @return <em>nullptr</em>: no array is available. Otherwise: the internal list
+   *  of the <em>ArrayJson</em> instance.
    */
   virtual bool asBool() const;
   /**
@@ -120,8 +127,8 @@ public:
    * @return <em>nullptr</em>: the instance is not a map node or the attribute does not exist.
    *  Otherwise: the related node of the attribute.
    */
-  virtual NodeJson* byAttribute(const char *attribute,
-      bool throwException = false);
+  virtual NodeJson* byAttribute(const char *attribute, bool throwException =
+      false);
   /**
    * Returns the value of a given attribute of the instance as constant item.
    * @param attribute The name of the attribute.
@@ -173,6 +180,12 @@ public:
    * @param
    */
   virtual bool hasAttribute(const char *attribute) const;
+  /**
+   * Returns the internal map of a <em>NodeJson</em> instance of null for other nodes.
+   * @param throwException <em>true</em>: throws an exception if null is returned.
+   * @return <em>nullptr</em>: no map available. Otherwise: the map of the <em>NodeJson</em> instance.
+   */
+  virtual std::map<std::string, NodeJson*>* map(bool throwException = true);
   /**
    * Tests whether a given path exists in the Json tree.
    * @param path A list of attributes, ending with a <em>nullptr</em>.
@@ -269,6 +282,7 @@ public:
       bool needsPrefix = true) const;
   virtual size_t addNeededBytes(size_t &needed, int indent, int level,
       bool needsPrefix = true) const;
+  virtual std::vector<NodeJson*>* array(bool throwException = true);
   virtual NodeJson* byIndex(int index, bool throwException = false);
   virtual const NodeJson* byIndexConst(int index,
       bool throwException = false) const;
@@ -290,7 +304,7 @@ public:
   virtual ~MapJson();
   virtual NodeJson& operator [](const char *attribute);
 public:
-  void add(const char *name, NodeJson *item);
+  void add(const char *name, NodeJson *item, bool maskMetaCharacters = true);
   virtual void addAsString(std::string &jsonString, int indent, int level,
       bool needsPrefix = true) const;
   virtual size_t addNeededBytes(size_t &needed, int indent, int level,
@@ -302,6 +316,7 @@ public:
   virtual std::string checkStructure(NameAndType mandatory[],
       NameAndType optional[] = nullptr, bool mustComplete = false) const;
   virtual JsonDataType dataType() const;
+  virtual std::map<std::string, NodeJson*>* map(bool throwException = true);
   bool erase(const char *attribute, bool deleteNode = true);
   bool hasAttribute(const char *attribute) const;
   virtual std::string toString(int maxLength = 40) const;

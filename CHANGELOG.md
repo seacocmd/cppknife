@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.6.2] - 2023-08-11
+
+## Added
+- NodeJson::map() / MapJson::map(): access to internal maps
+- NodeJson::array() /ArrayJson::map(): access to the internal array
+- StringTool: escapeMetaCharacters(), escapeMetaCharactersCount()
+
+## Fixed
+- MapJson::add(): new parameter maskMetaCharacters to safe label string.
+
 ## [0.6.1] - 2023-07-25 
 
 ## Fixed

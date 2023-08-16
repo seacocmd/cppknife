@@ -329,7 +329,7 @@ protected:
   std::string _value;
   JsonDataType _dataType;
 public:
-  ValueJson(const char *value);
+  ValueJson(JsonDataType, const char *value);
   ~ValueJson();
 public:
   virtual void addAsString(std::string &jsonString, int indent, int level,

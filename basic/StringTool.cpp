@@ -200,7 +200,7 @@ std::string escapeMetaCharacters(const char *string) {
   return rc;
 }
 std::string& escapeMetaCharacters(std::string &string) {
-  unsigned char cc;
+  unsigned char cc = 0;
   int additional = escapeMetaCharactersCount(string.c_str());
   if (additional > 0) {
     string.reserve(string.size() + additional);
@@ -671,7 +671,7 @@ std::vector<std::string> splitCString(const char *text, const char *delimiter,
   if (maxCount <= 0) {
     maxCount = 0x7fffffff;
   }
-  std::vector < std::string > rc;
+  std::vector<std::string> rc;
   assert(text != nullptr && delimiter);
   if (delimiter == nullptr) {
     delimiter = "\n";
@@ -714,7 +714,7 @@ std::vector<std::string> splitString(const std::string &text,
   for (; iter != end; ++iter) {
     ++count;
   }
-  std::vector < std::string > rc;
+  std::vector<std::string> rc;
   rc.reserve(count + 1);
   std::sregex_token_iterator iter2(text.begin(), text.end(), delimiter, -1);
   for (; iter2 != end; ++iter2) {
@@ -900,6 +900,56 @@ std::string truncateCString(const char *text, size_t length) {
     rc = std::string(text, length);
   }
   return rc;
+}
+std::string& unEscapeMetaCharacters(std::string &string) {
+  for (size_t ix = 0; ix < string.size(); ix++) {
+    if (string[ix] == '\\' && ix < string.size() - 1) {
+      string.erase(ix, 1);
+      switch (string[ix]) {
+      default:
+        break;
+      case 'n':
+        string[ix] = '\n';
+        break;
+      case 'r':
+        string[ix] = '\r';
+        break;
+      case 't':
+        string[ix] = '\t';
+        break;
+      case 'v':
+        string[ix] = '\v';
+        break;
+      case 'f':
+        string[ix] = '\f';
+        break;
+      case 'x':
+        if (ix >= string.size()) {
+          // Undo the erase:
+          string.insert(ix, "\\");
+        } else {
+          int length = 1;
+          int value = hexToInt(string[ix + 1]);
+          if (value < 0) {
+            // Undo the erase:
+            string.insert(ix, "\\");
+          } else {
+            if (ix < string.size() - 1) {
+              int value2 = hexToInt(string[ix + 2]);
+              if (value2 >= 0) {
+                value = value * 16 + value2;
+                length++;
+              }
+            }
+            string[ix] = (unsigned char) value;
+            string.erase(ix + 1, length);
+          }
+        }
+        break;
+      }
+    }
+  }
+  return string;
 }
 } /* namespace polygeo */
 

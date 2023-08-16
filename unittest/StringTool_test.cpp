@@ -436,10 +436,37 @@ TEST(StringToolTest, escapeMetaCharacters) {
 }
 
 TEST(StringToolTest, escapeMetaCharactersCount) {
-  //FEW_TESTS;
+  FEW_TESTS;
   const char* x = "2slash: \\\\ Apo:\" NL: \n CR: \r TAB: \t VTAB: \v ONE: \x01";
   ASSERT_EQ(escapeMetaCharactersCount(x), 7+3);
   const char* a = "\x05";
   ASSERT_EQ(escapeMetaCharactersCount(a), 3);
+}
+
+TEST(StringToolTest, hexToInt) {
+  FEW_TESTS;
+  ASSERT_EQ(hexToInt(' '), -1);
+  ASSERT_EQ(hexToInt('0'), 0);
+  ASSERT_EQ(hexToInt('9'), 9);
+  ASSERT_EQ(hexToInt('A'-1), -1);
+  ASSERT_EQ(hexToInt('A'), 10);
+  ASSERT_EQ(hexToInt('F'), 15);
+  ASSERT_EQ(hexToInt('G'), -1);
+  ASSERT_EQ(hexToInt('a'), 10);
+  ASSERT_EQ(hexToInt('f'), 15);
+  ASSERT_EQ(hexToInt('g'), -1);
+}
+
+TEST(StringToolTest, unEscapeMetaCharacters) {
+  //FEW_TESTS;
+  std::string a = "\\tX";
+  unEscapeMetaCharacters(a);
+  ASSERT_STREQ(a.c_str(), "\tX");
+  std::string x = "2slash: \\\\\\\\ Apo:\\\" NL: \\n CR: \\r TAB: \\t VTAB: \\v FF: \\f ONE: \\x01";
+  unEscapeMetaCharacters(x);
+  ASSERT_STREQ(x.c_str(), "2slash: \\\\ Apo:\" NL: \n CR: \r TAB: \t VTAB: \v FF: \f ONE: \x01");
+  std::string y = "\\x1G\x2";
+  unEscapeMetaCharacters(y);
+  ASSERT_STREQ(y.c_str(), "\x01G\x2");
 }
 

@@ -1,6 +1,12 @@
 # Changelog
 
-## [0.6.2] - 2023-08-11
+# [0.6.3] - 2023-08-16
+
+## Changed:
+- ValueJson::ValueJson(): added: needed parameter dataType
+- ValueJson: strings will be stored with unescaped meta characters: "\n" instead of "\\n"
+
+# [0.6.2] - 2023-08-11
 
 ## Added
 - NodeJson::map() / MapJson::map(): access to internal maps
@@ -10,7 +16,7 @@
 ## Fixed
 - MapJson::add(): new parameter maskMetaCharacters to safe label string.
 
-## [0.6.1] - 2023-07-25 
+# [0.6.1] - 2023-07-25 
 
 ## Fixed
 - CMakeList.txt: Google test is working again

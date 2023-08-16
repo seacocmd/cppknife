@@ -589,21 +589,9 @@ std::string MapJson::toString(int maxLength) const {
   std::string rc = "<map>";
   return rc;
 }
-ValueJson::ValueJson(const char *value) :
-    NodeJson(JNT_VALUE), _value(value == nullptr ? "null" : value) {
-  if (value == nullptr) {
-    _dataType = JDT_NULL;
-  } else if (isInt(value)) {
-    _dataType = JDT_INT;
-  } else if (isFloat(value)) {
-    _dataType = JDT_FLOAT;
-  } else if (strcmp(value, "null") == 0) {
-    _dataType = JDT_UNDEFINED;
-  } else if (strcmp(value, "true") == 0 || strcmp(value, "false") == 0) {
-    _dataType = JDT_BOOL;
-  } else {
-    _dataType = JDT_STRING;
-  }
+ValueJson::ValueJson(JsonDataType dataType, const char *value) :
+    NodeJson(JNT_VALUE), _value(value == nullptr ? "null" : value), _dataType(
+        dataType) {
 }
 ValueJson::~ValueJson() {
 }
@@ -616,7 +604,9 @@ void ValueJson::addAsString(std::string &jsonString, int indent, int level,
   case JDT_FLOAT_LIST:
   case JDT_STRING: {
     jsonString += '"';
-    jsonString += _value;
+    std::string value = _value;
+    escapeMetaCharacters(value);
+    jsonString += value;
     jsonString += '"';
     break;
   }
@@ -913,6 +903,7 @@ ArrayJson* JsonReader::parseArray() {
   ArrayJson *rc = new ArrayJson();
   NodeJson *value = nullptr;
   int no = 0;
+  std::string stringValue;
   while (again) {
     no++;
     TokenType type = next();
@@ -938,13 +929,23 @@ ArrayJson* JsonReader::parseArray() {
       break;
     case TT_NULL:
       // deleted in the destructor of the parent (MapNode or ArrayNode).
-      value = new ValueJson(nullptr);
+      value = new ValueJson(JDT_NULL, nullptr);
+      break;
+    case TT_STRING:
+      stringValue = _token._string;
+      unEscapeMetaCharacters(stringValue);
+      // deleted in the destructor of the parent (MapNode or ArrayNode).
+      value = new ValueJson(JDT_STRING, stringValue.c_str());
       break;
     case TT_NUMBER:
+      // deleted in the destructor of the parent (MapNode or ArrayNode).
+      value = new ValueJson(isInt(_token._string) ? JDT_INT : JDT_FLOAT,
+          _token._string);
+      break;
     case TT_FALSE:
     case TT_TRUE:
       // deleted in the destructor of the parent (MapNode or ArrayNode).
-      value = new ValueJson(_token._string);
+      value = new ValueJson(JDT_BOOL, _token._string);
       break;
     default:
       throw JsonFormatError(
@@ -971,8 +972,9 @@ MapJson* JsonReader::parseMap() {
   bool again = true;
 // deleted in the destructor of the parent (MapNode or ArrayNode).
   MapJson *rc = new MapJson();
-  const char *attribute;
+  std::string attribute;
   int no = 0;
+  std::string stringValue;
   while (again) {
     no++;
     TokenType type = next();
@@ -995,6 +997,7 @@ MapJson* JsonReader::parseMap() {
           _token);
     }
     attribute = _token._string;
+    unEscapeMetaCharacters(attribute);
     if (next() != TT_COLON) {
       throw JsonFormatError(
           formatCString("':' expected, not %.20s", _token._string), _token);
@@ -1008,23 +1011,33 @@ MapJson* JsonReader::parseMap() {
     case TT_BRACKET_LEFT:
       value = parseArray();
       break;
-    case TT_STRING:
+    case TT_STRING: {
+      stringValue = _token._string;
+      unEscapeMetaCharacters(stringValue);
+      // deleted in the destructor of the parent (MapNode or ArrayNode).
+      value = new ValueJson(JDT_STRING, stringValue.c_str());
+      break;
+    }
     case TT_NUMBER:
+      // deleted in the destructor of the parent (MapNode or ArrayNode).
+      value = new ValueJson(isInt(_token._string) ? JDT_INT : JDT_FLOAT,
+          _token._string);
+      break;
     case TT_FALSE:
     case TT_TRUE:
       // deleted in the destructor of the parent (MapNode or ArrayNode).
-      value = new ValueJson(_token._string);
+      value = new ValueJson(JDT_BOOL, _token._string);
       break;
     case TT_NULL:
       // deleted in the destructor of the parent (MapNode or ArrayNode).
-      value = new ValueJson(nullptr);
+      value = new ValueJson(JDT_NULL, nullptr);
       break;
     default:
       throw JsonFormatError(
           formatCString("value expected, not %.20s", _token._string), _token);
       break;
     }
-    rc->add(attribute, value, false);
+    rc->add(attribute.c_str(), value, false);
   }
   return rc;
 }

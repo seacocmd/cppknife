@@ -185,6 +185,11 @@ formatOnBuffer(char *buffer, size_t bufferSize, const char *format, ...);
  * @return The regular expression that is equivalent to <em>globPattern</em>.
  */
 std::string globToRegularExpression(const char *globPattern, int length = -1);
+inline int hexToInt(char cc) {
+  return cc < '0' ? -1 : cc <= '9' ? cc - '0' : cc < 'A' ? -1 :
+         cc <= 'F' ? cc - 'A' + 10 : cc < 'a' ? -1 :
+         cc <= 'f' ? cc - 'a' + 10 : -1;
+}
 /**
  * Finds the position of a <em>part</em> in a <em>source</em> starting at a <em>position</em>.
  * @param source The string to inspect.
@@ -378,6 +383,9 @@ toLower(const std::string &source);
  */
 std::string
 truncateCString(const char *text, size_t length);
+
+std::string& unEscapeMetaCharacters(std::string &string);
+
 } /* namespace polygeo */
 
 #endif /* CORE_STRINGTOOL_HPP_ */

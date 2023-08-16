@@ -23,7 +23,7 @@ auto logger = buildMemoryLogger(100, LV_DEBUG);
   writeText(fnSource.c_str(),
       R"""({
 "number": 10.5,
-"string": "hello",
+"string": "hello\tWorld",
 "bool": true,
 "array": [ 1, 2, 3],
 "map": { "a": 47, "b": "xyz\tabc\n" }
@@ -34,13 +34,13 @@ auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto root = reader.parse(stream);
   ASSERT_TRUE(root != nullptr);
   ASSERT_EQ(10.5, root->byAttribute("number")->asDouble());
-  ASSERT_STREQ("hello", root->byAttribute("string")->asString());
+  ASSERT_STREQ("hello\tWorld", root->byAttribute("string")->asString());
   ASSERT_TRUE(root->byAttribute("bool")->asBool());
   ASSERT_EQ(1, root->byAttribute("array")->byIndexConst(0)->asInt());
   ASSERT_EQ(2, root->byAttribute("array")->byIndexConst(1)->asInt());
   ASSERT_EQ(3, root->byAttribute("array")->byIndexConst(2)->asInt());
   ASSERT_EQ(47, root->byAttribute("map")->byAttribute("a")->asInt());
-  ASSERT_STREQ("xyz\\tabc\\n", root->byAttribute("map")->byAttribute("b")->asString());
+  ASSERT_STREQ("xyz\tabc\n", root->byAttribute("map")->byAttribute("b")->asString());
   delete root;
   delete logger;
 }
@@ -482,7 +482,7 @@ std::string error;
 MapJson &root = dynamic_cast<MapJson&>(*NodeJson::encode(
         R"""({
 })""", error, *logger));
-auto node = new ValueJson(nullptr);
+auto node = new ValueJson(JDT_NULL, nullptr);
 root.add("\n", node);
 ASSERT_TRUE(root.hasAttribute("\\n"));
 delete &root;

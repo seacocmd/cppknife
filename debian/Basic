@@ -1,0 +1,8 @@
+#! /bin/bash
+VERSION=$(grep "set.LIB_VERSION" ../CMakeLists.txt | grep -o "[0-9][0-9.]*")
+echo "Version: $VERSION"
+sed "s/X.Y.Z/$VERSION/" scripts/prerm >scripts/prerm2
+chmod 755 scripts/prerm2
+form2linux -v text replace-range basic.json --replacement=$VERSION --anchor=Variables '--start=VERSION":."' '--end="'
+form2linux -v package build basic.json
+cp -va cppknife-[0-9]*.deb ../releases/

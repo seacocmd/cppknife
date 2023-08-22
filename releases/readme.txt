@@ -1,9 +1,6 @@
 Installation for architecture amd64:
 
-* Download the script InstallOrUpdate.sh
-* run: sudo bash InstallOrUpdate.sh
+* Download the Debian package
+* run: sudo dpkg -i cppknife*.deb.sh ; sudo apt -f install
 
-Update:
-
-sudo /usr/share/cppknife/InstallOrUpdate.sh
 

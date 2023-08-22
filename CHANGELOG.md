@@ -1,10 +1,21 @@
 # Changelog
 
+# [0.6.4] - 2023-08-22
+
+## Added
+- Building of Debian packages: cppknife and cppknife-full
+- Scripts Basic basic.json and Full full.json
+
+
 # [0.6.3] - 2023-08-16
 
-## Changed:
+## Changed
 - ValueJson::ValueJson(): added: needed parameter dataType
 - ValueJson: strings will be stored with unescaped meta characters: "\n" instead of "\\n"
+
+## Added
+- StringTool: hexToInt()
+- StringTool: unEscapeMetaCharacters()
 
 # [0.6.2] - 2023-08-11
 

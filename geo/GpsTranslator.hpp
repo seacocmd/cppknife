@@ -7,7 +7,6 @@
  */
 
 /// Conversions from GPS to some EPSG/ESDI coordinates systems and vice versa.
-
 #ifndef GEO_GPSTRANSLATOR_HPP_
 #define GEO_GPSTRANSLATOR_HPP_
 #include <ogr_spatialref.h>
@@ -28,6 +27,15 @@ public:
   EastNorthCoordinates(double east, double north) :
       _east(east), _north(north) {
   }
+public:
+public:
+  inline void clear() {
+    _east = _north = 0.0;
+  }
+  inline void set(double east, double north) {
+    _east = east;
+    _north = north;
+  }
 };
 /**
  * @brief Stores coordinates for GPS coordinate systems.
@@ -42,6 +50,14 @@ public:
   }
   GpsCoordinates(double latitude, double longitude) :
       _longitude(longitude), _latitude(latitude) {
+  }
+public:
+  inline void clear() {
+    _longitude = _latitude = 0.0;
+  }
+  inline void set(double latitude, double longitude) {
+    _latitude = latitude;
+    _longitude = longitude;
   }
 };
 /**

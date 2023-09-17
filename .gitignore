@@ -24,8 +24,13 @@ safe/
 /CTestTestfile.cmake
 /DartConfiguration.tcl
 /version.txt
-debian/cppknife-full-0.6.4/
-debian/cppknife-0.6.4/
+debian/cppknife-full-0.6.5/
+debian/cppknife-0.6.5/
 debian/*.deb
 debian/Put
 debian/Sc
+build.debug/
+Geo
+geoknifedev
+SyncBook
+SyncBull

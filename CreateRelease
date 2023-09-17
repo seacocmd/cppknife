@@ -5,7 +5,7 @@ REL_TEMP=cppknife
 BASE_TEMP=/tmp/$REL_TEMP
 KNIFE_TAR=releases/cppknife.amd64.tgz
 VERSION=$(grep "set(LIB_VERSION" CMakeLists.txt | grep -o '[0-9][0-9.]*' | head -n1)
-BINARIES="dbknife fileknife geoknife netknife sesknife textknife libcppknife-$VERSION.so libcppknifegeo-$VERSION.so"
+BINARIES="fileknife netknife sesknife textknife libcppknife-$VERSION.so libcppknifegeo-$VERSION.so"
 ABS_KNIFE_TAR=$(pwd)/$KNIFE_TAR
 function ChangeVersion(){
   mkdir -p ../seapluspro.github.io/releases
@@ -46,8 +46,10 @@ function Doxy(){
   fi
 }
 function AdaptGitIgnore(){
-  form2linux -v text replace-range .gitignore --replacement=$VERSION '--start=debian/cppknife-full-' '--end=/'
-  form2linux -v text replace-range .gitignore --replacement=$VERSION --anchor=debian/cppknife-full '--start=debian/cppknife-' '--end=/'
+  if [ -e .gitignore ]; then
+    form2linux -v text replace-range .gitignore --replacement=$VERSION '--start=debian/cppknife-full-' '--end=/'
+    form2linux -v text replace-range .gitignore --replacement=$VERSION --anchor=debian/cppknife-full '--start=debian/cppknife-' '--end=/'
+  fi
 }
 echo "Version: $VERSION"
 SwitchControl productive

@@ -1,0 +1,60 @@
+{
+  "Variables": {
+     "VERSION": "0.6.4",
+     "BASE": "usr/share/cppknife-%(VERSION)"
+  },
+  "Project": {
+    "Package": "cppknife-full",
+    "Version": "%(VERSION)",
+    "Architecture": "amd64",
+    "Maintainer": "SeaPlusPro <seapluspro@gmail.com>",
+    "Replaces": "cppknife",
+    "Depends": {
+      "libc6": ">= 2.31",
+      "libgdal-dev": "",
+      "libmysqlcppconn-dev": "",
+      "postgresql-client-13": ""
+      },
+    "Provides": "cppknife",
+    "Suggests": [
+      ],
+    "Homepage": "https://github.com/seapluspro/cppknife",
+    "Description": "Shared libraries for C++ programming and tools using that. With db and geo additions.",
+    "Notes": [
+      "The heart is the shared library libcppknife as a helper for fast programming a command line C++ program.",
+      "Also there are the programs textknife, fileknife, geoknife, sesknife, osknife which demonstrate the usage of the library."
+    ]
+  },
+  "Directories": [
+    ],
+  "Files": {
+    "Comment": "../build.release/dbknife\" +  ../build.release/geoknife",
+    "../build.release/libcppknife-%(VERSION).so": "%(BASE)/",
+    "../build.release/libcppknifegeo-%(VERSION).so": "%(BASE)/",
+    "../build.release/fileknife": "%(BASE)/",
+    "../build.release/textknife": "%(BASE)/",
+    "../build.release/sesknife": "%(BASE)/",
+    "../basic/*.hpp": "%(BASE)/basic/",
+    "../db/*.hpp": "%(BASE)/db/",
+    "../core/*.hpp": "%(BASE)/core/",
+    "../geo/*.hpp": "%(BASE)/geo/",
+    "../net/*.hpp": "%(BASE)/net/",
+    "../os/*.hpp": "%(BASE)/net/",
+    "../text/*.hpp": "%(BASE)/text/",
+    "../tools/*.hpp": "%(BASE)/tools/",
+    "scripts/prerm2": "DEBIAN/prerm"
+  },
+  "Links": {
+    "Comment": "%(BASE)/dbknife + %(BASE)/geoknife",
+    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/",
+    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife.so",
+    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/",
+    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/libcppknifegeo.so",
+    "%(BASE)/fileknife": "usr/local/bin/",
+    "%(BASE)/textknife": "usr/local/bin/",
+    "%(BASE)/sesknife": "usr/local/bin/"
+  },
+  "PostInstall": "",
+  "PostRemove": ""
+}
+

@@ -1,5 +1,11 @@
 # Changelog
 
+# [0.6.5] - 2023-09-17 Additional CRS
+
+## Added
+- full.bullseye.json: creation of a debian package for version bullseye
+- GpsTranslator: additional CRS
+
 # [0.6.4] - 2023-08-22
 
 ## Added

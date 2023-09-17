@@ -6,7 +6,7 @@ project (ccppknife
 	DESCRIPTION "A C++ library with some applications")
 
 set(CMAKE_CXX_STANDARD 17)
-set(LIB_VERSION 0.6.4)
+set(LIB_VERSION 0.6.5)
 set(LIB_NAME cppknife-${LIB_VERSION})
 set(GEOLIB_NAME cppknifegeo-${LIB_VERSION})
 
@@ -69,11 +69,10 @@ set(TOOLS_SOURCES tools/ArgumentParser.cpp tools/ToolsCommons.cpp tools/VeilEngi
 
 set (DB_LIBS -lmysqlcppconn	-lpqxx -lpq)
 set (GEO_LIBS gdal)
-set (UNITTEST_LIB cppknifeunittest)
 set (GOOGLE_TEST_LIB GTest::gtest GTest::gtest_main)
-set (CPPKNIFE_LIBS ${GOOGLE_TEST_LIB} ${LIB_NAME} ${UNITTEST_LIB}  ${GOOGLE_TEST_LIB})
+set (CPPKNIFE_LIBS ${GOOGLE_TEST_LIB} ${LIB_NAME} ${GOOGLE_TEST_LIB})
 
-add_library(${GEOLIB_NAME} SHARED ${GEO_SOURCES} ${GEO_UNITTEST_SOURCES})
+add_library(${GEOLIB_NAME} SHARED ${GEO_UNITTEST_SOURCES} ${GEO_SOURCES} )
 target_compile_options(${GEOLIB_NAME} PRIVATE -Wall)
 target_include_directories(${GEOLIB_NAME} PRIVATE /usr/include/gdal gdal)
 
@@ -89,29 +88,33 @@ target_include_directories(cppknifeunittest PRIVATE /usr/include/gdal gdal)
 
 find_package(GTest REQUIRED)
 
-#add_executable(dbknife tools/dbknife_main.cpp tools/dbknife.cpp 
-#	unittest/google_test.cpp)
-#target_include_directories(dbknife 
-#	PRIVATE ${LIBMYSQLCLIENT_INCLUDE_DIRS}
-#	${PostgreSQL_INCLUDE_DIRS})
-#target_link_libraries(dbknife
-#	-lmysqlcppconn
-#	)
+if(DEFINED WITH_DB)
+add_executable(dbknife tools/dbknife_main.cpp tools/dbknife.cpp 
+	unittest/google_test.cpp)
+target_include_directories(dbknife 
+	PRIVATE ${LIBMYSQLCLIENT_INCLUDE_DIRS}
+	${PostgreSQL_INCLUDE_DIRS})
+target_link_libraries(dbknife
+	-lmysqlcppconn
+	)
+endif()
 
 add_executable(fileknife tools/fileknife_main.cpp tools/fileknife.cpp 
 	unittest/fileknife_test.cpp
 	${OS_UNITTEST_SOURCES} ${BASIC_UNITTEST_SOURCES})
 target_link_libraries(fileknife ${CPPKNIFE_LIBS})
 
-#add_executable(geoknife tools/geoknife_main.cpp tools/geoknife.cpp 
-#	unittest/GpsTranslator_test.cpp
-#	${GEO_UNITTEST_SOURCES})
-#target_include_directories(geoknife PRIVATE /usr/include/gdal)
-#target_link_libraries(geoknife ${CPPKNIFE_LIBS}	gdal)
+
+if(DEFINED WITH_GEO)
+add_executable(geoknife tools/geoknife_main.cpp tools/geoknife.cpp 
+	unittest/GpsTranslator_test.cpp  ${GEO_SOURCES} ${GEO_UNITTEST_SOURCES})
+target_include_directories(geoknife PRIVATE /usr/include/gdal)
+target_link_libraries(geoknife ${GEOLIB_NAME} ${CPPKNIFE_LIBS}	gdal)
+endif()
 
 add_executable(sesknife tools/sesknife_main.cpp tools/sesknife.cpp 
 	unittest/sesknife_test.cpp
-	${TEXT_UNITTEST_SOURCES}
+	${OS_UNITTEST_SOURCES} ${BASIC_UNITTEST_SOURCES} ${TEXT_UNITTEST_SOURCES}
 	)
 target_compile_options(sesknife PRIVATE -Wall)
 target_link_libraries(sesknife ${CPPKNIFE_LIBS})

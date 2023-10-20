@@ -19,13 +19,13 @@ int main(int argc, char **argv) {
     //filter = "Base64Test.*";
     //filter = "BaseRandomTest.*";
     //filter = "ByteStorageTest.*";
-    //filter = "CsvFileTest.*";
+    filter = "CsvFileTest.*";
     //filter = "ConfigurationTest.*";
     //filter = "FileTest.*";
     //filter = "FunctionEngineTest.*";
     //filter = "FileToolTest.*";
     //filter = "ScriptTest.*";
-    filter = "NodeJsonTest.*";
+    //filter = "NodeJsonTest.*";
     //filter = "LinesStreamTest.*";
     //filter = "LineReaderTest.*";
     //filter = "LineAgentTest.*";

@@ -1,0 +1,5 @@
+VERSION=X.Y.Z
+test -L /usr/lib/libcppknife.so && rm -f /usr/lib/libcppknife.so
+ln -s libcppknife-$VERSION.so /usr/lib/libcppknife.so
+test -L /usr/lib/libcppknifegeo.so && rm -f /usr/lib/libcppknifegeo.so
+ln -s libcppknifegeo-$VERSION.so /usr/lib/libcppknifegeo.so

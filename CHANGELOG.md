@@ -1,5 +1,15 @@
 # Changelog
 
+# [0.6.7] - 2023-10.20 Additional CRS
+
+## Added
+* GpsTranslator: Additional CRS
+
+# [0.6.6] - 2023-10-18 Blanks in CSV files
+
+## Added
+- CsvFile::asInt() and CsvFile::asDouble(): blanks will be ignored
+
 # [0.6.5] - 2023-09-17 Additional CRS
 
 ## Added

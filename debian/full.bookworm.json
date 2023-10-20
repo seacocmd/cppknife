@@ -1,6 +1,6 @@
 {
   "Variables": {
-     "VERSION": "0.6.5",
+     "VERSION": "0.6.7",
      "BASE": "usr/share/cppknife-%(VERSION)"
   },
   "Project": {
@@ -13,7 +13,7 @@
       "libc6": ">= 2.36",
       "libgdal-dev": "",
       "libmysqlcppconn-dev": "",
-      "postgresql-client-dev-15": ""
+      "postgresql-client-15": ""
       },
     "Provides": "cppknife",
     "Suggests": [
@@ -28,7 +28,7 @@
   "Directories": [
     ],
   "Files": {
-    "Comment": "../build.release/dbknife\" +  ../build.release/geoknife",
+    "Comment": "../build.release/dbknife +  ../build.release/geoknife",
     "../build.release/libcppknife-%(VERSION).so": "%(BASE)/",
     "../build.release/libcppknifegeo-%(VERSION).so": "%(BASE)/",
     "../build.release/fileknife": "%(BASE)/",
@@ -46,15 +46,15 @@
   },
   "Links": {
     "Comment": "%(BASE)/dbknife + %(BASE)/geoknife",
-    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/",
+    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife-%(VERSION).so",
     "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife.so",
-    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/",
+    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/libcppknifegeo-%(VERSION).so",
     "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/libcppknifegeo.so",
     "%(BASE)/fileknife": "usr/local/bin/",
     "%(BASE)/textknife": "usr/local/bin/",
     "%(BASE)/sesknife": "usr/local/bin/"
   },
-  "PostInstall": "",
+  "PostInstall": "scripts/postinst2",
   "PostRemove": ""
 }
 

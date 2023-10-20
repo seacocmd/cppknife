@@ -3,6 +3,7 @@ set -e
 VERSION=X.Y.Z
 BASE=/usr/share/cppknife-$VERSION
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
+date "+%Y.%m.%d-%H:%M:%S prerm $VERSION $*" >> /tmp/cppknife-full.log
 for node in dbknife geoknife; do
   test -e $BASE/$node && rm -f $BASE/$node
 done

@@ -1,0 +1,10 @@
+Package: cppknife
+Version: 0.6.6
+Architecture: amd64
+Replaces: cppknife-full
+Maintainer: SeaPlusPro <seapluspro@gmail.com>
+Depends: libc6 (>= 2.36)
+Installed-size: 24470
+Homepage: https://github.com/seapluspro/cppknife
+Description: Shared libraries for C++ programming and tools using that. Without db and geo additions. The heart is the shared library libcppknife as a helper for fast programming a command line C++ program.
+ Also there are the programs textknife, fileknife, sesknife that demonstrate the usage of the library.

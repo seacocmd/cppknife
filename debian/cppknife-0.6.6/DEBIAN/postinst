@@ -1,0 +1,21 @@
+#! /bin/bash
+set -e
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+if [ "$1" = configure ]; then
+test -d /usr/share/cppknife-0.6.6 || mkdir -p /usr/share/cppknife-0.6.6
+test -d /usr/share/cppknife-0.6.6/basic || mkdir -p /usr/share/cppknife-0.6.6/basic
+test -d /usr/share/cppknife-0.6.6/core || mkdir -p /usr/share/cppknife-0.6.6/core
+test -d /usr/share/cppknife-0.6.6/net || mkdir -p /usr/share/cppknife-0.6.6/net
+test -d /usr/share/cppknife-0.6.6/text || mkdir -p /usr/share/cppknife-0.6.6/text
+test -d /usr/share/cppknife-0.6.6/tools || mkdir -p /usr/share/cppknife-0.6.6/tools
+test -L /usr/lib/libcppknife.so && rm -f /usr/lib/libcppknife.so
+ln -s ../share/cppknife-0.6.6/libcppknife-0.6.6.so /usr/lib/libcppknife.so
+test -L /usr/local/bin/fileknife && rm -f /usr/local/bin/fileknife
+ln -s ../../share/cppknife-0.6.6/fileknife /usr/local/bin/fileknife
+test -L /usr/local/bin/textknife && rm -f /usr/local/bin/textknife
+ln -s ../../share/cppknife-0.6.6/textknife /usr/local/bin/textknife
+test -L /usr/local/bin/sesknife && rm -f /usr/local/bin/sesknife
+ln -s ../../share/cppknife-0.6.6/sesknife /usr/local/bin/sesknife
+
+fi
+exit 0

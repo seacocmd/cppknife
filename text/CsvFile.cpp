@@ -26,10 +26,16 @@ void CsvRow::addColumn(const char *contents) {
 
 double CsvRow::asDouble(size_t columnIndex, double defaultValue) const {
   const char *contents = rawColumn(columnIndex);
+  while (*contents == ' ') {
+    contents++;
+  }
   double rc = defaultValue;
   if (contents != nullptr) {
     char *endPtr;
     rc = strtod(contents, &endPtr);
+    while (*endPtr == ' ') {
+      endPtr++;
+    }
     if ((rc == 0.0 && *contents != '0') || *endPtr != '\0') {
       rc = defaultValue;
     }
@@ -40,6 +46,9 @@ int CsvRow::asInt(size_t columnIndex, int defaultValue) const {
   const char *contents = rawColumn(columnIndex);
   int rc = defaultValue;
   if (contents != nullptr) {
+    while (*contents == ' ') {
+      contents++;
+    }
     rc = atoi(contents);
     if (rc == 0 && *contents != '0') {
       rc = defaultValue;

@@ -12,7 +12,6 @@
     "Depends": {
       "libc6": ">= 2.31",
       "libgdal-dev": "",
-      "libmysqlcppconn-dev": "",
       "postgresql-client-13": ""
       },
     "Provides": "cppknife",
@@ -28,33 +27,30 @@
   "Directories": [
     ],
   "Files": {
-    "Comment": "../build.release/dbknife\" +  ../build.release/geoknife",
+    "Comment": "../build.release/dbknife\" +  ../build.release/geoknife ../db/*.hpp: %(BASE)/db/",
     "../build.release/libcppknife-%(VERSION).so": "%(BASE)/",
     "../build.release/libcppknifegeo-%(VERSION).so": "%(BASE)/",
     "../build.release/fileknife": "%(BASE)/",
     "../build.release/textknife": "%(BASE)/",
     "../build.release/sesknife": "%(BASE)/",
     "../basic/*.hpp": "%(BASE)/basic/",
-    "../db/*.hpp": "%(BASE)/db/",
     "../core/*.hpp": "%(BASE)/core/",
     "../geo/*.hpp": "%(BASE)/geo/",
     "../net/*.hpp": "%(BASE)/net/",
-    "../os/*.hpp": "%(BASE)/net/",
+    "../os/*.hpp": "%(BASE)/os/",
     "../text/*.hpp": "%(BASE)/text/",
     "../tools/*.hpp": "%(BASE)/tools/",
     "scripts/prerm2": "DEBIAN/prerm"
   },
   "Links": {
-    "Comment": "%(BASE)/dbknife + %(BASE)/geoknife",
+    "Comment": "dbknife + geoknife",
     "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/",
-    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife.so",
-    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/",
-    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/libcppknifegeo.so",
+    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/libcppknifegeo-%(VERSION).so",
     "%(BASE)/fileknife": "usr/local/bin/",
     "%(BASE)/textknife": "usr/local/bin/",
     "%(BASE)/sesknife": "usr/local/bin/"
   },
-  "PostInstall": "",
+  "PostInstall": "scripts/postinst2",
   "PostRemove": ""
 }
 

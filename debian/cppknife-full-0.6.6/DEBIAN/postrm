@@ -1,0 +1,19 @@
+#! /bin/bash
+set -e
+PATH=/usr/bin:/bin:/usr/sbin:/sbin
+test -n "$LOG_INSTALL" && date "+%Y.%m.%d-%H:%M:%S postrm 0.6.6 $*" >>/tmp/cppknife-full.log
+test -L /usr/lib/libcppknife.so && rm -f /usr/lib/libcppknife.so
+test -L /usr/lib/libcppknifegeo.so && rm -f /usr/lib/libcppknifegeo.so
+test -L /usr/local/bin/fileknife && rm -f /usr/local/bin/fileknife
+test -L /usr/local/bin/textknife && rm -f /usr/local/bin/textknife
+test -L /usr/local/bin/sesknife && rm -f /usr/local/bin/sesknife
+test -d /usr/share/cppknife-0.6.6/basic && rm -Rf /usr/share/cppknife-0.6.6/basic
+test -d /usr/share/cppknife-0.6.6/tools && rm -Rf /usr/share/cppknife-0.6.6/tools
+test -d /usr/share/cppknife-0.6.6/core && rm -Rf /usr/share/cppknife-0.6.6/core
+test -d /usr/share/cppknife-0.6.6/text && rm -Rf /usr/share/cppknife-0.6.6/text
+test -d /usr/share/cppknife-0.6.6/geo && rm -Rf /usr/share/cppknife-0.6.6/geo
+test -d /usr/share/cppknife-0.6.6/net && rm -Rf /usr/share/cppknife-0.6.6/net
+test -d /usr/share/cppknife-0.6.6/db && rm -Rf /usr/share/cppknife-0.6.6/db
+test -d /usr/share/cppknife-0.6.6/os && rm -Rf /usr/share/cppknife-0.6.6/os
+test -d /usr/share/cppknife-0.6.6 && rm -Rf /usr/share/cppknife-0.6.6
+exit 0

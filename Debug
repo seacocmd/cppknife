@@ -1,0 +1,21 @@
+#! /bin/bash
+BASE_BINARIES=debug
+BASE_BUILD=build.debug
+REL_TEMP=cppknife
+BASE_TEMP=/tmp/$REL_TEMP
+KNIFE_TAR=releases/cppknife.amd64.tgz
+VERSION=$(grep "set(LIB_VERSION" CMakeLists.txt | grep -o '[0-9][0-9.]*' | head -n1)
+BINARIES="fileknife netknife sesknife textknife libcppknife-$VERSION.so libcppknifegeo-$VERSION.so"
+ABS_KNIFE_TAR=$(pwd)/$KNIFE_TAR
+function SwitchControl(){
+  cd unittest
+  rm cppknife_control.hpp
+  ln -s cppknife_control.$1.hpp cppknife_control.hpp
+  cd ..
+}
+echo "Version: $VERSION"
+mkdir -p $BASE_BUILD
+SwitchControl debug
+cmake -Dmode=debug -S . -B $BASE_BUILD
+cmake --build build.debug
+

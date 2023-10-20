@@ -5,6 +5,7 @@ polygeo
 .settings/
 a.out
 build/
+build.debug/
 /Deploy
 /V
 .git.01/
@@ -24,8 +25,8 @@ safe/
 /CTestTestfile.cmake
 /DartConfiguration.tcl
 /version.txt
-debian/cppknife-full-0.6.5/
-debian/cppknife-0.6.5/
+debian/cppknife-full-0.6.7/
+debian/cppknife-0.6.7/
 debian/*.deb
 debian/Put
 debian/Sc
@@ -34,3 +35,4 @@ Geo
 geoknifedev
 SyncBook
 SyncBull
+bullseye/

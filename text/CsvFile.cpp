@@ -25,19 +25,21 @@ void CsvRow::addColumn(const char *contents) {
 }
 
 double CsvRow::asDouble(size_t columnIndex, double defaultValue) const {
-  const char *contents = rawColumn(columnIndex);
-  while (*contents == ' ') {
-    contents++;
-  }
   double rc = defaultValue;
+  const char *contents = rawColumn(columnIndex);
   if (contents != nullptr) {
-    char *endPtr;
-    rc = strtod(contents, &endPtr);
-    while (*endPtr == ' ') {
-      endPtr++;
+    while (*contents == ' ') {
+      contents++;
     }
-    if ((rc == 0.0 && *contents != '0') || *endPtr != '\0') {
-      rc = defaultValue;
+    if (contents != nullptr) {
+      char *endPtr;
+      rc = strtod(contents, &endPtr);
+      while (*endPtr == ' ') {
+        endPtr++;
+      }
+      if ((rc == 0.0 && *contents != '0') || *endPtr != '\0') {
+        rc = defaultValue;
+      }
     }
   }
   return rc;
@@ -290,9 +292,12 @@ void CsvFile::read(const char *filename, int additionalRows) {
   }
   while (!endOfFile()) {
     line = nextLine();
-    auto row = new CsvRow(*this, line.c_str(), colCount);
-    colCount = row->columnCount() + additionalRows;
-    _rows.push_back(row);
+    static std::regex emptyLinePattern(R"""(^\s*$)""");
+    if (!line.empty() && !std::regex_match(line, emptyLinePattern)) {
+      auto row = new CsvRow(*this, line.c_str(), colCount);
+      colCount = row->columnCount() + additionalRows;
+      _rows.push_back(row);
+    }
   }
 }
 void CsvFile::write(const char *filename) {

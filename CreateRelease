@@ -5,12 +5,16 @@ REL_TEMP=cppknife
 BASE_TEMP=/tmp/$REL_TEMP
 KNIFE_TAR=releases/cppknife.amd64.tgz
 VERSION=$(grep "set(LIB_VERSION" CMakeLists.txt | grep -o '[0-9][0-9.]*' | head -n1)
+OLD_VERSION=$(cat $BASE_BINARIES/version.txt)
 BINARIES="fileknife netknife sesknife textknife libcppknife-$VERSION.so libcppknifegeo-$VERSION.so"
 ABS_KNIFE_TAR=$(pwd)/$KNIFE_TAR
 function ChangeVersion(){
   mkdir -p ../seapluspro.github.io/releases
   echo "$VERSION" >$BASE_BINARIES/version.txt
   echo "$VERSION" >../seapluspro.github.io/releases/version.txt
+  if [ "$OLD_VERSION" != "$VERSION" ]; then
+    rm -Rf debian/cppknife-${OLD_VERSION}* debian/cppknife-full-${OLD_VERSION}*
+  fi
 }
 function SwitchControl(){
   cd unittest
@@ -52,6 +56,7 @@ function AdaptGitIgnore(){
   fi
 }
 echo "Version: $VERSION"
+test "$DEBIAN_VERS" = bullseye && PrepareKnife
 SwitchControl productive
 mkdir -p $BASE_BUILD
 cmake -Dmode=productive -DCMAKE_BUILD_TYPE=Release -S . -B $BASE_BUILD

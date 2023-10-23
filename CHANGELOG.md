@@ -1,9 +1,16 @@
 # Changelog
 
+# [0.6.8] - 2023-10.23 CsvFile: ignoring empty lines, preventing crash
+
+## Changed
+- CsvFile: 
+    - CsvRow::asDouble(): Preventing nullptr access
+    - CsvFile::read(): ignoring empty lines (whitespaces only)
+
 # [0.6.7] - 2023-10.20 Additional CRS
 
 ## Added
-* GpsTranslator: Additional CRS
+- GpsTranslator: Additional CRS
 
 # [0.6.6] - 2023-10-18 Blanks in CSV files
 

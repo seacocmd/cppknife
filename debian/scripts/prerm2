@@ -1,6 +1,6 @@
 #! /bin/bash
 set -e
-VERSION=0.6.7
+VERSION=0.6.8
 BASE=/usr/share/cppknife-$VERSION
 PATH=/bin:/usr/bin:/sbin:/usr/sbin
 date "+%Y.%m.%d-%H:%M:%S prerm $VERSION $*" >> /tmp/cppknife-full.log

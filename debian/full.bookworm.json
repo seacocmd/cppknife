@@ -1,6 +1,6 @@
 {
   "Variables": {
-     "VERSION": "0.6.7",
+     "VERSION": "0.6.8",
      "BASE": "usr/share/cppknife-%(VERSION)"
   },
   "Project": {
@@ -47,9 +47,7 @@
   "Links": {
     "Comment": "%(BASE)/dbknife + %(BASE)/geoknife",
     "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife-%(VERSION).so",
-    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife.so",
     "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/libcppknifegeo-%(VERSION).so",
-    "%(BASE)/libcppknifegeo-%(VERSION).so": "usr/lib/libcppknifegeo.so",
     "%(BASE)/fileknife": "usr/local/bin/",
     "%(BASE)/textknife": "usr/local/bin/",
     "%(BASE)/sesknife": "usr/local/bin/"

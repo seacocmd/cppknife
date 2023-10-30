@@ -15,10 +15,13 @@ static bool onlyFewTests() {
   return false;
 }
 #define FEW_TESTS() if (onlyFewTests()) return
+#ifndef TEST
+#define TEST(a, b) void a::b()
+#endif
 
 TEST(NodeJsonTest, basic) {
   FEW_TESTS();
-auto logger = buildMemoryLogger(100, LV_DEBUG);
+  auto logger = buildMemoryLogger(100, LV_DEBUG);
   auto fnSource = temporaryFile("test1.json", "unittest", true);
   writeText(fnSource.c_str(),
       R"""({
@@ -40,14 +43,15 @@ auto logger = buildMemoryLogger(100, LV_DEBUG);
   ASSERT_EQ(2, root->byAttribute("array")->byIndexConst(1)->asInt());
   ASSERT_EQ(3, root->byAttribute("array")->byIndexConst(2)->asInt());
   ASSERT_EQ(47, root->byAttribute("map")->byAttribute("a")->asInt());
-  ASSERT_STREQ("xyz\tabc\n", root->byAttribute("map")->byAttribute("b")->asString());
+  ASSERT_STREQ("xyz\tabc\n",
+      root->byAttribute("map")->byAttribute("b")->asString());
   delete root;
   delete logger;
 }
 
 TEST(NodeJsonTest, root) {
   FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
 
   auto fnSource = temporaryFile("test1.json", "unittest", true);
   writeText(fnSource.c_str(),
@@ -68,7 +72,7 @@ auto logger(buildMemoryLogger(100, LV_DEBUG));
 }
 TEST(NodeJsonTest, decodeEncode) {
   FEW_TESTS();
-auto logger = buildMemoryLogger(100, LV_DEBUG);
+  auto logger = buildMemoryLogger(100, LV_DEBUG);
   const char *data =
       R"""({
 "number": 10.5,
@@ -114,7 +118,7 @@ auto logger = buildMemoryLogger(100, LV_DEBUG);
 
 TEST(NodeJsonTest, checkStructure) {
   FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
 
   auto data =
       R"""({
@@ -158,7 +162,7 @@ unknown attribute: map)""");
 
 TEST(NodeJsonTest, nodeByPath) {
   FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
 
   auto data =
       R"""({
@@ -184,7 +188,7 @@ auto logger(buildMemoryLogger(100, LV_DEBUG));
 
 TEST(NodeJsonTest, nodeByPathExceptions) {
   FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
 
   auto data =
       R"""({
@@ -281,7 +285,7 @@ TEST(NodeJsonTest, isNull) {
 
 TEST(NodeJsonTest, operatorBracket) {
   FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
   std::string error;
   MapJson &root =
       dynamic_cast<MapJson&>(*NodeJson::encode(
@@ -309,14 +313,14 @@ auto logger(buildMemoryLogger(100, LV_DEBUG));
 
   ASSERT_EQ(root["array"][2].asInt(), 3);
   ASSERT_EQ(root["bool"].asBool(), true);
-  ASSERT_EQ(root["map"]["array2"][(int )0].asInt(), 0);
+  ASSERT_EQ(root["map"]["array2"][(int) 0].asInt(), 0);
   ASSERT_EQ(root["map"]["map2"]["key"].isNull(), true);
   delete &root;
   delete logger;
 }
 TEST(NodeJsonTest, exceptions) {
   FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
   std::string error;
   MapJson &root =
       dynamic_cast<MapJson&>(*NodeJson::encode(
@@ -329,7 +333,8 @@ auto logger(buildMemoryLogger(100, LV_DEBUG));
   "b": "xyz",
   "map2": {
     "key": null
-    }
+    },
+  "null": null
   },
 "number": 10.5,
 "string": "hello"
@@ -444,48 +449,48 @@ auto logger(buildMemoryLogger(100, LV_DEBUG));
 }
 TEST(NodeJsonTest, addBlanks2) {
   FEW_TESTS();
-std::string item("x");
-NodeJson::addBlanks(200, item);
-ASSERT_EQ(item.size(), 201);
-ASSERT_EQ(item[0], 'x');
-ASSERT_EQ(item[1], ' ');
-ASSERT_EQ(item[200], ' ');
+  std::string item("x");
+  NodeJson::addBlanks(200, item);
+  ASSERT_EQ(item.size(), 201);
+  ASSERT_EQ(item[0], 'x');
+  ASSERT_EQ(item[1], ' ');
+  ASSERT_EQ(item[200], ' ');
 }
 TEST(NodeJsonTest, erase) {
-FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
-std::string error;
-MapJson &root = dynamic_cast<MapJson&>(*NodeJson::encode(
-        R"""({
+  FEW_TESTS();
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
+  std::string error;
+  MapJson &root = dynamic_cast<MapJson&>(*NodeJson::encode(
+      R"""({
 "array": [ 1,  2,  3 ],
 "bool": true,
 })""", error, *logger));
-ASSERT_TRUE(root.hasAttribute("bool"));
-root.erase("bool", true);
-ASSERT_FALSE(root.hasAttribute("bool"));
-delete &root;
-delete logger;
+  ASSERT_TRUE(root.hasAttribute("bool"));
+  root.erase("bool", true);
+  ASSERT_FALSE(root.hasAttribute("bool"));
+  delete &root;
+  delete logger;
 }
 TEST(NodeJsonTest, addMaskedLabel) {
   FEW_TESTS();
-std::string item("x");
-NodeJson::addBlanks(200, item);
-ASSERT_EQ(item.size(), 201);
-ASSERT_EQ(item[0], 'x');
-ASSERT_EQ(item[1], ' ');
-ASSERT_EQ(item[200], ' ');
+  std::string item("x");
+  NodeJson::addBlanks(200, item);
+  ASSERT_EQ(item.size(), 201);
+  ASSERT_EQ(item[0], 'x');
+  ASSERT_EQ(item[1], ' ');
+  ASSERT_EQ(item[200], ' ');
 }
 TEST(NodeJsonTest, addLabelWithMetaChar) {
-FEW_TESTS();
-auto logger(buildMemoryLogger(100, LV_DEBUG));
-std::string error;
-MapJson &root = dynamic_cast<MapJson&>(*NodeJson::encode(
-        R"""({
-})""", error, *logger));
-auto node = new ValueJson(JDT_NULL, nullptr);
-root.add("\n", node);
-ASSERT_TRUE(root.hasAttribute("\\n"));
-delete &root;
-delete logger;
+  FEW_TESTS();
+  auto logger(buildMemoryLogger(100, LV_DEBUG));
+  std::string error;
+  MapJson &root = dynamic_cast<MapJson&>(*NodeJson::encode(R"""({
+})""", error,
+      *logger));
+  auto node = new ValueJson(JDT_NULL, nullptr);
+  root.add("\n", node);
+  ASSERT_TRUE(root.hasAttribute("\\n"));
+  delete &root;
+  delete logger;
 }
 }

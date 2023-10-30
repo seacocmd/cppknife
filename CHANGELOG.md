@@ -1,5 +1,10 @@
 # Changelog
 
+# [0.6.9] - 2023-10.23 NodeJson: nullptr exception
+
+## Changed
+- NodeJson::addAsString()+NodeJson::addNeededBytes(): nullptr access item.second may be null
+
 # [0.6.8] - 2023-10.23 CsvFile: ignoring empty lines, preventing crash
 
 ## Changed

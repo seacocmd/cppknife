@@ -421,7 +421,9 @@ void MapJson::addAsString(std::string &jsonString, int indent, int level,
     } else {
       jsonString += "\": ";
     }
-    item.second->addAsString(jsonString, indent, level + 1, false);
+    if (item.second != nullptr) {
+      item.second->addAsString(jsonString, indent, level + 1, false);
+    }
     if (++no < _map.size()) {
       jsonString += indent == 0 ? "," : ",\n";
     } else if (indent > 0) {
@@ -439,7 +441,9 @@ size_t MapJson::addNeededBytes(size_t &needed, int indent, int level,
   needed += indent == 0 ? 1 + 1 : 2 + indent * level + 1;
   for (auto item : _map) {
     needed += 3 + item.first.size() + indent * level;
-    item.second->addNeededBytes(needed, indent, level + 1);
+    if (item.second != nullptr) {
+      item.second->addNeededBytes(needed, indent, level + 1);
+    }
     needed += indent == 0 ? 1 : 2;
   }
   return needed;

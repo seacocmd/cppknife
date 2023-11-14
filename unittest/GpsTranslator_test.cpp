@@ -483,9 +483,9 @@ TEST(GpsTranslatorTest, epsg6362) {
   translator.fromGpsRaw(gps, eastWest);
   ASSERT_STREQ(
       formatCString("%0.2f, %0.2f", eastWest._east, eastWest._north).c_str(),
-      "784913.75, 2853041.60");
+      "2853041.60, 784913.75");
   gps.clear();
-  eastWest.set(784913.75, 2853041.60);
+  eastWest.set(2853041.60, 784913.75);
   translator.toGpsRaw(eastWest, gps);
 
   ASSERT_STREQ(

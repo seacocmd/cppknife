@@ -11,7 +11,7 @@
  * see: /usr/include/gdal and /usr/lib/libgdal.a
  */
 #include "geo.hpp"
-std::map<int, std::string> s_wkt(
+std::map<int, const char*> s_wkt(
     {
         { 4908,
             R"""(GEOCCS["GR96",
@@ -29,7 +29,7 @@ AXIS["Geocentric Z",NORTH],
 AUTHORITY["EPSG","4908"]]
 )""" }, });
 
-std::map<int, std::string> s_esriData(
+std::map<int, const char*> s_esriData(
     {
         { 102002,
             R"""(PROJCS["Canada_Lambert_Conformal_Conic",
@@ -270,13 +270,13 @@ namespace cppknife {
 GpsTranslator::GpsTranslator(Logger &logger, int srid) :
     _logger(logger), _epsg(srid < 10000 ? srid : 0), _esri(
         srid >= 10000 ? srid : 0), _other(), _gps(), _transformFromGps(nullptr), _transformToGps(
-        nullptr) {
+        nullptr), _transformations(0) {
   const char *error1 = nullptr;
   const char *error2 = nullptr;
 
   if (_epsg == 4908) {
     if (s_wkt.find(srid) != s_wkt.end()) {
-      const char *description = s_wkt[srid].c_str();
+      const char *description = s_wkt[srid];
       _other.importFromWkt(&description);
     } else {
       auto msg = formatCString("GpsTranslator: unknown WKT: ", srid);
@@ -291,8 +291,8 @@ GpsTranslator::GpsTranslator(Logger &logger, int srid) :
       _logger.say(LV_ERROR, msg);
       throw InternalError(msg);
     }
-    std::string &esri = s_esriData[_esri];
-    _other.SetFromUserInput(esri.c_str());
+    const char *esri = s_esriData[_esri];
+    _other.SetFromUserInput(esri);
     if (true || _esri > 0) {
       _other.morphFromESRI();
     }
@@ -327,7 +327,8 @@ GpsTranslator::~GpsTranslator() {
 }
 
 void GpsTranslator::fromGpsRaw(const GpsCoordinates &input,
-    EastNorthCoordinates &output) const {
+    EastNorthCoordinates &output) {
+  _transformations++;
   if (_epsg > 0) {
     output._east = input._longitude;
     output._north = input._latitude;
@@ -336,15 +337,16 @@ void GpsTranslator::fromGpsRaw(const GpsCoordinates &input,
     output._north = input._latitude;
   }
   _transformFromGps->Transform(1, &output._north, &output._east);
-  if (_esri > 0 || _epsg != 3035) {
+  if (_esri > 0 || (_epsg != 3035 && _epsg != 6362)) {
     auto tmp = output._north;
     output._north = output._east;
     output._east = tmp;
   }
 }
 void GpsTranslator::toGpsRaw(const EastNorthCoordinates &input,
-    GpsCoordinates &output) const {
-  bool invers = _epsg == 3035;
+    GpsCoordinates &output) {
+  _transformations++;
+  bool invers = _epsg == 3035 || _epsg == 6263;
   if (invers) {
     output._latitude = input._east;
     output._longitude = input._north;

@@ -72,14 +72,20 @@ protected:
   OGRSpatialReference _gps;
   OGRCoordinateTransformation *_transformFromGps;
   OGRCoordinateTransformation *_transformToGps;
+  int _transformations;
 public:
   GpsTranslator(Logger &logger, int srid);
   virtual ~GpsTranslator();
 public:
-  void fromGpsRaw(const GpsCoordinates &input,
-      EastNorthCoordinates &output) const;
-  void toGpsRaw(const EastNorthCoordinates &input,
-      GpsCoordinates &output) const;
+  /**
+   * Returns the number of transformations (calls of toGpsRaw() or fromGpsRaw().
+   * @return the number of translations
+   */
+  inline int transformations() const {
+    return _transformations;
+  }
+  void fromGpsRaw(const GpsCoordinates &input, EastNorthCoordinates &output);
+  void toGpsRaw(const EastNorthCoordinates &input, GpsCoordinates &output);
 };
 
 } /* namespace cppknife */

@@ -54,6 +54,13 @@ public:
    */
   int estimateLineCount(double factor = 1.05);
   /**
+   * Returns the filename.
+   * @return the filename
+   */
+  inline const char* filename() const {
+    return _filename.c_str();
+  }
+  /**
    * Tests whether the <em>_nextBlock</em> contains binary data: '\0' ...
    * @param localOnly: <em>false</em>: the previous test should be respected.
    * @return <em>true</em>: there are binary data.

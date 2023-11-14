@@ -15,7 +15,7 @@
 namespace cppknife {
 
 CsvRow::CsvRow(CsvFile &parent, const char *line, int colCount) :
-    _parent(parent), _columns() {
+    _parent(parent), _columns(), _rowIndex(-1) {
   if (line != nullptr) {
     read(line, colCount);
   }
@@ -127,8 +127,9 @@ void CsvRow::read(const char *line, int colCount) {
   char delimiter1 = _parent._delimiter1;
   char delimiter2 = _parent._delimiter2;
   bool escChar = _parent._escChar;
-  char cc;
+  char cc = 0;
   const char *start = line;
+  _rowIndex++;
   char nextChar = *line++;
   bool hasDelimiter = false;
   if (nextChar == delimiter1 || nextChar == delimiter2) {

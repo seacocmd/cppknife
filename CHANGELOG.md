@@ -1,18 +1,30 @@
 # Changelog
 
-# [0.6.9] - 2023-10.23 NodeJson: nullptr exception
+# [0.6.10] - 2023-11-14 Fix SRID=6362 Fix: double free
+
+## Added:
+- new: NodeJson::change(): the change of a node is now possible.
+- new: CsvRow::rowIndex: the row info contains now the row index
+- new: GpsTranslator::translations(): returns the number of translations since instantiation
+- new: LineReader::filename(): returns the internal stored filename
+
+## Changed:
+- fix: GpsTranslator::s_wkt+esri_data: map changed to <int, const char*>. Fixes double free.
+- fix: GpsTranslator::toGpsRaw(): SRID=6362 needs exchange of the coordinates
+
+# [0.6.9] - 2023-10-23 NodeJson: nullptr exception
 
 ## Changed
 - NodeJson::addAsString()+NodeJson::addNeededBytes(): nullptr access item.second may be null
 
-# [0.6.8] - 2023-10.23 CsvFile: ignoring empty lines, preventing crash
+# [0.6.8] - 2023-10-23 CsvFile: ignoring empty lines, preventing crash
 
 ## Changed
 - CsvFile: 
     - CsvRow::asDouble(): Preventing nullptr access
     - CsvFile::read(): ignoring empty lines (whitespaces only)
 
-# [0.6.7] - 2023-10.20 Additional CRS
+# [0.6.7] - 2023-10-20 Additional CRS
 
 ## Added
 - GpsTranslator: Additional CRS

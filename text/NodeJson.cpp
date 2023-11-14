@@ -661,6 +661,10 @@ const char* ValueJson::asString() const {
   return _value.c_str();
 }
 
+void ValueJson::change(const char *value) {
+  _value = value;
+}
+
 JsonDataType ValueJson::dataType() const {
   return _dataType;
 }

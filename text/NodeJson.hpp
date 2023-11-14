@@ -340,6 +340,7 @@ public:
   virtual double asDouble(double defaultValue = UNDEF_DOUBLE) const;
   virtual int asInt(int defaultValue = UNDEF_INT) const;
   virtual const char* asString() const;
+  virtual void change(const char *value);
   virtual JsonDataType dataType() const;
   virtual bool isNull() const;
   virtual std::string toString(int maxLength = 40) const;

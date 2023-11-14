@@ -493,4 +493,11 @@ TEST(NodeJsonTest, addLabelWithMetaChar) {
   delete &root;
   delete logger;
 }
+TEST(NodeJsonTest, change) {
+  FEW_TESTS();
+  auto node = new ValueJson(JDT_STRING, "Hello");
+  node->change("Hi");
+  ASSERT_STREQ(node->asString(), "Hi");
+  delete node;
+}
 }

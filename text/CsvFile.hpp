@@ -18,6 +18,8 @@ class CsvRow {
   friend CsvFile;
   CsvFile &_parent;
   std::vector<std::string> _columns;
+  /// the row number (beginning with 0)
+  int _rowIndex;
 public:
   /**
    * Constructor.
@@ -83,6 +85,13 @@ public:
    * @param colCount The number of columns.
    */
   void read(const char *line, int colCount = 20);
+  /**
+   * Returns the row position in the file (beginning with 0).
+   * @return the row index
+   */
+  inline int rowIndex() const {
+    return _rowIndex;
+  }
   /**
    * Writes the whole row into a file.
    * @param fp The FILE instance to write.

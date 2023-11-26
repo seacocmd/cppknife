@@ -16,7 +16,9 @@ namespace cppknife {
 
 CsvRow::CsvRow(CsvFile &parent, const char *line, int colCount) :
     _parent(parent), _columns(), _rowIndex(-1) {
-  if (line != nullptr) {
+  if (line == nullptr) {
+    _columns.reserve(colCount);
+  } else {
     read(line, colCount);
   }
 }
@@ -215,7 +217,7 @@ CsvFile::~CsvFile() {
   _rows.clear();
 }
 
-void CsvFile::detectSeparator() {
+void CsvFile::detectSeparator(bool preferTab) {
   if (_cursorNextBlock == nullptr) {
     readBlock();
   }
@@ -229,6 +231,10 @@ void CsvFile::detectSeparator() {
     switch (cc) {
     case '\t':
       tabs++;
+      if (preferTab) {
+        // breaks the loop
+        size = 0;
+      }
       break;
     case ',':
       commas++;
@@ -238,7 +244,9 @@ void CsvFile::detectSeparator() {
       break;
     }
   }
-  if (tabs >= semicolons) {
+  if (preferTab && tabs > 0) {
+    _separator = '\t';
+  } else if (tabs >= semicolons) {
     _separator = tabs >= commas ? '\t' : semicolons > commas ? ';' : ',';
   } else {
     _separator = semicolons >= commas ? ';' : ',';

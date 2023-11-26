@@ -43,6 +43,9 @@ LineReader::~LineReader() {
   }
 }
 
+const std::string& LineReader::currentBlock() const {
+  return _nextBlock;
+}
 bool LineReader::endOfFile() {
   if (_cursorNextBlock == nullptr) {
     readBlock();

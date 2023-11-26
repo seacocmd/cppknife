@@ -6,7 +6,7 @@ project (ccppknife
 	DESCRIPTION "A C++ library with some applications")
 
 set(CMAKE_CXX_STANDARD 17)
-set(LIB_VERSION 0.6.10)
+set(LIB_VERSION 0.6.11)
 set(LIB_NAME cppknife-${LIB_VERSION})
 set(GEOLIB_NAME cppknifegeo-${LIB_VERSION})
 

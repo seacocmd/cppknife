@@ -150,8 +150,9 @@ public:
   }
   /**
    * Tries to detect the separator from the first block.
+   * @param preferTab if true: the existence of at least one tab selects the tab
    */
-  void detectSeparator();
+  void detectSeparator(bool preferTab = true);
   /**
    * Returns the next row of the file.
    * @param row OUT: If result is true: The next row. Otherwise: unchanged.

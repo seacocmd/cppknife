@@ -1,5 +1,12 @@
 # Changelog
 
+# [0.6.11] - 2023-11-26 Improvements in CsvRow, CsvFile, LineReader()
+
+## Added:
+- CsvRow::CsvRow(): reserving columns also when not reading
+- CsvFile::detectSeparator(): new parameter preferTab
+- new: LineReader::currentBlock()
+
 # [0.6.10] - 2023-11-14 Fix SRID=6362 Fix: double free
 
 ## Added:

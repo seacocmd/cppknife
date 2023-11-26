@@ -42,6 +42,11 @@ public:
   virtual ~LineReader();
 public:
   /**
+   * Returns the lookahead data of the reader.
+   * @return the data block containing the line returned with the nextLine() call
+   */
+  const std::string& currentBlock() const;
+  /**
    * Returns whether the end of file is reached.
    * @return <em>true</em>: no more data available.
    */

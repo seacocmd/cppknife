@@ -5,8 +5,12 @@
  *      Author: seacocmd
  *     License: CC0 1.0 Universal
  */
+#include <set>
 #include "../os/os.hpp"
 #include "fileknife.hpp"
+#include <pwd.h>
+#include <grp.h>
+
 namespace cppknife {
 /**
  * Manages the "du" (Disk Usage) sub command.
@@ -179,6 +183,173 @@ int extrema(ArgumentParser &parser, Logger &logger) {
   logger.say(LV_SUMMARY, traverser.statisticAsString(info, true));
   return 0;
 }
+class OwnerInfo {
+private:
+  Logger &_logger;
+  FILE *_output;
+  int _countFiles;
+  int _countDirs;
+  int _countErrors;
+  std::set<int> _uids;
+  std::set<int> _gids;
+public:
+  OwnerInfo(Logger &logger, FILE *output);
+public:
+  inline int countDirs() const {
+    return _countDirs;
+  }
+  inline int countErrors() const {
+    return _countErrors;
+  }
+  inline int countFiles() const {
+    return _countFiles;
+  }
+  inline int countGids() const {
+    return _gids.size();
+  }
+  inline int countUids() const {
+    return _uids.size();
+  }
+  void finish();
+  void oneDir(const char *path, int uid, int gid);
+  inline void storeUid(int uid) {
+    _uids.insert(uid);
+  }
+  inline void storeGid(int gid) {
+    _gids.insert(gid);
+  }
+};
+OwnerInfo::OwnerInfo(Logger &logger, FILE *output) :
+    _logger(logger), _output(output), _countFiles(0), _countDirs(0), _countErrors(
+        9), _uids(), _gids() {
+}
+
+void OwnerInfo::finish() {
+  for (std::set<int>::iterator it = _uids.cbegin(); it != _uids.cend(); it++) {
+    struct passwd *info = getpwuid(*it);
+    const char *name = info == nullptr ? "?" : info->pw_name;
+    fprintf(_output, "u%d %s\n", *it, name);
+  }
+  for (std::set<int>::iterator it = _gids.cbegin(); it != _gids.cend(); it++) {
+    struct group *info = getgrgid(*it);
+    const char *name = info == nullptr ? "?" : info->gr_name;
+    fprintf(_output, "g%d %s\n", *it, name);
+  }
+  fclose(_output);
+  _output = nullptr;
+}
+void OwnerInfo::oneDir(const char *path, int uid, int gid) {
+  size_t length = strlen(path);
+  char fullName[8192];
+  storeUid(uid);
+  storeGid(gid);
+  if (length + 256 >= sizeof fullName) {
+    _logger.say(LV_DETAIL,
+        formatCString("path too long (%d): %s", length, path));
+  } else {
+    bool directoryIsWritten = false;
+    struct stat statInfo;
+    DIR *handle = opendir(path);
+    if (handle == nullptr) {
+      _logger.say(LV_DETAIL, formatCString("opendir() failed: %s", fullName));
+      ++_countErrors;
+    } else {
+      struct dirent *data = nullptr;
+      copyNCString(fullName, sizeof fullName, path, length);
+      char *start = fullName + length;
+      length++;
+      size_t restLength = sizeof fullName - length - 1;
+      *start++ = '/';
+      // detect files with other owner/group than the directory:
+      while ((data = readdir(handle)) != nullptr) {
+        if (data->d_name[0] == '.'
+            && (data->d_name[1] == 0
+                || (data->d_name[1] == '.') && (data->d_name[2] == 0))) {
+          continue;
+        }
+        copyNCString(start, restLength, data->d_name);
+        if (lstat(fullName, &statInfo) != 0) {
+          _logger.say(LV_DETAIL, formatCString("lstat failed: %s", fullName));
+          ++_countErrors;
+        } else {
+          if (data->d_type == DT_DIR) {
+            _countDirs++;
+          } else {
+            _countFiles++;
+          }
+          bool differentUid = statInfo.st_uid != uid;
+          bool differentGid = statInfo.st_gid != gid;
+          if (differentUid || differentGid) {
+            if (!directoryIsWritten) {
+              fprintf(_output, "=%d %d %s\n", uid, gid, path);
+              directoryIsWritten = true;
+            }
+            if (differentUid) {
+              storeUid(statInfo.st_uid);
+            }
+            if (differentGid) {
+              storeGid(statInfo.st_gid);
+            }
+            fprintf(_output, "%d %d %s\n", statInfo.st_uid, statInfo.st_gid,
+                data->d_name);
+          }
+        }
+      }
+      // detect the sub directories for recursive call:
+      rewinddir(handle);
+      while ((data = readdir(handle)) != nullptr) {
+        if (data->d_name[0] == '.'
+            && (data->d_name[1] == 0
+                || (data->d_name[1] == '.') && (data->d_name[2] == 0))) {
+          continue;
+        }
+        if (data->d_type == DT_DIR) {
+          copyNCString(start, restLength, data->d_name);
+          if (lstat(fullName, &statInfo) != 0) {
+            _logger.say(LV_DETAIL, formatCString("lstat failed: %s", fullName));
+            ++_countErrors;
+          } else {
+            oneDir(fullName, statInfo.st_uid, statInfo.st_gid);
+          }
+        }
+      }
+      closedir(handle);
+    }
+  }
+}
+
+int owner(ArgumentParser &parser, Logger &logger) {
+  auto base = parser.asString("directory");
+  auto outputFile = parser.asString("target");
+  struct stat statInfo;
+  int errors = 0;
+  int countFiles = 0;
+  int countDirs = 0;
+  lstat(base, &statInfo);
+  if (!S_ISDIR(statInfo.st_mode)) {
+    logger.say(LV_ERROR, formatCString("not a directory: %s\n", base));
+  } else {
+    int level = 0;
+    FILE *output = fopen(outputFile, "w");
+    if (output == nullptr) {
+      logger.say(LV_ERROR,
+          formatCString("cannot open (for writing): %s (%d)", outputFile,
+          errno));
+    } else {
+      fprintf(output, "=%d %d %s\n", statInfo.st_uid, statInfo.st_gid, base);
+      OwnerInfo info(logger, output);
+      info.oneDir(base, statInfo.st_uid, statInfo.st_gid);
+      info.finish();
+      logger.say(LV_SUMMARY,
+          formatCString(
+              "%d files in %d directories with %d errors %d uids %d gids",
+              info.countFiles(), info.countDirs(), info.countErrors(),
+              info.countUids(), info.countGids()));
+    }
+  }
+  return 0;
+}
+
 const char* wcOutput(const char *format, char *buffer, size_t bufferSize,
     size_t lines, size_t words, size_t bytes, size_t maxLength,
     const char *fullname) {
@@ -433,7 +604,7 @@ int fileKnife(int argc, char **argv, Logger *loggerExtern) {
       "5");
   parser.add("--verbose", "-v", DT_BOOL, "Show more information");
   parser.add("--examples", nullptr, DT_BOOL, "Show usage examples", "false");
-  parser.addMode("mode", "What should be done:", "du,extrema,list,wc");
+  parser.addMode("mode", "What should be done:", "du,extrema,list,owner,wc");
   ArgumentParser listParser("list", logger,
       "Lists specified files/directories");
   parser.addSubParser("mode", "list", listParser);
@@ -445,6 +616,15 @@ int fileKnife(int argc, char **argv, Logger *loggerExtern) {
   extramaParser.add("--count", "-c", DT_NAT,
       "Maximal count of entries per extremum will be collected", "20", "5|100");
   parser.addSubParser("mode", "extrema", extramaParser);
+  ArgumentParser ownerParser("owner", logger,
+      "Stores the owner/group information of a file tree into a file");
+  ownerParser.add("directory", nullptr, DT_DIRECTORY, "The directory to scan.",
+      ".");
+  ownerParser.add("target", nullptr, DT_STRING,
+      "The generated file with the owner information.");
+  ownerParser.add("--count", "-c", DT_NAT,
+      "Maximal count of entries per extremum will be collected", "20", "5|100");
+  parser.addSubParser("mode", "owner", ownerParser);
   addTraverserOptions(extramaParser);
   ArgumentParser wcParser("wc", logger, "Counts words, lines and characters");
   wcParser.add("--bytes", "-b", DT_BOOL, "Only count bytes", "F");
@@ -478,6 +658,8 @@ int fileKnife(int argc, char **argv, Logger *loggerExtern) {
       rc = du(parser, *logger);
     } else if (parser.isMode("mode", "extrema")) {
       rc = extrema(parser, *logger);
+    } else if (parser.isMode("mode", "owner")) {
+      rc = owner(parser, *logger);
     } else if (parser.isMode("mode", "wc")) {
       rc = wc(parser, *logger);
     } else {

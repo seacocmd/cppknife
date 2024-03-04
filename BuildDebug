@@ -1,0 +1,5 @@
+#! /bin/bash
+BASE_BUILD=build.debug
+cmake -Dmode=debug -DCMAKE_BUILD_TYPE=Debug -S . -B $BASE_BUILD
+cmake --build build.debug
+

@@ -6,9 +6,12 @@ project (ccppknife
 	DESCRIPTION "A C++ library with some applications")
 
 set(CMAKE_CXX_STANDARD 17)
-set(LIB_VERSION 0.6.11)
+set(LIB_VERSION 0.6.12)
 set(LIB_NAME cppknife-${LIB_VERSION})
 set(GEOLIB_NAME cppknifegeo-${LIB_VERSION})
+set(WITH_GEO "true")
+set(WITH_MYSQL "true")
+set(WITH_POSTGRES "true")
 
 if(NOT DEFINED mode)
     set(mode debug)
@@ -34,15 +37,25 @@ set(CORE_SOURCES core/ByteStorage.cpp core/KissRandom.cpp core/Storage.cpp)
 set(CORE_UNITTEST_SOURCES unittest/ByteStorage_test.cpp unittest/KissRandom_test.cpp 
 	unittest/Storage_test.cpp)
 
-set(DB_SOURCES db/MySql.cpp db/Postgres.cpp db/SqlDriver.cpp)
+set(DB_SOURCES "")
+set(DB_UNITTEST_SOURCES "")
+if(DEFINED WITH_MYSQL)
+  set(DB_SOURCES db/MySql.cpp db/SqlDriver.cpp)
+  set(DB_UNITTEST_SOURCES unittest/MySql_test.cpp unittest/SqlDriver_test.cpp)
+endif()
+if(DEFINED WITH_POSTGRES)
+  set(DB_SOURCES $(DB_SOURCES) db/Postgres.cpp db/SqlDriver.cpp)
+  set(DB_UNITTEST_SOURCES $(DB_UNITTEST_SOURCES) unittest/Postgres_test.cpp unittest/SqlDriver_test.cpp)
+endif()
 
-set(DB_UNITTEST_SOURCES unittest/MySql_test.cpp unittest/Postgres_test.cpp unittest/SqlDriver_test.cpp)
-
+set(GEO_SOURCES, "")
+set(GEO_UNITTEST_SOURCES "")
+if(DEFINED WITH_GEO)
 set(GEO_SOURCES geo/GeoException.cpp geo/GeoHelper.cpp geo/GpsTranslator.cpp 
 	geo/Point2D.cpp geo/Rectangle.cpp geo/Shape.cpp)
-
 set(GEO_UNITTEST_SOURCES unittest/GeoException_test.cpp unittest/GeoHelper_test.cpp 
 	unittest/GpsTranslator_test.cpp unittest/Point2D_test.cpp unittest/Rectangle_test.cpp unittest/Shape_test.cpp)
+endif()
 
 set(NET_SOURCES  net/Agents.cpp net/SocketServer.cpp net/SocketClient.cpp )
 
@@ -72,9 +85,11 @@ set (GEO_LIBS gdal)
 set (GOOGLE_TEST_LIB GTest::gtest GTest::gtest_main -lpthread)
 set (CPPKNIFE_LIBS ${GOOGLE_TEST_LIB} ${LIB_NAME} ${GOOGLE_TEST_LIB})
 
+if(DEFINED WITH_GEO)
 add_library(${GEOLIB_NAME} SHARED ${GEO_UNITTEST_SOURCES} ${GEO_SOURCES} )
 target_compile_options(${GEOLIB_NAME} PRIVATE -Wall)
 target_include_directories(${GEOLIB_NAME} PRIVATE /usr/include/gdal gdal)
+endif()
 
 add_library(${LIB_NAME} SHARED  ${TEXT_SOURCES} ${BASIC_SOURCES} ${CORE_SOURCES} ${NET_SOURCES} ${OS_SOURCES} 
 	${TOOLS_SOURCES} unittest/google_test.cpp)
@@ -103,14 +118,14 @@ add_executable(fileknife tools/fileknife_main.cpp tools/fileknife.cpp
 	unittest/fileknife_test.cpp
 	${OS_UNITTEST_SOURCES} ${BASIC_UNITTEST_SOURCES})
 target_link_libraries(fileknife ${CPPKNIFE_LIBS})
+#target_include_directories(fileknife PUBLIC "${PROJECT_BINARY_DIR}")
 
-
-#if(DEFINED WITH_GEO)
+if(DEFINED WITH_GEO)
 add_executable(geoknife tools/geoknife_main.cpp tools/geoknife.cpp 
 	unittest/GpsTranslator_test.cpp  ${GEO_SOURCES} ${GEO_UNITTEST_SOURCES})
 target_include_directories(geoknife PRIVATE /usr/include/gdal)
 target_link_libraries(geoknife ${GEOLIB_NAME} ${CPPKNIFE_LIBS}	gdal)
-#endif()
+endif()
 
 add_executable(sesknife tools/sesknife_main.cpp tools/sesknife.cpp 
 	unittest/sesknife_test.cpp
@@ -119,12 +134,14 @@ add_executable(sesknife tools/sesknife_main.cpp tools/sesknife.cpp
 target_compile_options(sesknife PRIVATE -Wall)
 target_link_libraries(sesknife ${CPPKNIFE_LIBS})
 
+if(DEFINED WITH_NET)
 add_executable(netknife tools/netknife_main.cpp tools/netknife.cpp 
 	unittest/Agents_test.cpp
 	${TEXT_UNITTEST_SOURCES}
 	)
 target_compile_options(netknife PRIVATE -Wall)
 target_link_libraries(netknife ${CPPKNIFE_LIBS})
+endif()
 
 add_executable(textknife tools/textknife_main.cpp tools/textknife.cpp 
 	unittest/textknife_test.cpp unittest/NodeJson_test.cpp

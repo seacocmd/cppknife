@@ -1,0 +1,50 @@
+{
+  "Variables": {
+     "VERSION": "0.6.12",
+     "BASE": "usr/share/cppknife-%(VERSION)"
+  },
+  "Project": {
+    "Package": "cppknife",
+    "Version": "%(VERSION)",
+    "Architecture": "amd64",
+    "Maintainer": "SeaPlusPro <seapluspro@gmail.com>",
+    "Replaces": "cppknife-full",
+    "Depends": {
+      "libc6": ">= 2.36"
+      },
+    "Provides": "cppknife",
+    "Suggests": [
+      ],
+    "Homepage": "https://github.com/seapluspro/cppknife",
+    "Description": "Shared libraries for C++ programming and tools using that. Without db and geo additions.",
+    "Notes": [
+      "The heart is the shared library libcppknife as a helper for fast programming a command line C++ program.",
+      "Also there are the programs textknife, fileknife, sesknife that demonstrate the usage of the library."
+    ]
+  },
+  "Directories": [
+    ],
+  "Files": {
+    "../build.release/libcppknife-%(VERSION).so": "%(BASE)/libcppknife-%(VERSION).so",
+    "../build.release/fileknife": "%(BASE)/",
+    "../build.release/textknife": "%(BASE)/",
+    "../build.release/sesknife": "%(BASE)/",
+    "../basic/*.hpp": "%(BASE)/basic/",
+    "../core/*.hpp": "%(BASE)/core/",
+    "../net/*.hpp": "%(BASE)/net/",
+    "../os/*.hpp": "%(BASE)/os/",
+    "../text/*.hpp": "%(BASE)/text/",
+    "../tools/*.hpp": "%(BASE)/tools/",
+    "scripts/prerm2": "DEBIAN/prerm"
+  },
+  "Links": {
+    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife-%(VERSION).so",
+    "%(BASE)/libcppknife-%(VERSION).so": "usr/lib/libcppknife.so",
+    "%(BASE)/fileknife": "usr/local/bin/fileknife",
+    "%(BASE)/textknife": "usr/local/bin/textknife",
+    "%(BASE)/sesknife": "usr/local/bin/sesknife"
+  },
+  "PostInstall": "",
+  "PostRemove": ""
+}
+

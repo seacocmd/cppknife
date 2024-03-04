@@ -26,8 +26,10 @@ function PrepareBinaries(){
   mkdir -p $BASE_TEMP
   rm -Rf /tmp/$REL_TEMP/*
   for file in $BINARIES; do
-    cp -a $BASE_BUILD/$file $BASE_TEMP
-    strip --strip-all $BASE_TEMP/$file
+    if [ -e $BASE_BUILD/$file ]; then
+      cp -a $BASE_BUILD/$file $BASE_TEMP
+      strip --strip-all $BASE_TEMP/$file
+    fi
   done
   #pushd $BASE_TEMP >/dev/null 2>&1
   #ls -ld *

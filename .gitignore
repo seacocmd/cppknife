@@ -25,8 +25,8 @@ safe/
 /CTestTestfile.cmake
 /DartConfiguration.tcl
 /version.txt
-debian/cppknife-full-0.6.11/
-debian/cppknife-0.6.11/
+debian/cppknife-full-0.6.12/
+debian/cppknife-0.6.12/
 debian/*.deb
 debian/Put
 debian/Sc
@@ -37,3 +37,4 @@ SyncBook
 SyncBull
 bullseye/
 /GitPush
+/build

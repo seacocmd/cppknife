@@ -16,6 +16,10 @@ static bool onlyFewTests() {
 }
 #define FEW_TESTS() if (onlyFewTests()) return
 
+#if ! defined(TEST)
+#define TEST(a,b) void b::a()
+#endif
+
 std::string initTree() {
   auto base =
       buildFileTree(

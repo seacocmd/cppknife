@@ -1,5 +1,12 @@
 # Changelog
 
+# [0.6.12] - 2024-02-08 Sub command owner in fileknife
+
+# Added
+- fileknife.cpp:
+  - class OwnerInfo,
+  - new sub command "owner"
+
 # [0.6.11] - 2023-11-26 Improvements in CsvRow, CsvFile, LineReader()
 
 ## Added:

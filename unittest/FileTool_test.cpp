@@ -6,7 +6,9 @@
  *     License: CC0 1.0 Universal
  */
 
+#include "../os/os.hpp"
 #include "google_test.hpp"
+#include "../tools/fileknife.hpp"
 
 using namespace cppknife;
 
@@ -14,6 +16,9 @@ static bool fewTests() {
   return false;
 }
 #define FEW_TESTS if (fewTests()) return
+#if ! defined(TEST)
+#define TEST(a,b) void b::a()
+#endif
 
 TEST(FileToolTest, ensureDirectory) {
   FEW_TESTS;
@@ -175,4 +180,16 @@ line 3)""";
   ASSERT_STREQ("line one", list[0].c_str());
   ASSERT_STREQ("line two", list[1].c_str());
   ASSERT_STREQ("line 3", list[2].c_str());
+}
+
+TEST(FileToolTest, owner) {
+  FEW_TESTS;
+  const char* data = R"""(line one
+line two
+line 3)""";
+  auto theOsInfo(osInfo());
+  auto logger = buildMemoryLogger(10, LV_FINEST);
+  auto target = theOsInfo._tempDirectorySeparator + "etc_owner.data";
+  const char *argv[] = {"owner", "/etc", target.c_str()};
+  //fileKnife(sizeof argv / sizeof argv[0], const_cast<char**>(argv), logger);
 }
